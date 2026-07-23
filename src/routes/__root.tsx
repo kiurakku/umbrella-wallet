@@ -131,14 +131,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className="h-full">
+    // Dark is the default theme, and THEME_INIT_SCRIPT sets `dark` + colorScheme on <html>
+    // before hydration. The shell ships that same state so the page doesn't flash the wrong
+    // scheme. suppressHydrationWarning covers the two attributes React can't reconcile here:
+    // the theme script mutating <html>, and the CSP nonce that injectScriptNonces() adds
+    // server-side but React strips from the client tree for security.
+    <html lang="en" className="h-full dark" style={{ colorScheme: "dark" }} suppressHydrationWarning>
       {/* telegram-web-app.js is injected lazily by TelegramInit only inside the
           Telegram client — ordinary and Tor visitors make no third-party requests. */}
       <head>
         <HeadContent />
-        {/* Applies the stored theme before first paint (no flash). The CSP nonce
-            is injected server-side by injectScriptNonces(). */}
-        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        {/* Applies the stored theme before first paint (no flash). The CSP nonce is injected
+            server-side by injectScriptNonces() and stripped from the client tree by React, so
+            this element needs its own suppressHydrationWarning. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} suppressHydrationWarning />
       </head>
       <body className="app-viewport">
         {children}
