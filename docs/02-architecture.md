@@ -1,176 +1,154 @@
-# 2 · Architecture
+# 02 — Architecture
 
-## The big picture
-
-```mermaid
-graph TB
-    subgraph User Devices
-        D[Desktop app<br/>.NET + Avalonia]
-        W[Web app<br/>React in browser]
-        T[Telegram<br/>mini-app]
-    end
-
-    subgraph "Desktop-only bundled processes"
-        TOR[tor.exe<br/>SOCKS5 :9250]
-        XMR[monero-wallet-rpc<br/>JSON-RPC :18099]
-    end
-
-    subgraph "Public blockchain data (no account needed)"
-        EXP[Block explorers<br/>esplora, blockstream]
-        RPC[Public RPC nodes<br/>ETH, SOL, TRON, XMR]
-        CG[CoinGecko / Binance<br/>prices & charts]
-    end
-
-    subgraph "Backend (public data only)"
-        API[NestJS API]
-        PG[(PostgreSQL)]
-        RD[(Redis)]
-        BOT[Telegram bot]
-    end
-
-    subgraph Exchanges
-        EX[Binance, Bybit, OKX,<br/>Kraken, ... CryptoBot]
-    end
-
-    D --> TOR
-    D --> XMR
-    D --> EXP
-    D --> RPC
-    D --> CG
-    D -.read-only keys.-> EX
-
-    W --> API
-    W --> EXP
-    W --> CG
-    T --> API
-    T --> BOT
-
-    API --> PG
-    API --> RD
-    XMR -.through Tor when on.-> RPC
-    TOR -.wraps traffic.-> RPC
-```
-
-**Key reading:** the desktop talks *directly* to public blockchain data (optionally wrapped in Tor)
-and never needs the backend. The web app uses the backend only for the *aggregator* half (auth, P2P,
-linked-account list) — its wallet half also talks to public data directly from the browser.
-
-## Where private keys live
-
-This is the most important diagram in the whole project.
-
-```mermaid
-graph LR
-    subgraph "Desktop device"
-        DS[Seed 24 words] --> DV[Vault file<br/>Argon2id + AES-256-GCM]
-        DV --> DD[(data/vault.json<br/>beside the .exe)]
-    end
-    subgraph "Web browser"
-        WS[Seed 24 words] --> WV[Vault blob<br/>Argon2id + AES-GCM]
-        WV --> WI[(IndexedDB<br/>seed:userId)]
-    end
-    subgraph "Backend server"
-        SRV[Stores: addresses, offers,<br/>price cache, auth hashes]
-        NK[❌ NEVER: seeds, keys, passwords in clear]
-    end
-
-    DS -.never leaves.-> DS
-    WS -.never leaves.-> WS
-```
-
-The seed exists in exactly two places, both on the user's own machine: the desktop vault file, or
-the browser's IndexedDB. **No arrow crosses into the server.** The backend's user table stores an
-Argon2id *hash* of the login password (not the encryption password, and never the seed).
-
-## Repository layout
+## Golden rule: private keys NEVER cross the network boundary
 
 ```
-Umbrella Wallet/
-├── desktop/                         # Product 1 — .NET/Avalonia wallet
-│   ├── src/
-│   │   ├── Umbrella.Wallet.Core/            # pure crypto: BIP39, derivation, Monero keys
-│   │   ├── Umbrella.Wallet.Infrastructure/  # network: senders, Tor, Monero RPC, vault I/O
-│   │   └── Umbrella.Wallet.App/             # UI: Avalonia views + view-models
-│   ├── tests/                               # 77 tests, pinned to published test vectors
-│   ├── scripts/                             # fetch-tor.ps1, fetch-monero.ps1, publish-linux.sh
-│   └── installer/umbrella.iss               # Inno Setup Windows installer
-│
-├── src/                             # Product 2 — web frontend (React)
-│   ├── routes/                              # pages: index, exchange, p2p, stats, settings, legal
-│   ├── components/                          # UI + wallet sheets
-│   ├── lib/
-│   │   ├── wallet/                          # seedManager, vault, walletCore, monero, tor, coinjoin
-│   │   ├── api/                             # REST client + demo-mode implementation
-│   │   └── market/                          # price/chart helpers
-│   └── content/legal/                       # terms, privacy, agreement, rules
-│
-├── backend/                        # Product 3 — NestJS API
-│   ├── src/
-│   │   ├── auth/                            # JWT access+refresh, register/login
-│   │   ├── users/  linked-wallets/  linked-bank-accounts/
-│   │   ├── p2p/                             # offers, orders, state machine
-│   │   ├── rates/                           # price aggregation + conversion
-│   │   ├── kyc/    webhooks/                # optional KYC + signed webhooks
-│   │   ├── telegram/                        # bot + mini-app auth
-│   │   └── common/                          # crypto, env, throttler, webhook util
-│   └── prisma/schema.prisma                 # database schema
-│
-├── docs/                           # ← you are here
-└── README.md  LICENSE  DEPLOY.md
+╔══════════════════════════════════════════════════════════════════╗
+║                        USER'S DEVICE (Browser)                    ║
+║                                                                    ║
+║  ┌──────────────────────────────────────────────────────────┐    ║
+║  │  IndexedDB  (umbra-vault)                                  │    ║
+║  │  ┌──────────────────────────────────────────────────┐    │    ║
+║  │  │  seed:userId  →  { ciphertext, iv, salt, v:1 }    │    │    ║
+║  │  │  Encrypted with AES-256-GCM                        │    │    ║
+║  │  │  Key = Argon2id(userPassword, salt, 64MB, 3 iter)  │    │    ║
+║  │  └──────────────────────────────────────────────────┘    │    ║
+║  └──────────────────────────────────────────────────────────┘    ║
+║                          │ decrypt (local only)                    ║
+║  ┌───────────────────────▼──────────────────────────────────┐    ║
+║  │  wallet/walletCore.ts  (in-browser, no WASM needed)       │    ║
+║  │  • @scure/bip39  — mnemonic generate / validate           │    ║
+║  │  • @scure/bip32  — HD key derivation (BIP44 paths)        │    ║
+║  │  • @noble/curves — secp256k1, ed25519                     │    ║
+║  │  • @noble/hashes — keccak256, sha256, ripemd160           │    ║
+║  │  • Outputs: addresses only (never private key leaves)     │    ║
+║  └──────────────────────────────────┬───────────────────────┘    ║
+║                        public addr  │  only                        ║
+╚═════════════════════════════════════╪════════════════════════════╝
+                                      │  HTTPS / JWT
+                  ╔═══════════════════▼════════════════════════╗
+                  ║          UMBRA BACKEND  (NestJS)            ║
+                  ║  Auth · Users · LinkedWallets · P2P · KYC  ║
+                  ║  Rates · Cards · Webhooks · Telegram        ║
+                  ║  PostgreSQL + Redis                         ║
+                  ╚════════════════╤════════════════════════════╝
+                                   │
+              ┌────────────────────┼─────────────────────────┐
+              ▼                    ▼                          ▼
+       Monobank API        CoinGecko API            Sumsub / Veriff
+       (balance read)      (rates cache)            (KYC docs — stored
+       PrivatBank OB                                 by provider only)
 ```
 
-## Data-flow examples
+---
 
-### Desktop: "send 0.01 BTC"
+## Data flows
 
-```mermaid
-sequenceDiagram
-    participant U as User
-    participant VM as MainViewModel
-    participant S as BitcoinTransactionSender
-    participant E as Esplora explorer
-    U->>VM: enter address + amount, Confirm
-    VM->>S: PrepareSendAsync(from, to, amount)
-    S->>E: GET /address/{from}/utxo  (via Tor if on)
-    E-->>S: unspent outputs
-    S->>E: GET /fee-estimates
-    S->>S: build tx, sign locally with NBitcoin
-    S->>S: builder.Verify() must pass
-    S-->>VM: quote (amount, fee)
-    U->>VM: ConfirmSendAsync
-    VM->>S: SignAndBroadcast
-    S->>E: POST /tx  (signed bytes only)
-    E-->>S: txid
+### A. Wallet creation (fully local)
+```
+User clicks "Create wallet"
+  → walletCore.generateMnemonic(128)      // 12 words, in browser
+  → UI shows phrase for backup
+  → User confirms backup (word quiz)
+  → User sets encryption password (≥8 chars)
+  → vault.encryptSeed(mnemonic, password, userId)
+      → Argon2id KDF → 32-byte key
+      → AES-256-GCM encrypt
+      → save to IndexedDB under key "seed:{userId}"
+  → walletCore.deriveAddress(mnemonic, 'ethereum', 0)  → public address
+  → POST /wallets  { chain, address }     // only public address to server
 ```
 
-The private key is used only inside `BitcoinTransactionSender` on the device; only the finished
-signed transaction leaves.
-
-### Web: "link my MetaMask address"
-
-```mermaid
-sequenceDiagram
-    participant U as User
-    participant W as Web app
-    participant API as Backend
-    participant MM as MetaMask
-    W->>API: POST /linked-wallets/challenge
-    API-->>W: { nonce, message }  (stored in Redis, per-user, TTL, one-time)
-    W->>MM: personal_sign(message)
-    MM-->>W: signature
-    W->>API: POST /linked-wallets { chain, address, message, signature }
-    API->>API: verifyEvmPersonalSign — recover signer == address?
-    API->>API: message contains nonce? delete nonce (no replay)
-    API-->>W: linked (address stored — never a key)
+### B. Unlock (open app again)
+```
+User enters PIN / password
+  → vault.loadVault(userId) from IndexedDB
+  → vault.decryptSeed(blob, password)     // purely local
+  → addresses derived on-the-fly in memory only
+  → memory cleared on tab close / auto-lock timer
 ```
 
-Only a signature and a public address are involved. The backend proves the user controls the address
-without ever seeing its key.
+### C. P2P trade flow
+```
+Buyer opens offer → POST /p2p/orders
+  Server: creates order record, status = "created"
+  ↓
+Buyer sends fiat via bank app (outside Umbra)
+  → PATCH /p2p/orders/:id/fiat-proof  { fiatPaymentReference }
+  Server: status → "fiat_payment_confirmed"
+  ↓
+Seller sees notification (WebSocket / Telegram)
+  → Seller sends crypto from their own wallet (outside Umbra)
+  → PATCH /p2p/orders/:id/crypto-proof  { cryptoTxHash }
+  Server: status → "crypto_sent"
+  ↓
+Buyer verifies on-chain receipt
+  → PATCH /p2p/orders/:id/complete
+  Server: status → "completed"
+```
+No escrow. No custody. Only public proof hashes stored on the backend.
 
-## Why the two "wallet" halves are separate code
+### D. Rates flow (read-only, privacy-preserving)
+```
+Frontend hook useMarketRates()
+  → GET /rates/market  (backend)
+    → Redis cache check (TTL 60s)
+      → if miss: fetch CoinGecko /simple/price (server-side, no user IP leaked)
+      → store in Redis
+    → return to client
+```
 
-The desktop and web wallets implement the **same cryptography** (BIP39, Argon2id, AES-GCM) but in
-**different languages** (C# vs TypeScript) because they run in different environments. They are kept
-deliberately in sync at the spec level — same word count, same KDF parameters, same derivation paths
-— so a seed created in one can be imported into the other. They are not a shared library; each is
-tested independently against the published BIP/SLIP test vectors.
+---
+
+## Component map
+
+```
+src/
+├── routes/
+│   ├── index.tsx          ← Wallet dashboard (balances, assets, recent P2P)
+│   ├── p2p.tsx            ← P2P market, my deals, my offers
+│   ├── exchange.tsx       ← Swap / exchange (rates + create P2P offer shortcut)
+│   ├── stats.tsx          ← Portfolio analytics, sparklines
+│   ├── settings.tsx       ← Wallets, seed, KYC, 2FA, privacy, language
+│   ├── nft.tsx            ← NFT viewer (read-only)
+│   ├── help.tsx           ← FAQ
+│   └── legal/             ← Terms, Privacy, Agreement (static)
+├── components/
+│   ├── AppShell.tsx       ← Bottom nav, theme, layout wrapper
+│   ├── Welcome.tsx        ← Onboarding (cover → slides → auth form)
+│   ├── SeedOnboarding.tsx ← Generate / backup / import seed flow
+│   ├── P2pOfferSheet.tsx  ← Create / edit offer bottom sheet
+│   ├── P2pOrderSheet.tsx  ← Trade execution, status machine UI
+│   ├── ActionSheet.tsx    ← Generic bottom drawer
+│   └── wallet/            ← WalletSheets (deposit QR, withdraw form, send)
+├── lib/
+│   ├── wallet/
+│   │   ├── vault.ts       ← Argon2id + AES-GCM + IndexedDB
+│   │   ├── walletCore.ts  ← BIP39/44, address derivation, tx signing
+│   │   ├── walletConnect.ts ← WalletConnect v2, injected wallet
+│   │   └── seedManager.ts ← reveal/import/delete seed UI helpers
+│   ├── api/
+│   │   ├── client.ts      ← All API calls, typed
+│   │   ├── config.ts      ← Base URL, timeout
+│   │   ├── demo.ts        ← Demo mode stubs
+│   │   └── errors.ts      ← Error formatting
+│   ├── authStore.ts       ← Zustand session (access token in memory, refresh in cookie)
+│   ├── profileStore.ts    ← Preferences (lang, push, 2fa, kyc)
+│   ├── scrubSecrets.ts    ← Remove seed/key fields before any log
+│   └── privacyMode.ts     ← Tor mode flag, .onion detection
+
+backend/src/
+├── auth/           ← register, login, oauth (Google/Apple), refresh, logout
+├── users/          ← me, patch, delete (GDPR)
+├── linked-wallets/ ← link/unlink wallets, balance proxy
+├── linked-bank-accounts/ ← Monobank/PrivatBank OB link
+├── p2p/            ← offers CRUD, orders state machine, SSE events
+├── rates/          ← CoinGecko proxy with Redis cache
+├── kyc/            ← Sumsub/Veriff link, webhook intake
+├── cards/          ← payment token CRUD (no PAN stored)
+├── webhooks/       ← KYC + payment provider webhooks
+├── telegram/       ← bot, auth, notify
+├── redis/          ← shared Redis provider
+├── prisma/         ← PrismaService
+└── common/         ← guards, logger, env validation, privacy middleware
+```

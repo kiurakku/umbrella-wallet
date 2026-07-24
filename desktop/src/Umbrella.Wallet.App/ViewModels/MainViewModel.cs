@@ -208,6 +208,7 @@ public partial class MainViewModel : ViewModelBase
     public bool IsTabBackup => SettingsTab == "Backup";
     public bool IsTabGuide => SettingsTab == "Guide";
     public bool IsTabDanger => SettingsTab == "Danger";
+    public bool IsTabDeveloper => SettingsTab == "Developer";
 
     partial void OnSettingsTabChanged(string value)
     {
@@ -217,6 +218,10 @@ public partial class MainViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsTabBackup));
         OnPropertyChanged(nameof(IsTabGuide));
         OnPropertyChanged(nameof(IsTabDanger));
+        OnPropertyChanged(nameof(IsTabDeveloper));
+
+        // Entering the developer pane loads the saved fee config into the editable fields.
+        if (value == "Developer") LoadDeveloperFeeFields();
 
         // Leaving the backup pane must drop any revealed secret from the screen.
         if (value != "Backup")
@@ -230,6 +235,75 @@ public partial class MainViewModel : ViewModelBase
     [RelayCommand]
     private void SelectSettingsTab(string tab) => SettingsTab = tab;
 
+    // --- Developer fee (admin panel) -----------------------------------------
+    // A platform fee added on top of a send and routed to the developer's own address, per chain.
+    // Works with no backend — the config lives in a local file. The fee is ALWAYS shown in the
+    // send review before the user confirms; there is no hidden collection.
+    private readonly DeveloperFeeConfig _devFee = DeveloperFeeConfig.Load();
+
+    [ObservableProperty] private string _devFeePercent = string.Empty;
+    [ObservableProperty] private string _devFeeAddressBtc = string.Empty;
+    [ObservableProperty] private string _devFeeAddressLtc = string.Empty;
+    [ObservableProperty] private string _devFeeAddressEth = string.Empty;
+    [ObservableProperty] private string _devFeeAddressSol = string.Empty;
+    [ObservableProperty] private string _devFeeAddressTrx = string.Empty;
+    [ObservableProperty] private string _devFeeAddressUsdt = string.Empty;
+    [ObservableProperty] private string _devFeeAddressXmr = string.Empty;
+    [ObservableProperty] private string _devFeeStatus = string.Empty;
+
+    private void LoadDeveloperFeeFields()
+    {
+        DevFeePercent = (_devFee.EffectiveBps / 100m).ToString("0.##", CultureInfo.InvariantCulture);
+        DevFeeAddressBtc = _devFee.AddressFor("BTC") ?? string.Empty;
+        DevFeeAddressLtc = _devFee.AddressFor("LTC") ?? string.Empty;
+        DevFeeAddressEth = _devFee.AddressFor("ETH") ?? string.Empty;
+        DevFeeAddressSol = _devFee.AddressFor("SOL") ?? string.Empty;
+        DevFeeAddressTrx = _devFee.AddressFor("TRX") ?? string.Empty;
+        DevFeeAddressUsdt = _devFee.AddressFor("USDT") ?? string.Empty;
+        DevFeeAddressXmr = _devFee.AddressFor("XMR") ?? string.Empty;
+        DevFeeStatus = string.Empty;
+    }
+
+    [RelayCommand]
+    private void SaveDeveloperFee()
+    {
+        // Percent → basis points, clamped so a fat-fingered value can never quote a wild fee.
+        var raw = DevFeePercent.Trim().Replace(',', '.');
+        if (!decimal.TryParse(raw, NumberStyles.Any, CultureInfo.InvariantCulture, out var percent) || percent < 0)
+        {
+            DevFeeStatus = "Enter the fee as a percentage, e.g. 0.5";
+            return;
+        }
+
+        var bps = (int)Math.Round(percent * 100m);
+        if (bps > DeveloperFeeConfig.MaxBps)
+        {
+            DevFeeStatus = $"Capped at {DeveloperFeeConfig.MaxBps / 100m:0.##}% — using that.";
+            bps = DeveloperFeeConfig.MaxBps;
+        }
+
+        _devFee.FeeBps = bps;
+        SetDevAddress("BTC", DevFeeAddressBtc);
+        SetDevAddress("LTC", DevFeeAddressLtc);
+        SetDevAddress("ETH", DevFeeAddressEth);
+        SetDevAddress("SOL", DevFeeAddressSol);
+        SetDevAddress("TRX", DevFeeAddressTrx);
+        SetDevAddress("USDT", DevFeeAddressUsdt);
+        SetDevAddress("XMR", DevFeeAddressXmr);
+        _devFee.Save();
+
+        DevFeeStatus = bps == 0
+            ? "Saved. Fee is off (0%) — no fee will be taken."
+            : $"Saved. {bps / 100m:0.##}% is taken on sends for chains with an address set (routed: BTC, LTC, XMR).";
+    }
+
+    private void SetDevAddress(string symbol, string value)
+    {
+        var trimmed = value.Trim();
+        if (string.IsNullOrEmpty(trimmed)) _devFee.Addresses.Remove(symbol);
+        else _devFee.Addresses[symbol] = trimmed;
+    }
+
     // ETH send flow: quote → explicit confirm → broadcast result.
     [ObservableProperty] private bool _hasSendQuote;
     [ObservableProperty] private string _sendQuoteSummary = string.Empty;
@@ -242,6 +316,9 @@ public partial class MainViewModel : ViewModelBase
     private string _sendSymbol = "ETH";
     private decimal _moneroAmount;
     private string _moneroTo = string.Empty;
+    // Validated developer fee for the pending XMR send (second destination in the same tx).
+    private string? _moneroFeeTo;
+    private decimal _moneroFeeAmount;
 
     // Monero wallet service (bundled monero-wallet-rpc) — real balance and sending.
     [ObservableProperty] private bool _moneroEnabled;
@@ -350,6 +427,26 @@ public partial class MainViewModel : ViewModelBase
     /// <summary>Every coin the wallet accepts, with live price — readable while locked.</summary>
     public ObservableCollection<MarketRowViewModel> Market { get; } = [];
 
+    /// <summary>Product news, shown in the News section. Curated, offline; no network needed.</summary>
+    public ObservableCollection<NewsItemViewModel> News { get; } =
+    [
+        new("UPDATE", "Transparent 0.5% swap fee on the web exchange",
+            "Currency conversions now include a small, clearly-labelled spread, always shown before you confirm. There is no separate on-chain fee, so your network cost is unchanged.",
+            "2026-07-24"),
+        new("SECURITY", "Tor is built into the wallet",
+            "One switch in Settings routes all wallet traffic through the Tor network — no separate install. Your IP stays out of your finances.",
+            "2026-07-20"),
+        new("UPDATE", "Full Monero wallet, powered by Monero's own engine",
+            "XMR is a first-class coin here: real private balance and sending, with the Monero daemon running locally. Your keys never leave this device.",
+            "2026-07-18"),
+        new("GUIDE", "Why a USDT (TRC-20) transfer can cost several dollars",
+            "That fee is TRON's energy cost, not ours. A fresh, unstaked TRON account burns TRX for every USDT transfer. Stake TRX for energy, or use USDT on a cheaper network.",
+            "2026-07-15"),
+        new("UPDATE", "Ten themes, six languages, movable navigation",
+            "Make the wallet yours: pick from ten colour themes, six interface languages, and park the navigation panel on any edge — all in Settings.",
+            "2026-07-12"),
+    ];
+
     /// <summary>
     /// Assets that can actually be sent, as a pick-list. Typing a ticker by hand is how people
     /// send on the wrong network, so the UI only offers what this build can really broadcast.
@@ -385,6 +482,7 @@ public partial class MainViewModel : ViewModelBase
     public bool IsSettings => ActiveSection == "Settings";
     public bool IsConnect => ActiveSection == "Connect";
     public bool IsMarket => ActiveSection == "Market";
+    public bool IsNews => ActiveSection == "News";
 
     // --- Onboarding state machine: each is a full-screen page, sidebar only in the workspace ---
     public bool IsWelcomeStage => !HasVault && SetupStage == "Welcome";
@@ -502,6 +600,7 @@ public partial class MainViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsSettings));
         OnPropertyChanged(nameof(IsConnect));
         OnPropertyChanged(nameof(IsMarket));
+        OnPropertyChanged(nameof(IsNews));
         OnPropertyChanged(nameof(IsWelcomeStage));
         OnPropertyChanged(nameof(IsCreateStage));
         OnPropertyChanged(nameof(IsImportStage));
@@ -1694,9 +1793,24 @@ public partial class MainViewModel : ViewModelBase
             _sendSymbol = "XMR";
             _moneroAmount = amount;
             _moneroTo = SendTo.Trim();
+
+            // Developer fee as a second destination. Only kept if its address is a valid Monero
+            // address — otherwise the whole transfer would fail, so the user's send comes first.
+            _moneroFeeTo = null;
+            _moneroFeeAmount = 0m;
+            var xmrFee = _devFee.QuoteFee("XMR", amount);
+            if (xmrFee is { } f && MoneroKeys.TryDecodeAddress(f.Address, out _, out _, out _))
+            {
+                _moneroFeeTo = f.Address;
+                _moneroFeeAmount = f.Amount;
+            }
+
             HasSendQuote = true;
             SendQuoteSummary = $"Send {Fmt(amount)} XMR  →  {Shorten(_moneroTo)}";
-            SendQuoteFee = "Fee is set by the Monero network at broadcast (priority: normal).";
+            SendQuoteFee = _moneroFeeTo is not null
+                ? $"Network fee is set by Monero at broadcast · service fee {_devFee.FeePercent:0.##}% ≈ " +
+                  $"{Fmt(_moneroFeeAmount)} XMR to the developer (same transaction)."
+                : "Fee is set by the Monero network at broadcast (priority: normal).";
             StatusMessage = "Review the transfer, then confirm to broadcast";
             return;
         }
@@ -1764,12 +1878,17 @@ public partial class MainViewModel : ViewModelBase
                 case "BTC":
                 case "LTC":
                 {
-                    var (quote, error) = await _btcSender.PrepareAsync(chain, from.Address, SendTo.Trim(), amount);
+                    var devFee = _devFee.QuoteFee(chain, amount);
+                    var (quote, error) = await _btcSender.PrepareAsync(
+                        chain, from.Address, SendTo.Trim(), amount, devFee?.Address, devFee?.Amount ?? 0m);
                     if (quote is null) { SendError = error ?? "Could not prepare the transaction."; return; }
                     _btcQuote = quote;
                     SendQuoteSummary = $"Send {Fmt(quote.Amount)} {chain}  →  {quote.To}";
-                    SendQuoteFee =
-                        $"Network fee ≈ {Fmt(quote.FeeAmount)} {chain} · {quote.InputCount} input(s) · change returns to you";
+                    // Disclosure is driven off the quote (the source of truth for what is actually sent).
+                    SendQuoteFee = quote.DevFeeSat > 0
+                        ? $"Network fee ≈ {Fmt(quote.FeeAmount)} {chain} · service fee {_devFee.FeePercent:0.##}% ≈ " +
+                          $"{Fmt(quote.DevFeeSat / 100_000_000m)} {chain} to the developer · change returns to you"
+                        : $"Network fee ≈ {Fmt(quote.FeeAmount)} {chain} · {quote.InputCount} input(s) · change returns to you";
                     break;
                 }
 
@@ -1873,7 +1992,8 @@ public partial class MainViewModel : ViewModelBase
                 case "XMR":
                 {
                     // monero-wallet-rpc builds, signs and relays the RingCT transaction itself.
-                    var result = await _monero.SendAsync(_moneroTo, _moneroAmount);
+                    // The developer fee (if any) rides along as a second destination — disclosed above.
+                    var result = await _monero.SendAsync(_moneroTo, _moneroAmount, _moneroFeeTo, _moneroFeeAmount);
                     await FinishSendAsync(result.Ok, result.TxHash, result.Error,
                         "XMR", _moneroAmount, _moneroTo,
                         result.TxHash is null ? "" : $"xmrchain.net/tx/{result.TxHash}");
@@ -1881,6 +2001,8 @@ public partial class MainViewModel : ViewModelBase
                     {
                         _moneroAmount = 0;
                         _moneroTo = string.Empty;
+                        _moneroFeeTo = null;
+                        _moneroFeeAmount = 0m;
                         await RefreshMoneroAsync();
                     }
 
@@ -2344,8 +2466,20 @@ public sealed record ActivityRowViewModel(
     string Counterparty,
     string When);
 
+/// <summary>One entry in the News section: a tagged, dated product note.</summary>
+public sealed record NewsItemViewModel(string Tag, string Title, string Body, string Date)
+{
+    /// <summary>Tag accent colour, so update/security/guide read at a glance.</summary>
+    public string TagColor => Tag switch
+    {
+        "SECURITY" => "#E7CA83",
+        "GUIDE" => "#5AC8B4",
+        _ => "#8A5FD6",
+    };
+}
+
 /// <summary>
-/// One coin in the market list. <see cref="Accepts"/> states plainly whether this wallet can
+/// One coin in the market list. <see cref="IsSupported"/> states plainly whether this wallet can
 /// actually hold the coin today — a "Planned" coin has no address adapter, so claiming
 /// otherwise would invite someone to send funds nowhere.
 /// </summary>

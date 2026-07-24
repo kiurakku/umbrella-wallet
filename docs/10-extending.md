@@ -1,91 +1,421 @@
-# 10 · Extending the project
+# 10 — Extending Umbra
 
-Safe, step-by-step recipes for the changes you'll actually make. Follow the existing patterns — they
-exist for good reasons (usually a bug that was fixed).
+## Add a new blockchain
 
-## Add a coin (desktop)
+### Requirement
+- Must support BIP39/BIP44 (HD wallets) OR SLIP-0010 (ed25519 chains like Solana)
+- Must have a way to derive address from seed without making RPC calls
+- Must have public block explorer or indexer API for balance queries
 
-⚠️ **The golden rule:** never ship a coin whose address derivation isn't verified against a
-**published test vector**. A plausible-looking wrong address loses funds forever. This is why TON and
-Cardano are disabled.
+### Example: Adding Polygon (EVM-compatible, easy)
 
-1. **Add to the chain enum** — `Core/Chains/ChainId.cs`.
-2. **Derive the address** — add a case in `HdAddressDeriver`, using the coin's real derivation path
-   and address format.
-3. **Write a test first** — in `tests/`, assert the address derived from the canonical test mnemonic
-   equals the value published by the coin's own reference implementation. If you can't find such a
-   vector, **stop** — mark it `🚧` disabled like TON/Cardano.
-4. **Map the ticker** — `SymbolFor()` and `ParseChain()` in `MainViewModel` (accept ticker,
-   token-standard name, and full coin name; a missing map drops the coin silently).
-5. **Read balances** — add to `PublicChainClients` / `PublicChainBalanceClient`.
-6. **Add prices** — `CoinIds` and `BinancePairs` tables in `PublicChainClients`.
-7. **Sending (optional, separate step)** — new `XxxTransactionSender`, gated by a test that proves the
-   signing key matches the displayed address.
+**1. Update `walletCore.ts`:**
+```typescript
+// src/lib/wallet/walletCore.ts
 
-## Add a language (desktop)
+export type WalletChain =
+  | "ethereum"
+  | "bitcoin"
+  | "solana"
+  | "tron"
+  | "polygon";  // ← ADD THIS
 
-1. `Localization.cs` → add a `new("xx", "Native name")` to `Languages`.
-2. Add a `["xx"] = new() { … }` block with every key (missing keys fall back to English, so you can
-   ship partial and fill in later).
-3. That's it — the picker and live switching already work.
+export const DERIVABLE_CHAINS: WalletChain[] = [
+  "ethereum",
+  "bitcoin",
+  "solana",
+  "tron",
+  "polygon",  // ← ADD THIS
+];
 
-## Add a theme (desktop)
+export function deriveAddress(mnemonic: string, chain: WalletChain, index = 0): string {
+  const seed = seedFromMnemonic(mnemonic);
+  const root = HDKey.fromMasterSeed(seed);
 
-1. `Theming.cs` → add `new("id", "Display name")` to `Themes`.
-2. Add an `["id"] = [ …hex values… ]` palette with **every** key in `Keys` (the count must match, or
-   it throws at apply).
-3. If it should have a gradient background, handle it in `GradientBackground(id)` and the
-   `id is "gradient" or …` check in `Apply`.
-4. Never theme the QR plate or danger-reds.
+  switch (chain) {
+    case "polygon": {  // ← ADD THIS CASE
+      // Polygon uses same derivation as Ethereum (EVM)
+      const child = root.derive(`m/44'/60'/0'/0/${index}`);
+      if (!child.publicKey) throw new Error("Failed to derive Polygon key");
+      return ethAddressFromPublicKey(child.publicKey);
+    }
+    // ... rest of cases
+  }
+}
+```
 
-## Add an exchange (desktop, read-only)
+**2. Update backend `linked-wallets.service.ts`:**
+```typescript
+// backend/src/linked-wallets/linked-wallets.service.ts
 
-1. `ExchangeConnectors.cs`:
-   - add the name to `Supported`,
-   - add a `FetchXxxAsync` that calls only the venue's **balance** endpoint with its signing scheme,
-     and route it in `FetchBalancesAsync`,
-   - set `RequiresPassphrase` / `RequiresSecret` and a `KeyHint`.
-2. **Read-only only.** Do not add any trading or withdrawal call — the project's guarantee is that no
-   such code exists.
-3. A test asserts every `Supported` venue has a key hint and correct passphrase/secret flags.
+const CHAIN_INDEXERS: Record<string, string> = {
+  ethereum: "https://api.etherscan.io/api",
+  polygon: "https://api.polygonscan.com/api",  // ← ADD THIS
+  // ...
+};
 
-## Add a page (web frontend)
+// Fetch balance method — reuse same RPC logic as Ethereum
+async getBalance(address: string, chain: string): Promise<{ native: string; tokens: Token[] }> {
+  if (chain === "polygon") {
+    // Use ethers.js JsonRpcProvider with Polygon RPC
+    const provider = new ethers.JsonRpcProvider("https://polygon-rpc.com");
+    const balance = await provider.getBalance(address);
+    return { native: ethers.formatEther(balance), tokens: [] };
+  }
+  // ...
+}
+```
 
-1. Create `src/routes/yourpage.tsx` (TanStack Start file-based routing picks it up).
-2. Use TanStack Query for any backend data; keep wallet crypto in `lib/wallet/` (never send the seed).
-3. Add nav if it should be reachable from the shell.
+**3. Update UI asset colors (optional):**
+```typescript
+// src/hooks/usePortfolio.ts — add color mapping
 
-## Add a backend endpoint
+const ASSET_COLORS: Record<string, string> = {
+  BTC: "oklch(0.75 0.18 60)",    // orange
+  ETH: "oklch(0.68 0.14 265)",   // purple
+  MATIC: "oklch(0.68 0.16 290)", // ← ADD THIS (purple-ish for Polygon)
+  // ...
+};
+```
 
-1. Create/extend a module under `backend/src/<feature>/` (controller + service + DTOs).
-2. Import it in `app.module.ts`.
-3. **Never** accept a private key or mnemonic. If you're tempted to, the design is wrong — the
-   operation belongs in the client.
-4. Throttle sensitive endpoints (`@Throttle`), validate DTOs, and use Prisma (no raw SQL).
-5. Add a test if it has non-trivial logic (see `test/p2p-transitions.test.ts` as a model).
+Done. Polygon addresses now derive locally, balances fetch from PolygonScan API, and appear in portfolio.
 
-## Add / change a fee (financial)
+---
 
-Read [07-financial.md](07-financial.md) first. In brief:
+## Add Monero (different pattern — NOT BIP39)
 
-- **Swap fee** → edit `rates.service.convert()` to apply a disclosed percentage (recommended path).
-- **Send fee** → add an output in the relevant `*TransactionSender` (raises network fee, visible
-  on-chain).
-- The license requires the fee be **disclosed in the UI where it applies** — wire a review-screen
-  line that shows it before the user confirms.
+Monero uses its own 25-word mnemonic (not BIP39). You cannot derive Monero addresses from the same seed as BIP39 wallets.
 
-## Bump the version
+### Approach: Separate vault record
 
-Change all three in sync, or the footer/installer will disagree:
+**1. Generate Monero wallet (separate flow):**
+```typescript
+// src/lib/wallet/moneroWallet.ts (new file)
+import * as monerojs from "monero-javascript";
 
-1. `desktop/src/Umbrella.Wallet.App/Umbrella.Wallet.App.csproj` → `<Version>`.
-2. `desktop/installer/umbrella.iss` → `#define AppVersion`.
-3. The status-bar text in `MainWindow.axaml` and the badge in `README.md`.
+export async function generateMoneroWallet(): Promise<{
+  mnemonic: string;      // 25 words
+  address: string;       // primary address
+  viewKey: string;       // for balance scanning
+  spendKey: string;      // for sending (encrypt this!)
+}> {
+  const wallet = await monerojs.createWalletFull({
+    networkType: "mainnet",
+    seed: undefined,  // generates new
+  });
+  return {
+    mnemonic: await wallet.getMnemonic(),
+    address: await wallet.getPrimaryAddress(),
+    viewKey: (await wallet.getPrivateViewKey()).toString("hex"),
+    spendKey: (await wallet.getPrivateSpendKey()).toString("hex"),  // ENCRYPT!
+  };
+}
+```
 
-## Before you commit
+**2. Encrypt and store separately:**
+```typescript
+// IndexedDB key: "seed:monero:{userId}"
+const blob = await vault.encryptSeed(
+  JSON.stringify({ mnemonic, spendKey, viewKey }),
+  password,
+  userId
+);
+await idbPut(`seed:monero:${userId}`, blob);
+```
 
-- Desktop: `dotnet test` green.
-- Web: `npx tsc --noEmit`, `npm run build`, `npm audit`.
-- Backend: `npm test`, `npm run build`.
-- Never commit `.env`, secrets, or the `tor/` / `monero/` binaries (all gitignored).
-- Never `git push --force`.
+**3. Balance scanning:**
+Monero balance requires connecting to a Monero daemon and scanning with the ViewKey. Options:
+- **Local:** Run `monerod` + `monero-wallet-rpc` on user's machine (desktop app only)
+- **Remote:** Connect to public node (e.g., `xmr-node.cakewallet.com:18081`), but this leaks view key to that node (privacy trade-off)
+
+**4. Backend:**
+No backend storage — Monero wallet lives entirely client-side. Backend API is not involved.
+
+---
+
+## Add a new language
+
+**1. Add translation file:**
+```typescript
+// src/lib/i18n.ts
+
+export const SUPPORTED_LANGS = ["uk", "en", "ru", "pl"];  // ← ADD "pl"
+
+export const translations: Record<Lang, Record<string, string>> = {
+  uk: { greeting: "Привіт", ... },
+  en: { greeting: "Hello", ... },
+  ru: { greeting: "Привет", ... },
+  pl: { greeting: "Cześć", ... },  // ← ADD THIS
+};
+```
+
+**2. Update backend enum:**
+```typescript
+// backend/src/users/dto/update-user.dto.ts
+
+@IsIn(["uk", "en", "ru", "pl"])  // ← ADD "pl"
+@IsOptional()
+lang?: string;
+```
+
+**3. Update UI selector:**
+```typescript
+// src/routes/settings.tsx — language sheet
+
+{["uk", "en", "ru", "pl"].map((l) => (  // ← ADD "pl"
+  <button key={l} onClick={() => setProfile({ lang: l })}>
+    {langLabel(l)}
+  </button>
+))}
+```
+
+**4. Add flag/label:**
+```typescript
+// src/lib/i18n.ts
+
+export function langLabel(l: Lang): string {
+  const labels: Record<Lang, string> = {
+    uk: "🇺🇦 Українська",
+    en: "🇬🇧 English",
+    ru: "🇷🇺 Русский",
+    pl: "🇵🇱 Polski",  // ← ADD THIS
+  };
+  return labels[l];
+}
+```
+
+Done. User can now select Polish in Settings → Language.
+
+---
+
+## Add a new theme (custom color scheme)
+
+**1. Define new theme in `styles.css`:**
+```css
+/* src/styles.css */
+
+:root[data-theme="cyberpunk"] {
+  --primary: 310 100% 50%;           /* magenta */
+  --secondary: 280 80% 30%;          /* deep purple */
+  --accent: 180 100% 50%;            /* cyan */
+  --background: 280 20% 8%;          /* dark purple */
+  --foreground: 280 5% 95%;          /* light grey */
+  /* ... rest of tokens */
+}
+```
+
+**2. Add theme switcher:**
+```typescript
+// src/components/ThemeSwitcher.tsx (new)
+
+const THEMES = ["light", "dark", "cyberpunk"];
+
+export function ThemeSwitcher() {
+  const [theme, setTheme] = useState(localStorage.getItem("theme") || "dark");
+
+  const applyTheme = (t: string) => {
+    document.documentElement.dataset.theme = t;
+    localStorage.setItem("theme", t);
+    setTheme(t);
+  };
+
+  return (
+    <select value={theme} onChange={(e) => applyTheme(e.target.value)}>
+      {THEMES.map((t) => <option key={t} value={t}>{t}</option>)}
+    </select>
+  );
+}
+```
+
+**3. Load on app start:**
+```typescript
+// src/routes/__root.tsx — add in useEffect
+
+useEffect(() => {
+  const theme = localStorage.getItem("theme") || "dark";
+  document.documentElement.dataset.theme = theme;
+}, []);
+```
+
+---
+
+## Add swap spread revenue model
+
+**As described in `07-financial.md`:**
+
+```typescript
+// backend/src/rates/rates.service.ts
+
+const PLATFORM_SPREAD_BPS = 50;  // 0.5% = 50 basis points
+// Change to 100 for 1%, 25 for 0.25%, 10 for 0.1%
+
+async getExchangeRate(from: string, to: string): Promise<{
+  rate: number;
+  spread: string;
+}> {
+  const market = await this.fetchCoinGeckoRate(from, to);
+  const adjusted = market * (1 - PLATFORM_SPREAD_BPS / 10_000);
+  return {
+    rate: adjusted,
+    spread: (PLATFORM_SPREAD_BPS / 100) + "%",
+  };
+}
+```
+
+**Frontend display:**
+```tsx
+// src/routes/exchange.tsx
+
+<div className="text-xs text-muted-foreground">
+  Market rate: {marketRate} {to}/{from}
+</div>
+<div className="text-sm font-semibold">
+  You receive: {adjustedRate * amount} {to}
+</div>
+<div className="text-xs text-primary">
+  Includes 0.5% service fee
+</div>
+```
+
+---
+
+## Add P2P commission
+
+```prisma
+// backend/prisma/schema.prisma — add to P2pOffer
+
+model P2pOffer {
+  // ... existing fields
+  platformFeePercent Decimal @default(0.1) @db.Decimal(5, 3)  // 0.1%
+}
+```
+
+```typescript
+// backend/src/p2p/p2p.service.ts — calculate on order completion
+
+async completeOrder(orderId: string): Promise<P2pOrder> {
+  const order = await this.prisma.p2pOrder.findUnique({
+    where: { id: orderId },
+    include: { offer: true },
+  });
+
+  const feePercent = order.offer.platformFeePercent.toNumber();
+  const feeAmount = order.amount.toNumber() * feePercent / 100;
+
+  // Log fee (virtual — no on-chain transaction)
+  console.log(`Order ${orderId} completed. Platform fee: ${feeAmount} ${order.offer.asset}`);
+
+  // Update order status
+  return this.prisma.p2pOrder.update({
+    where: { id: orderId },
+    data: { status: "completed" },
+  });
+}
+```
+
+---
+
+## Add a new exchange integration (e.g., Binance API for real swaps)
+
+Currently, swap shows quote only — user signs tx manually. To execute trades through an exchange:
+
+**1. Add Binance client:**
+```typescript
+// backend/src/exchange/binance.service.ts (new)
+
+import { Spot } from "@binance/connector";
+
+export class BinanceService {
+  private client: Spot;
+
+  constructor() {
+    this.client = new Spot(
+      process.env.BINANCE_API_KEY,
+      process.env.BINANCE_API_SECRET
+    );
+  }
+
+  async marketBuy(symbol: string, amount: number): Promise<{ orderId: string }> {
+    const { data } = await this.client.newOrder(symbol, "BUY", "MARKET", {
+      quoteOrderQty: amount,
+    });
+    return { orderId: data.orderId };
+  }
+}
+```
+
+**2. Frontend: POST /exchange/execute instead of manual tx signing.**
+
+**⚠️ Legal warning:** Executing trades on behalf of users makes Umbra a **custodian** (you hold their API keys). This voids the non-custodial model and triggers MSB/VASP licensing. Only do this if you're willing to get licensed.
+
+---
+
+## Add WebAuthn / Passkeys for biometric unlock
+
+```typescript
+// src/lib/wallet/webauthn.ts (new)
+
+export async function createPasskey(userId: string): Promise<void> {
+  const challenge = crypto.getRandomValues(new Uint8Array(32));
+  const credential = await navigator.credentials.create({
+    publicKey: {
+      challenge,
+      rp: { name: "Umbra Wallet" },
+      user: { id: Uint8Array.from(userId, c => c.charCodeAt(0)), name: userId, displayName: "User" },
+      pubKeyCredParams: [{ type: "public-key", alg: -7 }],  // ES256
+      authenticatorSelection: { userVerification: "required" },
+    },
+  });
+  // Store credential.id in localStorage: webauthnCredId:{userId}
+  localStorage.setItem(`webauthnCredId:${userId}`, (credential as any).id);
+}
+
+export async function unlockWithPasskey(userId: string): Promise<boolean> {
+  const credId = localStorage.getItem(`webauthnCredId:${userId}`);
+  if (!credId) return false;
+
+  const challenge = crypto.getRandomValues(new Uint8Array(32));
+  try {
+    await navigator.credentials.get({
+      publicKey: {
+        challenge,
+        allowCredentials: [{ type: "public-key", id: Uint8Array.from(atob(credId), c => c.charCodeAt(0)) }],
+      },
+    });
+    return true;  // Face ID / Touch ID succeeded
+  } catch {
+    return false;
+  }
+}
+```
+
+Use in unlock flow as alternative to password.
+
+---
+
+## Add KYC enforcement on P2P
+
+```typescript
+// backend/src/p2p/p2p.guard.ts (new)
+
+import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
+
+@Injectable()
+export class KycRequiredGuard implements CanActivate {
+  constructor(private prisma: PrismaService) {}
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const req = context.switchToHttp().getRequest();
+    const userId = req.user.sub;
+
+    const kyc = await this.prisma.kycRecord.findUnique({ where: { userId } });
+    if (kyc?.status !== "approved") {
+      throw new Error("KYC verification required for P2P deals above $500");
+    }
+    return true;
+  }
+}
+```
+
+Apply to `POST /p2p/orders` and `POST /p2p/offers`.

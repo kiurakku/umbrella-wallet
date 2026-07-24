@@ -3,6 +3,7 @@ import { AppShell } from "@/components/AppShell";
 import { ArrowDownUp, TrendingUp, TrendingDown } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useConvert, useMarketPrices } from "@/lib/market/prices";
+import { getFeeBps } from "@/lib/platformFee";
 
 export const Route = createFileRoute("/exchange")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -41,8 +42,16 @@ function ExchangePage() {
     }).filter((c) => c.usd > 0 || isLoading);
   }, [prices, isLoading]);
 
-  const received = convert.data?.result;
-  const rate = convert.data?.rate ?? 0;
+  // The platform fee is configured locally (admin panel) so it works with no server. It drives
+  // the disclosed spread here; converting an asset to itself is never a swap, so no fee applies.
+  const sameAsset = from.toUpperCase() === to.toUpperCase();
+  const feeBps = sameAsset ? 0 : getFeeBps();
+  const feeFactor = 1 - feeBps / 10_000;
+  const marketRate = convert.data?.marketRate ?? 0;
+  const marketResult = convert.data?.marketResult ?? 0;
+  const received = convert.data ? marketResult * feeFactor : undefined;
+  const rate = marketRate * feeFactor;
+  const feeAmount = convert.data ? Math.max(marketResult - (received ?? 0), 0) : 0;
 
   const goToP2p = () => {
     void navigate({
@@ -176,24 +185,24 @@ function ExchangePage() {
 
         {/* Fee disclosure — always shown before the user acts. The spread is baked into the
             quoted rate; there is no separate on-chain fee. Required by the license and by trust. */}
-        {(convert.data?.spreadBps ?? 0) > 0 && received != null && (
+        {feeBps > 0 && received != null && (
           <div className="rounded-2xl border border-border/60 bg-secondary/30 p-3 mt-2 text-xs space-y-1">
             <div className="flex justify-between text-muted-foreground">
               <span>Market rate</span>
               <span className="tabular-nums">
-                1 {from} ≈ {(convert.data?.marketRate ?? 0).toFixed(6)} {to}
+                1 {from} ≈ {marketRate.toFixed(6)} {to}
               </span>
             </div>
             <div className="flex justify-between text-muted-foreground">
               <span>Service fee</span>
               <span className="text-foreground/80">
-                {((convert.data?.spreadBps ?? 0) / 100).toFixed(2)}% · included in rate
+                {(feeBps / 100).toFixed(2)}% · included in rate
               </span>
             </div>
             <div className="flex justify-between text-muted-foreground">
               <span>Fee amount</span>
               <span className="tabular-nums">
-                ≈ {(convert.data?.fee ?? 0).toLocaleString("en-US", { maximumFractionDigits: 8 })} {to}
+                ≈ {feeAmount.toLocaleString("en-US", { maximumFractionDigits: 8 })} {to}
               </span>
             </div>
           </div>

@@ -1,137 +1,202 @@
-# 7 · Financial part — fees, sending, where money moves
+# 07 — Financial Model & Fees
 
-This is the money doc. It describes **exactly what happens to funds and fees today**, why the TRC-20
-transfer you saw cost so much, and — for a future decision — **where a platform fee could be added**
-and what is and isn't realistic about it.
+## Current state: zero platform fee by default
 
-## 1. The current fee model (today, in the code)
+Umbra ships with **zero markup** by default. Users pay only network (miner/validator) fees. There are no subscriptions and no hidden charges. A developer fee **can** be switched on per install (see below); until it is, nothing is added.
 
-**There is no Umbrella platform fee anywhere.** Confirmed in the code:
+This is intentional for launch — build trust first. But the platform must be sustainable.
 
-- Desktop senders add no extra output and no cut — they build a normal transaction.
-- Backend `rates.service.ts` returns `fee: 0` on every conversion quote.
-- Read-only exchange links can't move funds at all, so they charge nothing.
+---
 
-When a user sends, they pay **only the blockchain's own network fee**. That fee goes to miners /
-validators / the network — never to us. So right now the wallet earns nothing per transaction.
+## Implemented: developer fee on send + admin panel
 
-## 2. Network fees per chain (what the user actually pays)
+Both clients ship a **disclosed developer fee on sends**, configurable with no backend:
 
-| Coin | Fee mechanism | Typical cost | Set in |
-|------|---------------|-------------|--------|
-| BTC / LTC | sat/vB × tx size | a few cents – a $ | `BitcoinTransactionSender` — ~6-block target, floor 1 sat/vB |
-| ETH | gas × gas price | varies with congestion | `EthTransactionSender` — `eth_gasPrice` × 1.05, 21000 gas |
-| SOL | flat lamports | fractions of a cent | `SolanaTransactionSender` |
-| DOGE | tiny | cents | — |
-| TRX (native) | bandwidth | ~0 if you have free bandwidth | `TronTransactionSender` |
-| **USDT (TRC-20)** | **energy (burns TRX)** | **often $3–$15** | `TronTransactionSender`, `FeeLimitSun = 40 TRX` |
-| XMR | dynamic, private | cents | Monero itself |
+- **Config** — fee percentage (basis points, capped at **2%**) plus a receiving address **per chain**, stored in a local file (`developer-fee.json` on desktop) / `localStorage` on web. Default is **0% / no address** → the wallet behaves as zero-fee until a developer sets it. To ship one fixed fee to every install, bake the defaults in before building (`DeveloperFeeConfig` on desktop, `PLATFORM_SPREAD_BPS` + client defaults on web).
+- **Admin panel** — desktop: *Settings → Developer*; web: the `/admin` route behind a local PIN. Sets the percentage and per-chain address.
+- **Disclosure (required)** — the fee is **always shown in the send review before the user confirms**, exactly like the network fee. `07-financial.md` (below) and consumer-protection law require this; a hidden skim is not built or supported.
+- **Routing** — the fee is only taken on chains where the send path actually routes it, so the disclosure can never claim a fee the wallet does not collect:
+  - **Routed today (desktop):** BTC, LTC (extra output in the same transaction — one network fee), and XMR (second `destinations` entry in the same RingCT transfer). A fee address that fails validation is dropped, so a misconfiguration never blocks the user's send.
+  - **Configurable, routing pending:** ETH, SOL, TRX, USDT-TRC20 — deferred because a `%` fee via a second transaction is uneconomic (ETH gas, TRON energy) or needs a change to pinned transaction-serialization (SOL). Web has no on-chain send at all, so on web the percentage only drives the disclosed Exchange quote.
 
-## 3. Why the TRC-20 transfer cost ~$8.5 for $1 (this is the thing you noticed)
+**Trade-off (see "Anonymity and fee collection" below):** an on-chain fee address is chain-analysis visible, unlike the swap-spread option. This was a deliberate product choice to make the fee collectible with **no server**; the spread model needs a market-maker/backend to realise the revenue.
 
-This is **TRON's economics, not our fee.** Here is the full picture:
+---
 
-- On TRON, a **USDT (TRC-20) transfer is a smart-contract call**, not a plain transfer. Contract
-  calls consume **Energy**.
-- Energy is obtained by **staking (freezing) TRX**. If your wallet has **not staked TRX**, TRON
-  **burns TRX** from your balance to pay for the energy instead.
-- A USDT transfer needs roughly **13,000–65,000 energy** depending on whether the *recipient* already
-  holds USDT:
-  - recipient already has USDT → ~13k energy → burns ~13 TRX,
-  - recipient's USDT balance is empty (first time) → ~29k+ energy → burns ~27–30 TRX.
-- At ~$0.28–$0.30 per TRX, that is **~$4 to ~$9** — exactly the "$8.5" you saw. It is the same on any
-  wallet; a fresh, unstaked TRON account always pays this.
-- Our code sets `FeeLimitSun = 40_000_000` (40 TRX) as the **maximum** it will let the network burn.
-  Unused energy is not charged, but a fresh account with an empty-USDT recipient really can burn most
-  of it.
+## Why TRC-20 (USDT on Tron) is expensive
 
-**So the fee has nothing to do with the $1 you're moving** — TRON charges per *computation*, not per
-*amount*. Moving $1 or $10,000 of USDT costs the same energy.
+This is **not** Umbra's fee and **not** CryptoBot's fee. It is the Tron network's economics:
 
-### What can genuinely reduce it (legitimately)
+### How Tron fees work
 
-1. **Stake TRX for energy** on the sending account — then transfers cost ~0 TRX. This is the real
-   fix TRON intends. Umbrella could offer a "stake for energy" helper.
-2. **Send to a recipient that already holds USDT** — roughly halves the burn. Not always in the
-   user's control.
-3. **Lower `FeeLimitSun`** — but if set below the real energy cost, the transfer simply **fails**
-   (reverts) and TRON keeps the burned bandwidth. This is a footgun, not a saving.
-4. **Show the estimated fee before sending** — TronGrid can estimate energy; surfacing "~27 TRX
-   (~$8) network fee" on the review screen so the user isn't surprised. **This is the honest,
-   recommended improvement** and is a UI/estimation change, not a way to make TRON cheaper.
+Tron smart contract calls (like USDT TRC-20 transfers) consume **Energy**. Energy is obtained by staking TRX. If the wallet has no staked TRX, Tron **burns TRX** instead.
 
-## 4. The Telegram CryptoBot confusion
+| Scenario | Energy needed | TRX burned | USD cost (at $0.28/TRX) |
+|----------|--------------|------------|--------------------------|
+| Send USDT to account that already has USDT | ~13,000 Energy | ~13 TRX | ~$3.6 |
+| Send USDT to fresh account (no USDT history) | ~27,000-30,000 Energy | ~27-30 TRX | ~$7.5-8.4 |
+| Send USDT if wallet has enough staked TRX | 0 TRX burned | 0 | Free |
 
-You noted CryptoBot "sees the address but the fee is ~$8.5". Two separate things are being mixed:
+**This is how Tron works for everyone** — MetaMask, Trust Wallet, Binance, any wallet. Not Umbra-specific.
 
-- In Umbrella, **CryptoBot is a *read-only balance link*** (in the 9-exchange Connect list). It shows
-  your CryptoBot balance next to your on-chain coins. It is **not a send path** — Umbrella does not
-  send *through* CryptoBot.
-- The ~$8.5 is the **on-chain TRON energy burn** described above, which happens when *any* TRC-20
-  USDT transfer is made from an unstaked account — whether initiated in Umbrella, CryptoBot, or
-  anywhere else.
+### Mitigation strategies for users
 
-So there is nothing wrong in Umbrella's CryptoBot integration causing that fee; it is TRON's transfer
-cost. If you want Umbrella to *route* USDT sends in a cheaper way, that's a new feature (energy
-staking, or batching), described in section 6.
+1. **Stake TRX** — stake ~10,000+ TRX to get enough Energy for free USDT transfers
+2. **Use ERC-20 USDT** (Ethereum) — gas ~$0.50-3 instead
+3. **Use USDC on Solana** — fees <$0.001
+4. **Use P2P** — no on-chain transaction during fiat↔crypto trade
 
-## 5. Exchange rate / swap quotes (web)
+---
 
-The web `/exchange` swap asks the backend for a quote: `convert(from, to, amount)`. Today it returns
-the market rate with `fee: 0`. No spread, no cut. This is the **most natural place to add a swap
-service fee** if you want one (section 6).
+## Revenue model options
 
-## 6. Where a platform / service fee could go (for your decision)
+### Option A: Swap spread (RECOMMENDED)
 
-> The license already **reserves the right** for Umbrella to charge "a small service fee applied to
-> certain in-app transactions", provided it is **disclosed in the interface where it applies**. So a
-> fee is allowed *if shown to the user*. This section lays out the honest options; you decide.
+**What:** When user exchanges coin A → coin B, the displayed rate includes a small spread (e.g., 0.5%). The difference between market rate and shown rate is the platform's revenue.
 
-There are three technically distinct places a fee could live:
+**Example:**
+- Market rate: 1 ETH = $3,000.00
+- Umbra shows: 1 ETH = $2,985.00 (0.5% spread)
+- User agrees and swaps
+- Umbra earns $15 per ETH swapped (kept in the rate, not a separate on-chain transaction)
 
-### A) Swap/exchange spread (cleanest)
-Add a fee percentage inside `rates.service.convert()`: quote the user a slightly worse rate and route
-the difference. Because a swap already goes through a quote step, this is a single-file change,
-naturally disclosed ("you receive X after a Y% fee"), and doesn't touch on-chain send logic.
+**Why this is ideal:**
 
-### B) An extra output on outgoing sends
-When sending BTC/ETH/etc., add a second output that pays a fixed **fee-collection address** a small
-amount or percentage. Technically straightforward per chain, but:
-- It **raises the network fee** (extra output = bigger tx), and
-- It is **visible on-chain** (see the honesty note below).
+| Property | Swap spread | On-chain fee address |
+|----------|-------------|----------------------|
+| Chain-analysis visible | **No** — rate is internal | **Yes** — fee address is public |
+| Adds to network fee | No | No |
+| Legal compliance | Simple (disclose in UI) | Complex (MSB license risk) |
+| User-friendly | Transparent in UI | Annoying (extra gas) |
+| Implementation | 1 constant in rates.service.ts | Smart contract or tx splitting |
 
-### C) A deposit/spread on P2P or fiat rails
-A percentage on P2P order completion, handled in `p2p.service`. Separate from on-chain fees entirely.
+**Implementation (1 change):**
 
-### The honesty note about "untraceable"
+```typescript
+// backend/src/rates/rates.service.ts
 
-You asked for a fee to your wallet that "can't be tracked". Be aware of the hard reality:
+const PLATFORM_SPREAD_BPS = 50; // 0.5% = 50 basis points
+// Change to 100 for 1%, 25 for 0.25%, etc.
 
-- **Any on-chain fee to a fixed address is, by definition, public.** Blockchains are transparent
-  ledgers; a recurring output to one address is *more* visible than anything, and chain-analysis
-  tools cluster it instantly. There is no honest way to make an on-chain fee both go to a wallet you
-  control *and* be untraceable — those two goals contradict each other.
-- What is **realistic and legitimate**: a fee that is *not obviously attributable to a single
-  identity* — e.g. collected into a **fresh address per period** (rotating), or taken as a **swap
-  spread** (option A) where the difference simply settles inside the exchange flow and never appears
-  as a distinct "fee transaction". These reduce *linkability*, not *existence*.
-- What the license and this project **require**: the fee must be **disclosed to the user** where it
-  applies. A hidden fee that the user can't see before confirming is both against the stated license
-  and against the whole trust proposition of a non-custodial wallet — it's the exact behaviour
-  Umbrella markets itself against.
+// When returning exchange rate for quote A→B:
+const marketRate = rawCoinGeckoRate;
+const umbраRate = marketRate * (1 - PLATFORM_SPREAD_BPS / 10_000);
+return { rate: umbраRate, spread: PLATFORM_SPREAD_BPS / 100 + "%" };
+```
 
-**Recommendation for when you instruct me:** option **A (swap spread)** — a disclosed percentage
-inside the exchange quote, optionally collected to a rotating address. It earns revenue, is honest,
-matches the license, and never inflates the user's network fee or their send transactions. I'll
-implement whichever you choose once you tell me the model and the rate.
+And in the frontend exchange UI, show:
+```
+You pay: 1 ETH
+You receive: 2,985 USDT
+Rate: 2,985 USDT/ETH (incl. 0.5% service fee)  ← ALWAYS SHOW THIS
+```
 
-## 7. Summary table
+### Option B: P2P matchmaking fee
 
-| Question | Answer |
-|----------|--------|
-| Does Umbrella charge a fee today? | No — network fees only |
-| Why did TRC-20 cost ~$8.5? | TRON energy burn on an unstaked account — not us |
-| Is CryptoBot causing that fee? | No — it's a read-only balance view; the fee is TRON's transfer cost |
-| Where would a fee be added? | Swap quote (best), send output, or P2P |
-| Can an on-chain fee be untraceable? | No — but a swap spread minimises linkability and is disclosed |
-| What does the license require? | The fee must be disclosed in the UI where it applies |
+**What:** Charge a small % on completed P2P orders.
+
+**Example:** 0.1% of deal amount deducted from seller's crypto proof requirement.
+
+**How to implement:**
+- Add `platformFeePercent Decimal` to `p2p_offers` table (set globally or per-offer type)
+- On order completion: record `platformFeeAmount` in `p2p_orders`
+- Fee is virtual (tracked in DB), not on-chain — no separate transaction
+
+**Concern:** This works only if you have a way to enforce it. In a pure non-custodial P2P (no escrow), you can't withhold crypto from the seller. So this works best if:
+- You add soft enforcement: orders marked "completed" only after seller confirms fee was deducted
+- Or: you run a hybrid escrow for TRC-20 (smart contract)
+
+**Recommended %:** 0.1–0.2% per completed deal — low enough that users don't defect to other platforms, high enough to be meaningful at volume.
+
+### Option C: Subscription / Pro tier
+
+**What:** Free tier has rate-limited P2P (e.g., 5 deals/month). Pro tier ($5/month) unlimited.
+
+**Cons:**
+- Adds friction, may suppress growth
+- Requires payment processing (Stripe integration)
+- More compliance overhead
+
+**Not recommended** for privacy-first wallet. Users who want anonymity distrust recurring payments.
+
+### Option D: NFT/collectible minting fee (future)
+
+When NFT functionality is added, charge 1-2% on minting or marketplace transactions.
+
+---
+
+## Recommended setup for launch
+
+| Phase | Revenue model | Expected rate |
+|-------|--------------|---------------|
+| Launch | 0% (no fee) | Trust building |
+| Month 2-3 | 0.25% swap spread | Low, barely noticeable |
+| Month 4+ | 0.5% swap spread | Standard market rate |
+| Scale | 0.5% swap + 0.1% P2P | Dual stream |
+
+**Never go above 1% swap spread** — users will notice and compare to DEX aggregators (0.3% on Uniswap).
+
+---
+
+## Anonymity and fee collection
+
+**IMPORTANT — architectural constraint:**
+
+You CANNOT make on-chain fee collection anonymous. Here's why:
+
+1. Blockchain is a public ledger.
+2. If every transaction sends 0.5% to address `0xFEE...`, chain analysis tools (Chainalysis, Elliptic) will cluster that address and link it to Umbra within weeks.
+3. This **creates legal exposure** — regulators can subpoena exchange to identify the wallet owner.
+
+**Safe approaches:**
+
+1. **Swap spread** (recommended above) — no on-chain fee transaction. Revenue is the rate difference, tracked only in your backend DB.
+2. **Address rotation** — if you must collect on-chain, use a new HD wallet address for every 100 transactions. Much harder to cluster.
+3. **Monero for fee collection** — if fee goes to your Monero wallet, it's genuinely untraceable. But converting crypto→XMR→you is complex.
+
+**Legal note:** In all cases, the fee must be **shown to users before they confirm** the transaction. This is required for consumer protection laws in virtually all jurisdictions, and also required for maintaining the "non-custodial aggregator" legal model.
+
+---
+
+## Fee display in UI (required)
+
+Before any swap or P2P creation:
+
+```jsx
+// In exchange.tsx rate display:
+<div className="text-xs text-muted-foreground">
+  Market rate: {marketRate} USDT/ETH
+</div>
+<div className="text-xs text-primary">
+  Applied rate: {umbраRate} USDT/ETH
+</div>
+<div className="text-xs text-muted-foreground">
+  Service fee: 0.5% (included in rate)
+</div>
+```
+
+This is both legally required and builds user trust (they see it's small and consistent).
+
+---
+
+## Financial projections (rough)
+
+At 0.5% swap spread:
+
+| Monthly swap volume | Platform revenue |
+|--------------------|-----------------|
+| $100,000 | $500/month |
+| $500,000 | $2,500/month |
+| $1,000,000 | $5,000/month |
+| $5,000,000 | $25,000/month |
+
+**What drives volume:** P2P is the main acquisition channel. Users come for P2P → discover swap → swap becomes recurring revenue. Grow P2P DAU first.
+
+---
+
+## No fees we will never add
+
+1. ~~Withdrawal fee~~ — contradicts non-custodial model (we don't hold funds)
+2. ~~Account subscription~~ — wrong model for privacy-first wallet
+3. ~~Inactivity fee~~ — hostile to users
+4. ~~Forced KYC to use wallet~~ — defeats the anonymity purpose; KYC only required for P2P above thresholds

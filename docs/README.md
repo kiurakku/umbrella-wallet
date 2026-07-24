@@ -1,48 +1,180 @@
-<div align="center">
-<img src="assets/umbrella-256.png" width="80" alt="Umbrella"/>
+# Umbra Wallet — Complete Documentation
 
-# Umbrella Wallet — Full Documentation
-
-Everything about how the project is built and how it works, in one place.
-Written so a newcomer, a new engineer, an AI assistant, or future-you can pick it up
-without hunting through the code.
-
-</div>
+> **Goal:** A self-contained documentation set that a developer, AI assistant, or auditor can read to fully understand, build, deploy, and extend Umbra Wallet — from scratch, with no external searches needed.
 
 ---
 
-## 📚 Read in this order
+## Document index
 
-| # | Document | What it covers |
-|---|----------|----------------|
-| 1 | [Overview](01-overview.md) | What Umbrella is, the three products, the core philosophy |
-| 2 | [Architecture](02-architecture.md) | How every piece connects — diagrams and data flow |
-| 3 | [Tech stack](03-tech-stack.md) | Every language, framework and library, and why |
-| 4 | [Desktop app](04-desktop.md) | The .NET/Avalonia wallet in depth: vault, coins, Tor, Monero, sending |
-| 5 | [Web frontend](05-web-frontend.md) | The React app: routes, wallet-in-browser, state |
-| 6 | [Backend](06-backend.md) | The NestJS server: modules, database, auth, P2P |
-| 7 | [Financial part](07-financial.md) | **Fees, sending mechanics, network costs, exchange, where money moves** |
-| 8 | [Security model](08-security.md) | Threat model and every defence, across all three products |
-| 9 | [Build, run & deploy](09-build-run-deploy.md) | Exact commands for every platform |
-| 10 | [Extending](10-extending.md) | How to add a coin, language, theme or exchange |
-| 11 | [Glossary](11-glossary.md) | Every term explained in one line |
+| # | File | What's inside |
+|---|------|---------------|
+| **01** | [Overview](./01-overview.md) | What Umbra is, philosophy, product scope, supported chains, non-goals |
+| **02** | [Architecture](./02-architecture.md) | System diagrams, data flows, component map, golden rule (keys never leave device) |
+| **03** | [Tech Stack](./03-tech-stack.md) | Every library explained: frontend (React, TanStack), backend (NestJS, Prisma), crypto libs, why each |
+| **04** | [Desktop Vault](./04-desktop-vault.md) | Future: Tauri/Electron app, OS keychain, Tor integration, Monero support, screenshot protection |
+| **05** | [Web Routes](./05-web-routes.md) | Route map, onboarding flow, IndexedDB structure, demo mode, aggregator model, privacy mode, honest limits |
+| **06** | [Backend](./06-backend.md) | Module overview, DB schema, all API endpoints, auth flow, rate-limiting, WebSocket, Helmet config, hardening checklist |
+| **07** | [Financial Model](./07-financial.md) | 💸 **Revenue model, fees, swap spread, TRC-20 costs, anonymity constraints, user disclosure requirements** |
+| **08** | [Security](./08-security.md) | Threat model, audit status, legal classification (non-custodial aggregator), GDPR, incident response, bug bounty, compliance roadmap |
+| **09** | [Build & Deploy](./09-build-deploy.md) | Local dev setup, env vars, Docker, Prisma commands, production build, Vercel + Fly.io deploy, Tor hidden service, monitoring |
+| **10** | [Extending](./10-extending.md) | Recipes: add blockchain, add language, add theme, add Monero, add swap spread, add P2P commission, add exchange API, KYC enforcement |
+| **11** | [Glossary](./11-glossary.md) | Every technical term defined in one sentence |
 
-## 🗺️ The 30-second version
+---
 
-Umbrella is **three products sharing one philosophy — your keys never leave your device**:
+## Read in order (for new developers)
 
-- **Desktop** (`desktop/`) — a standalone, non-custodial wallet in C#/.NET + Avalonia. Real
-  sending for 8 coins, a Monero full-node engine and Tor both bundled inside the app. This is
-  the flagship.
-- **Web frontend** (`src/`) — a React browser wallet + a P2P/exchange aggregator. The seed is
-  generated and encrypted **in the browser**; the server never sees it.
-- **Backend** (`backend/`) — a NestJS API that stores only *public* data (linked-wallet
-  addresses, P2P offers, price cache) and drives the Telegram bot. It never touches a private key.
+**If you're new to the project:**
+1. [01 — Overview](./01-overview.md) → understand what Umbra is
+2. [02 — Architecture](./02-architecture.md) → see how data flows (no keys to server)
+3. [03 — Tech Stack](./03-tech-stack.md) → familiarize with libraries
+4. [09 — Build & Deploy](./09-build-deploy.md) → get it running locally
+5. [05 — Web Routes](./05-web-routes.md) → explore the UI flows
+6. [06 — Backend](./06-backend.md) → understand API and database
 
-## 💸 The one thing to know about money
+**If you're auditing security:**
+1. [08 — Security](./08-security.md) → threat model, legal model, GDPR
+2. [02 — Architecture](./02-architecture.md) → verify keys never reach server
+3. [06 — Backend](./06-backend.md) → check Helmet config, rate-limits, Argon2id usage
+4. [07 — Financial Model](./07-financial.md) → fee transparency, legal compliance
 
-There is currently **no platform fee**. When you send, you pay only the **blockchain's own network
-fee** — nothing to us. The one surprise is TRON: a USDT (TRC-20) transfer can cost several dollars
-in TRX even for $1, because TRON charges "energy" that a fresh wallet hasn't staked. That is
-TRON's economics, not our charge. Full detail — and where a future service fee *would* live — is in
-[07-financial.md](07-financial.md).
+**If you're adding features:**
+1. [10 — Extending](./10-extending.md) → all recipes in one place
+2. [03 — Tech Stack](./03-tech-stack.md) → understand existing libs
+3. [11 — Glossary](./11-glossary.md) → quick reference for terms
+
+---
+
+## Design principles (from 01-overview.md)
+
+1. **Non-custodial** — User owns seed, we never see it
+2. **Aggregator** — Links external wallets/banks, doesn't create its own
+3. **Privacy-first** — Username-only signup, Tor support, no analytics
+4. **Self-sovereign** — Seed phrase is portable to any BIP39 wallet
+5. **Transparent fees** — Swap spread (0.5%) shown before confirmation, no hidden charges
+
+---
+
+## Key architectural facts
+
+- **Seed encryption:** Argon2id KDF (64MB, 3 iter) → AES-256-GCM → IndexedDB (client-only)
+- **Backend auth:** Argon2id password hash, JWT access (15min), refresh (30d, httpOnly cookie, rotated)
+- **P2P model:** Proof-based (tx hashes), NO escrow on backend (users trade directly)
+- **Fee model:** Swap spread (configurable, default 0.5%), shown to user, tracked in backend DB (not on-chain)
+- **Legal model:** Non-custodial aggregator, NOT a VASP/MSB (but consult lawyer before public launch)
+
+---
+
+## File paths quick reference
+
+| What | Path |
+|------|------|
+| Seed vault (encrypt/decrypt) | `src/lib/wallet/vault.ts` |
+| BIP39/44 derivation | `src/lib/wallet/walletCore.ts` |
+| WalletConnect integration | `src/lib/wallet/walletConnect.ts` |
+| Auth store (session) | `src/lib/authStore.ts` |
+| API client | `src/lib/api/client.ts` |
+| Backend main | `backend/src/main.ts` |
+| Prisma schema | `backend/prisma/schema.prisma` |
+| P2P state machine | `backend/src/p2p/p2p-state.machine.ts` |
+| Helmet CSP config | `backend/src/main.ts` (line ~20) |
+| Swap spread constant | `backend/src/rates/rates.service.ts` (add `PLATFORM_SPREAD_BPS`) |
+
+---
+
+## Common tasks
+
+| Task | Command |
+|------|---------|
+| Start dev stack | `npm run dev:all` |
+| Start infra only | `npm run docker:up` |
+| Reset database | `cd backend && npx prisma migrate reset` |
+| Add migration | `cd backend && npx prisma migrate dev --name <name>` |
+| Build production | `npm run build && cd backend && npm run build` |
+| Run backend tests | `cd backend && npm test` |
+
+---
+
+## Security audit checklist (from 08-security.md)
+
+- [x] Argon2id for passwords
+- [x] Seed never transmitted (stays in IndexedDB)
+- [x] PAN never stored (only provider tokens)
+- [x] CSP without unsafe-inline
+- [x] HSTS enabled
+- [x] Rate-limit on auth endpoints
+- [x] Refresh token rotation
+- [x] GDPR delete endpoint
+- [ ] External security audit (when >1,000 MAU)
+- [ ] npm audit in CI
+- [ ] TOTP 2FA (flag exists, implementation pending)
+- [ ] WebAuthn / Passkeys (roadmap)
+
+---
+
+## Revenue model summary (from 07-financial.md)
+
+| Method | How | Legal complexity | User-visible |
+|--------|-----|------------------|--------------|
+| **Swap spread** (recommended) | 0.5% built into exchange rate | Low | Yes, shown before confirm |
+| P2P matchmaking fee | 0.1-0.2% per completed deal | Medium | Yes, in order summary |
+| On-chain fee address | 0.5% sent to fixed address | High (MSB risk) | Yes, extra gas |
+| Subscription | $5/month Pro tier | Medium (payment processing) | Yes, recurring charge |
+
+**Chosen model:** Swap spread (0.5%) — one-line change in `rates.service.ts`, transparent to users, no on-chain trace.
+
+---
+
+## Privacy mode (from 05-web-routes.md)
+
+When enabled:
+- No Telegram SDK
+- No Google/Apple OAuth
+- No third-party API calls from frontend (rates/balances cached or user-proxied)
+- User should use Tor Browser
+
+Auto-enabled on `.onion` domains.
+
+---
+
+## What Umbra will NEVER do
+
+- Store private keys, seed phrases, or PAN on the server
+- Custody user funds during P2P trades (no escrow on backend)
+- Collect real identity without explicit KYC consent
+- Operate as a Money Services Business or VASP (non-custodial aggregator only)
+- Charge withdrawal fees (contradicts non-custodial model)
+- Force KYC to use wallet (only for P2P above limits)
+
+---
+
+## Contributing / extending
+
+See [10 — Extending](./10-extending.md) for recipes:
+- Add a new blockchain (Polygon example provided)
+- Add Monero (different pattern)
+- Add a new language (translation file)
+- Add a new theme (CSS variables)
+- Add swap spread revenue (one constant)
+- Add P2P commission (Prisma field)
+- Add exchange integration (Binance example)
+- Add WebAuthn / Passkeys (biometric unlock)
+
+---
+
+## Support
+
+- **Issues:** GitHub Issues (if open-source)
+- **Security:** `security@umbra.example` (set this up)
+- **Legal:** Consult fintech lawyer before public launch (see 08-security.md)
+- **FAQ:** `/help` route in-app
+
+---
+
+## License
+
+Proprietary / AGPL-3.0 (choose one) — see LICENSE file.
+
+---
+
+**This documentation is complete as of January 2026.** Update `docs/` when adding features.

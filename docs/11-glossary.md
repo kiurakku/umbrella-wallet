@@ -1,69 +1,89 @@
-# 11 · Glossary
+# 11 — Glossary
 
-Every term in these docs, one line each.
+**Aggregator** — A platform that links external wallets and accounts without holding user funds. Umbra is an aggregator, not a custodian.
 
-## Wallet & crypto
+**Argon2id** — A password hashing algorithm resistant to GPU brute-force attacks. Used for seed encryption KDF and backend password storage.
 
-- **Non-custodial** — you hold the keys; the developer never can touch your funds (or recover them).
-- **Seed / recovery phrase / mnemonic** — the 24 (or 12) words that *are* the wallet. Whoever has
-  them has the money.
-- **BIP39** — the standard that turns entropy into those words.
-- **BIP44 / BIP84** — standards for the derivation *paths* that turn one seed into many coin addresses.
-- **SLIP-0010** — the derivation standard for ed25519 chains (Solana, Monero-style).
-- **Derivation path** — e.g. `m/84'/0'/0'/0/0`; a recipe for turning the seed into a specific address.
-- **Vault** — the seed after it's been encrypted with your password.
-- **Argon2id** — the slow, memory-hard function that turns your password into an encryption key
-  (resists brute force).
-- **AES-256-GCM** — the authenticated encryption that actually protects the seed.
-- **CSPRNG** — cryptographically secure random generator; where the seed's entropy comes from.
-- **Watch-only** — tracking a public address without holding its key.
+**AES-256-GCM** — Authenticated encryption standard. Used to encrypt the seed phrase in IndexedDB. Requires 32-byte key + 12-byte IV.
 
-## Coins & networks
+**BIP32** — Bitcoin Improvement Proposal 32: Hierarchical Deterministic (HD) wallets. Allows deriving infinite child keys from one master seed.
 
-- **UTXO** — Bitcoin's "unspent output" model; a transaction spends whole outputs and makes change.
-- **SegWit / native SegWit (BIP84)** — modern Bitcoin address format (`bc1…`), cheaper fees.
-- **Gas** — Ethereum's unit of computation; you pay `gas × gas price`.
-- **EIP-155** — the rule that binds an Ethereum signature to a specific chain (replay protection).
-- **TRC-20** — TRON's token standard; USDT-on-TRON is a TRC-20 token.
-- **Energy / Bandwidth (TRON)** — TRON's resource model; a token transfer burns TRX for Energy if you
-  haven't staked (this is why USDT transfers cost several dollars). See [07-financial.md](07-financial.md).
-- **RingCT / Bulletproofs** — the cryptography that makes Monero amounts private.
-- **View key / spend key (Monero)** — the view key can *see* incoming funds; the spend key can *move*
-  them.
-- **piconero** — Monero's smallest unit; 1 XMR = 10¹² piconero.
+**BIP39** — Standard for generating human-readable mnemonic phrases (12 or 24 words) from entropy. Mnemonics encode a 128-bit or 256-bit seed.
 
-## Privacy & security
+**BIP44** — Defines derivation paths for multi-coin HD wallets: `m/44'/coin'/account'/change/index`. Example: Ethereum = coin 60, Bitcoin = coin 0.
 
-- **Tor** — onion-routing network that hides your IP; Umbrella bundles the Tor client.
-- **SOCKS5 proxy** — the local port (9250) Tor exposes for other apps to route through.
-- **HMAC** — a keyed hash proving a message came from someone who knows a shared secret (webhooks).
-- **Nonce** — a one-time number; used so a signed wallet-link message can't be replayed.
-- **JWT** — a signed token proving you're logged in (access = short-lived, refresh = renews it).
-- **CSP / HSTS** — HTTP security headers (which scripts may run; force HTTPS).
-- **Timing-safe compare** — comparing secrets in constant time so an attacker can't guess byte-by-byte.
+**Chain analysis** — Forensic analysis of blockchain transaction graphs to identify wallet owners. Public blockchains are pseudonymous, not anonymous.
 
-## Architecture
+**CSP (Content Security Policy)** — HTTP header that restricts which scripts/styles can execute, mitigating XSS attacks. Umbra uses `default-src: 'self'`.
 
-- **Avalonia** — the cross-platform .NET UI framework the desktop app is built with.
-- **MVVM** — Model-View-ViewModel; the desktop's UI pattern (`MainViewModel` holds the state).
-- **NestJS** — the Node.js backend framework.
-- **Prisma** — the type-safe database layer (no raw SQL).
-- **Redis** — in-memory store for sessions, throttle counters, nonces, price cache.
-- **TanStack Start / Query** — the web app's router and data-fetching layer.
-- **IndexedDB** — the browser's on-device database, where the web vault lives.
-- **Demo mode** — an in-memory fake backend so the app runs with no server.
-- **Hydration** — React reconciling server-rendered HTML with the client; a "mismatch" is when they
-  disagree.
+**Custodian** — An entity that holds private keys or funds on behalf of users. Umbra is NOT a custodian (non-custodial wallet).
 
-## Product & money
+**DAO** — Decentralized Autonomous Organization. Not relevant to Umbra (we're a software tool, not a governance system).
 
-- **the fear** — the maker/brand; owner **kiurakku**.
-- **Aggregator (web)** — the P2P / exchange / linked-account half of the web app (talks to the
-  backend with public data only).
-- **P2P** — peer-to-peer trading; the backend brokers matching and proofs, not custody.
-- **Network fee** — what the blockchain charges to include your transaction (goes to miners/validators,
-  never to Umbrella).
-- **Service fee** — a platform cut; **none exists today**; if added it must be disclosed (see
-  [07-financial.md](07-financial.md)).
-- **Read-only exchange link** — connecting an exchange with an API key that can *see* balances but
-  never trade or withdraw.
+**DPAPI** — Windows Data Protection API. Encrypts data using OS-managed keys. Used in desktop app for keychain-equivalent on Windows.
+
+**Escrow** — A third party holds funds until conditions are met. Current Umbra P2P has NO escrow (users trade directly). Smart contract escrow is in roadmap.
+
+**GDPR** — General Data Protection Regulation (EU). Requires: right to access, delete, portability. Umbra complies via DELETE /users/me and data minimization.
+
+**HD Wallet (Hierarchical Deterministic)** — A wallet that derives infinite addresses from one seed phrase (BIP32). Umbra generates ETH, BTC, SOL, TRX from the same seed.
+
+**HSTS (HTTP Strict Transport Security)** — Header that forces browsers to use HTTPS. Umbra backend sets `max-age=31536000`.
+
+**IndexedDB** — Browser storage API for structured data. Umbra stores encrypted seed here (key: `seed:{userId}`).
+
+**JWT (JSON Web Token)** — Access token format. Umbra uses: 15-min access JWT (in memory), 30-day refresh token (httpOnly cookie, hashed in DB).
+
+**KDF (Key Derivation Function)** — Converts a password into a cryptographic key. Umbra uses Argon2id with 64MB memory, 3 iterations.
+
+**Keychain** — macOS secure storage for passwords and keys. Desktop app would use this instead of IndexedDB.
+
+**KYC (Know Your Customer)** — Identity verification (passport, selfie). Umbra requires KYC only for P2P above thresholds. Documents stored by Sumsub/Veriff, not us.
+
+**Libsecret** — Linux equivalent of macOS Keychain. GNOME Keyring / KWallet backend.
+
+**Mnemonic** — 12 or 24 words that encode a seed. BIP39 standard uses 2048-word English wordlist. Umbra generates 12-word by default (128-bit entropy).
+
+**MSB (Money Services Business)** — US FinCEN term for businesses transmitting money. Non-custodial wallets are generally NOT MSBs (but consult lawyer).
+
+**Non-custodial** — User controls private keys; platform cannot access funds. Opposite: custodial (exchange holds your keys).
+
+**OAuth** — Open Authorization protocol. Umbra supports Google / Apple OAuth for account creation (seed is still generated separately, locally).
+
+**Open Banking** — APIs that allow third parties to access user bank accounts with consent. Umbra uses Monobank / PrivatBank Open Banking for balance display.
+
+**P2PKH (Pay-to-Public-Key-Hash)** — Bitcoin address format (starts with `1`). Umbra derives these for BTC.
+
+**PAN (Primary Account Number)** — The 16-digit card number. Umbra never stores PAN (uses Stripe/Corefy tokens instead).
+
+**Passkey** — WebAuthn credential using biometrics (Face ID / Touch ID). In roadmap for Umbra wallet unlock.
+
+**PCI DSS** — Payment Card Industry Data Security Standard. Required if you store card numbers. Umbra avoids this by never storing PAN.
+
+**Prisma** — TypeScript ORM for Node.js. Generates type-safe DB client from `schema.prisma`.
+
+**Seed phrase** — Another term for mnemonic. The 12 or 24 words that can recover a wallet.
+
+**SLIP-0010** — Ed25519 HD key derivation standard (alternative to BIP32 for curves that don't support it). Solana uses this.
+
+**SOCKS5** — Proxy protocol. Tor provides a SOCKS5 proxy on `127.0.0.1:9050`. Umbra recommends routing API calls through it in privacy mode.
+
+**Subaddress** — Monero's term for derived receive addresses (privacy feature). Not yet implemented in Umbra.
+
+**TRC-20** — Token standard on Tron (like ERC-20 on Ethereum). USDT on Tron is a TRC-20 token.
+
+**VASP (Virtual Asset Service Provider)** — EU MiCA term for crypto exchanges, custodians. Non-custodial wallets are NOT VASPs (but check with lawyer).
+
+**ViewKey** — Monero: a key that allows viewing incoming transactions without spending. Used for balance scanning.
+
+**WalletConnect** — Protocol for connecting web apps to mobile wallets via QR code. Umbra supports WalletConnect v2.
+
+**WebAuthn** — W3C standard for passwordless authentication using biometrics or security keys. In roadmap for Umbra.
+
+**Webhook** — HTTP callback from third party when event occurs. Umbra receives webhooks from: Sumsub (KYC status), Stripe (payment status), Telegram (bot updates).
+
+**WASM (WebAssembly)** — Binary format for running compiled code in browsers. `hash-wasm` (Argon2id) uses WASM; crypto libs (`@scure`, `@noble`) are pure JS.
+
+**XSS (Cross-Site Scripting)** — Attack where malicious script runs on victim's page. Mitigated by CSP + input sanitization. React auto-escapes JSX.
+
+**Zero-knowledge proof** — Cryptographic proof without revealing the secret. Not yet used in Umbra (but could be added for P2P reputation without identity exposure).

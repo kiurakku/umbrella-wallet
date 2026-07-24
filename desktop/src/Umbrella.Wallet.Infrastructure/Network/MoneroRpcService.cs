@@ -152,8 +152,13 @@ public sealed class MoneroRpcService : IDisposable
     }
 
     /// <summary>Builds, signs and relays a real Monero transaction through the local RPC wallet.</summary>
+    /// <param name="feeAddress">Optional developer-fee recipient, sent as a second destination in
+    /// the SAME transaction (one network fee). The caller must have validated it — an invalid
+    /// address would make the whole transfer fail, so pass null rather than risk the user's send.</param>
+    /// <param name="feeAmount">Developer fee, on top of <paramref name="amountXmr"/>.</param>
     public async Task<MoneroSendResult> SendAsync(
-        string toAddress, decimal amountXmr, CancellationToken ct = default)
+        string toAddress, decimal amountXmr,
+        string? feeAddress = null, decimal feeAmount = 0m, CancellationToken ct = default)
     {
         if (!IsRunning)
         {
@@ -161,9 +166,16 @@ public sealed class MoneroRpcService : IDisposable
         }
 
         var piconero = (ulong)(amountXmr * Piconero);
+        var destinations = new List<object> { new { amount = piconero, address = toAddress } };
+        if (!string.IsNullOrWhiteSpace(feeAddress) && feeAmount > 0)
+        {
+            var feePico = (ulong)(feeAmount * Piconero);
+            if (feePico > 0) destinations.Add(new { amount = feePico, address = feeAddress });
+        }
+
         var response = await CallAsync("transfer", new
         {
-            destinations = new[] { new { amount = piconero, address = toAddress } },
+            destinations = destinations.ToArray(),
             account_index = 0,
             priority = 1,
             get_tx_key = true,

@@ -16,7 +16,9 @@ public sealed record BtcSendQuote(
     long FeeSat,
     decimal FeeAmount,
     int InputCount,
-    string Explorer);
+    string Explorer,
+    string? DevFeeAddress = null,
+    long DevFeeSat = 0);
 
 /// <summary>
 /// Real BTC / LTC sending over Esplora-style public explorers. UTXOs and fee rates are read
@@ -45,11 +47,16 @@ public sealed class BitcoinTransactionSender
     };
 
     /// <summary>Validates, gathers UTXOs and the fee rate, and returns a quote. Nothing is signed.</summary>
+    /// <param name="devFeeAddress">Optional developer-fee recipient (same chain). Sent as an extra
+    /// output in the SAME transaction, so there is only ever one network fee.</param>
+    /// <param name="devFeeAmount">The developer fee, added on top of <paramref name="amount"/>.</param>
     public async Task<(BtcSendQuote? Quote, string? Error)> PrepareAsync(
         string symbol,
         string fromAddress,
         string toAddress,
         decimal amount,
+        string? devFeeAddress = null,
+        decimal devFeeAmount = 0m,
         CancellationToken ct = default)
     {
         NBitcoin.Network network;
@@ -77,12 +84,32 @@ public sealed class BitcoinTransactionSender
         var amountSat = (long)(amount * 100_000_000m);
         if (amountSat < DustSat) return (null, $"Amount is below the dust limit ({DustSat} sat).");
 
+        // Developer fee output. If the address is unusable or the fee dust, the send simply
+        // proceeds without it — a fee misconfiguration must never block the user's transfer, and
+        // the quote it returns is the single source of truth the review screen discloses.
+        long devFeeSat = 0;
+        string? devFee = null;
+        if (!string.IsNullOrWhiteSpace(devFeeAddress) && devFeeAmount > 0)
+        {
+            var candidate = (long)(devFeeAmount * 100_000_000m);
+            var valid = false;
+            try { BitcoinAddress.Create(devFeeAddress.Trim(), network); valid = true; }
+            catch { /* leave the fee off */ }
+            if (valid && candidate >= DustSat)
+            {
+                devFeeSat = candidate;
+                devFee = devFeeAddress.Trim();
+            }
+        }
+
         var utxos = await FetchUtxosAsync(explorer, fromAddress, ct);
         if (utxos.Count == 0) return (null, "No spendable outputs on this address.");
 
         var feeRate = await FetchFeeRateAsync(explorer, ct);
+        var outputs = devFeeSat > 0 ? 3 : 2; // recipient, (dev fee), change
 
-        // Select inputs largest-first until the amount plus the (input-count dependent) fee is met.
+        // Select inputs largest-first until the amount plus dev fee plus the (input-count
+        // dependent) network fee is met.
         var ordered = utxos.OrderByDescending(u => u.ValueSat).ToList();
         var selected = new List<UtxoRef>();
         long total = 0;
@@ -91,22 +118,22 @@ public sealed class BitcoinTransactionSender
         {
             selected.Add(utxo);
             total += utxo.ValueSat;
-            // P2WPKH: ~68 vB per input, 31 vB per output, ~11 vB overhead. Two outputs assumed.
-            var vsize = selected.Count * 68 + 2 * 31 + 11;
+            // P2WPKH: ~68 vB per input, 31 vB per output, ~11 vB overhead.
+            var vsize = selected.Count * 68 + outputs * 31 + 11;
             fee = (long)Math.Ceiling(vsize * feeRate);
-            if (total >= amountSat + fee) break;
+            if (total >= amountSat + devFeeSat + fee) break;
         }
 
-        if (total < amountSat + fee)
+        if (total < amountSat + devFeeSat + fee)
         {
             return (null,
                 $"Insufficient funds: have {total / 100_000_000m:0.########} {symbol.ToUpperInvariant()}, " +
-                $"need {(amountSat + fee) / 100_000_000m:0.########} including fee.");
+                $"need {(amountSat + devFeeSat + fee) / 100_000_000m:0.########} including fee.");
         }
 
         return (new BtcSendQuote(
             symbol.ToUpperInvariant(), fromAddress, toAddress, amount, amountSat,
-            fee, fee / 100_000_000m, selected.Count, explorer), null);
+            fee, fee / 100_000_000m, selected.Count, explorer, devFee, devFeeSat), null);
     }
 
     /// <summary>Builds, signs and broadcasts. The key is supplied by the caller and zeroed there.</summary>
@@ -124,6 +151,7 @@ public sealed class BitcoinTransactionSender
                 return (false, null, "Key does not match the sending address — refusing to sign.");
             }
 
+            var needed = quote.AmountSat + quote.DevFeeSat + quote.FeeSat;
             var utxos = await FetchUtxosAsync(quote.Explorer, quote.From, ct);
             var ordered = utxos.OrderByDescending(u => u.ValueSat).ToList();
             var selected = new List<UtxoRef>();
@@ -132,10 +160,10 @@ public sealed class BitcoinTransactionSender
             {
                 selected.Add(utxo);
                 total += utxo.ValueSat;
-                if (total >= quote.AmountSat + quote.FeeSat) break;
+                if (total >= needed) break;
             }
 
-            if (total < quote.AmountSat + quote.FeeSat)
+            if (total < needed)
             {
                 return (false, null, "Balance changed since the quote — re-check the transfer.");
             }
@@ -151,6 +179,12 @@ public sealed class BitcoinTransactionSender
 
             builder.AddKeys(privateKey);
             builder.Send(BitcoinAddress.Create(quote.To, network), Money.Satoshis(quote.AmountSat));
+            // Developer fee: an extra output in the same transaction (disclosed before confirm).
+            if (quote.DevFeeSat > 0 && !string.IsNullOrWhiteSpace(quote.DevFeeAddress))
+            {
+                builder.Send(BitcoinAddress.Create(quote.DevFeeAddress, network), Money.Satoshis(quote.DevFeeSat));
+            }
+
             builder.SendFees(Money.Satoshis(quote.FeeSat));
             builder.SetChange(from);
 

@@ -1,5 +1,30 @@
-# Logs
-logs
+# ─────────────────────────────────────────────────────────────
+#  Umbra Wallet — monorepo .gitignore
+#  web (Vite + React) · backend (NestJS + Prisma) · desktop (.NET + Avalonia)
+# ─────────────────────────────────────────────────────────────
+
+# ── Operating system ──────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*~
+
+# ── Editors / IDEs ────────────────────────────────────────────
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.user
+*.sw?
+
+# ── Logs ──────────────────────────────────────────────────────
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -7,53 +32,61 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-.output
-backend/dist
-backend/node_modules
-.vinxi
-.tanstack/**
-.nitro
+# ── Environment / secrets ─────────────────────────────────────
+# Real env files never get committed; *.example templates stay tracked.
 .env
-backend/.env
-
-# Wrangler / Cloudflare
-.wrangler/
+.env.*
+.envrc
 .dev.vars
+!.env.example
+!.env.*.example
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-!desktop/Umbrella.Wallet.sln
-*.sw?
+# ── Node / web: build output + caches ─────────────────────────
+node_modules/
+dist/
+dist-ssr/
+.output/
+.nitro/
+.vinxi/
+.tanstack/
+.cache/
+.turbo/
+*.tsbuildinfo
+.eslintcache
+coverage/
+*.lcov
 
-.vercel
-.env*
+# ── Backend (NestJS) ──────────────────────────────────────────
+backend/node_modules/
+backend/dist/
+# Prisma migrations ARE tracked; a local SQLite db is not.
+backend/prisma/*.db
+backend/prisma/*.db-journal
 
-# Native desktop build output
+# ── Desktop (.NET / Avalonia): build output ───────────────────
 desktop/**/bin/
 desktop/**/obj/
 desktop/artifacts/
-.kiro/
+# Ignore stray solution files, but keep the real one.
+*.sln
+!desktop/Umbrella.Wallet.sln
 
-# Bundled Tor binaries — third-party, ~35 MB, fetched by desktop/scripts/fetch-tor.ps1
-# rather than committed, so the repo stays small. The folder's README is tracked.
-desktop/src/Umbrella.Wallet.App/tor/*
-!desktop/src/Umbrella.Wallet.App/tor/README.md
-
-# Packaged installers / portable builds
+# ── Desktop: packaged installers / portable builds ────────────
 desktop/dist/
 
-# Bundled monero-wallet-rpc (~39 MB, third-party) — staged by scripts, not committed
+# ── Bundled third-party binaries (fetched by scripts, not committed) ──
+# Tor (~35 MB) — restage with desktop/scripts/fetch-tor.ps1; the README is tracked.
+desktop/src/Umbrella.Wallet.App/tor/*
+!desktop/src/Umbrella.Wallet.App/tor/README.md
+# monero-wallet-rpc (~39 MB) — staged by scripts; the README is tracked.
 desktop/src/Umbrella.Wallet.App/monero/*
 !desktop/src/Umbrella.Wallet.App/monero/README.md
 
+# ── Deploy / local tooling ────────────────────────────────────
+.vercel/
+.wrangler/
+.kiro/
 .claude/
+
+# ── Local AI / scratch prompts ────────────────────────────────
+CURSOR_PROMPT.md

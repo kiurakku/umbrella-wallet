@@ -20,7 +20,7 @@ No account. No email. No phone number. No KYC. Just a wallet — the way it was 
 
 <br/>
 
-![Version](https://img.shields.io/badge/version-1.7.0-4B3F86)
+![Version](https://img.shields.io/badge/version-1.8.0-4B3F86)
 ![Windows](https://img.shields.io/badge/Windows-ready-4B3F86?logo=windows&logoColor=white)
 ![Linux](https://img.shields.io/badge/Linux-ready-6E5FB8?logo=linux&logoColor=white)
 ![Desktop](https://img.shields.io/badge/desktop-Avalonia%20·%20.NET%208-8A5FD6)
@@ -40,7 +40,7 @@ No account. No email. No phone number. No KYC. Just a wallet — the way it was 
 
 <br/>
 
-**[⬇️ Download Windows installer (v1.7.0)](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-Setup-1.7.0.exe)** · [All releases](https://github.com/kiurakku/umbrella-wallet/releases)
+**[⬇️ Download Windows installer (v1.8.0)](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-Setup-1.8.0.exe)** · [All releases](https://github.com/kiurakku/umbrella-wallet/releases)
 
 <br/>
 
@@ -120,7 +120,7 @@ Umbrella flips that model:
 
 | Platform | Package | Notes |
 |----------|---------|-------|
-| **Windows** | [`UmbrellaWallet-Setup-1.7.0.exe`](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-Setup-1.7.0.exe) | Installer — choose your folder |
+| **Windows** | [`UmbrellaWallet-Setup-1.8.0.exe`](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-Setup-1.8.0.exe) | Installer — choose your folder |
 | **Windows** | portable `.exe` from [Releases](https://github.com/kiurakku/umbrella-wallet/releases) | No install required |
 | **Linux** | `tar.gz` from [Releases](https://github.com/kiurakku/umbrella-wallet/releases) | `./Umbrella.Wallet.App` |
 
@@ -242,5 +242,6 @@ Made and maintained by **[kiurakku](https://github.com/kiurakku)**. Questions an
 <br/>
 <sub><b>the fear</b> · privacy · self-custody · no middlemen<br/>☂️ © 2026 <a href="https://github.com/kiurakku">kiurakku</a> · all rights reserved</sub>
 </div>
+
 
 
