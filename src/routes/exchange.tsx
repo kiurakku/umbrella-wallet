@@ -174,6 +174,31 @@ function ExchangePage() {
           </div>
         </div>
 
+        {/* Fee disclosure — always shown before the user acts. The spread is baked into the
+            quoted rate; there is no separate on-chain fee. Required by the license and by trust. */}
+        {(convert.data?.spreadBps ?? 0) > 0 && received != null && (
+          <div className="rounded-2xl border border-border/60 bg-secondary/30 p-3 mt-2 text-xs space-y-1">
+            <div className="flex justify-between text-muted-foreground">
+              <span>Market rate</span>
+              <span className="tabular-nums">
+                1 {from} ≈ {(convert.data?.marketRate ?? 0).toFixed(6)} {to}
+              </span>
+            </div>
+            <div className="flex justify-between text-muted-foreground">
+              <span>Service fee</span>
+              <span className="text-foreground/80">
+                {((convert.data?.spreadBps ?? 0) / 100).toFixed(2)}% · included in rate
+              </span>
+            </div>
+            <div className="flex justify-between text-muted-foreground">
+              <span>Fee amount</span>
+              <span className="tabular-nums">
+                ≈ {(convert.data?.fee ?? 0).toLocaleString("en-US", { maximumFractionDigits: 8 })} {to}
+              </span>
+            </div>
+          </div>
+        )}
+
         <button
           type="button"
           onClick={goToP2p}

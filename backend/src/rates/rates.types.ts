@@ -42,9 +42,18 @@ export type SparklineResult = {
 };
 
 export type ConvertResult = {
+  /** What the user receives, AFTER the platform spread is applied. */
   result: number;
+  /** Effective rate the user gets (already includes the spread). */
   rate: number;
+  /** Platform fee, expressed in the destination asset (result units). */
   fee: number;
+  /** The mid-market rate before any spread — shown next to `rate` for transparency. */
+  marketRate: number;
+  /** What the user would have received at the mid-market rate (before spread). */
+  marketResult: number;
+  /** Spread in basis points (50 = 0.5%). Surfaced so the UI can label it exactly. */
+  spreadBps: number;
 };
 
 export interface IRatesProvider {

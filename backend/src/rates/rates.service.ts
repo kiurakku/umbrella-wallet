@@ -18,6 +18,19 @@ import {
 } from "./rates.types";
 
 const FRESH_TTL_SEC = 30;
+
+/**
+ * Platform swap spread, in basis points. 50 = 0.5%.
+ *
+ * Applied to every currency conversion the user is quoted: they receive 0.5% less than the raw
+ * mid-market amount, and that difference is the platform's revenue. It lives entirely inside the
+ * quoted rate — there is NO separate on-chain fee transaction, so chain-analysis has nothing to
+ * cluster, and it never inflates the user's network fee. It is always shown before the user
+ * confirms (see the `marketRate`/`spreadBps` fields the UI displays).
+ *
+ * Override at deploy time with the PLATFORM_SPREAD_BPS env var (0 disables it entirely).
+ */
+const DEFAULT_PLATFORM_SPREAD_BPS = 50;
 const CHART_TTL_SEC = 300;
 /** Last-known-good cache — served when every provider fails (offline-tolerant). */
 const STALE_TTL_SEC = 7 * 24 * 60 * 60;
@@ -238,13 +251,41 @@ export class RatesService {
     return { symbol: upper, prices: chart.prices, timestamps };
   }
 
+  /** Configured spread in basis points, clamped so a misconfiguration can't quote a wild rate. */
+  private get platformSpreadBps(): number {
+    const raw = Number(this.config.get<string>("PLATFORM_SPREAD_BPS"));
+    const bps = Number.isFinite(raw) ? raw : DEFAULT_PLATFORM_SPREAD_BPS;
+    return Math.min(Math.max(bps, 0), 500); // never below 0 or above 5%
+  }
+
+  /**
+   * Wraps a raw mid-market conversion result with the platform spread. The user receives
+   * `marketResult` minus the spread; the difference is the fee. Everything needed to display the
+   * fee transparently is returned alongside.
+   */
+  private withSpread(marketResult: number, amount: number): ConvertResult {
+    const spreadBps = this.platformSpreadBps;
+    const result = marketResult * (1 - spreadBps / 10_000);
+    return {
+      result,
+      rate: amount > 0 ? result / amount : 0,
+      fee: Math.max(marketResult - result, 0),
+      marketRate: amount > 0 ? marketResult / amount : 0,
+      marketResult,
+      spreadBps,
+    };
+  }
+
   async convert(from: string, to: string, amount: number): Promise<ConvertResult> {
     const f = from.toUpperCase();
     const t = to.toUpperCase();
     if (!Number.isFinite(amount) || amount < 0) {
-      return { result: 0, rate: 0, fee: 0 };
+      return { result: 0, rate: 0, fee: 0, marketRate: 0, marketResult: 0, spreadBps: 0 };
     }
-    if (f === t) return { result: amount, rate: 1, fee: 0 };
+    // Converting an asset to itself is not a swap — no spread.
+    if (f === t) {
+      return { result: amount, rate: 1, fee: 0, marketRate: 1, marketResult: amount, spreadBps: 0 };
+    }
 
     const snap = await this.getMarketSnapshot();
 
@@ -284,7 +325,7 @@ export class RatesService {
       const row = snap.prices[f];
       if (row) {
         const rate = t === "USD" || t === "USDT" ? row.usd : t === "UAH" ? row.uah : row.eur;
-        return { result: amount * rate, rate, fee: 0 };
+        return this.withSpread(amount * rate, amount);
       }
     }
 
@@ -292,7 +333,7 @@ export class RatesService {
     const toUsd = usdOf(t);
     if (fromUsd == null || toUsd == null || toUsd <= 0) {
       const quote = await this.getRate(f, t);
-      return { result: amount * (quote.rate || 0), rate: quote.rate || 0, fee: 0 };
+      return this.withSpread(amount * (quote.rate || 0), amount);
     }
 
     // from → USD → to
@@ -303,7 +344,6 @@ export class RatesService {
     else if (t === "EUR") result = amountUsd * (snap.prices.USDT?.eur || FALLBACK_USD_EUR);
     else result = amountUsd / toUsd;
 
-    const rate = amount > 0 ? result / amount : 0;
-    return { result, rate, fee: 0 };
+    return this.withSpread(result, amount);
   }
 }

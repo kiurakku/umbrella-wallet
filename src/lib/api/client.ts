@@ -17,6 +17,19 @@ function resolveApiBase(): string {
 
 const API_BASE = resolveApiBase();
 
+/** Platform swap spread in basis points (50 = 0.5%) — kept in sync with the backend. */
+export const PLATFORM_SPREAD_BPS = 50;
+
+/** Result of a currency conversion, including the transparent platform-spread fields. */
+export type ConvertResult = {
+  result: number;
+  rate: number;
+  fee: number;
+  marketRate: number;
+  marketResult: number;
+  spreadBps: number;
+};
+
 /** Privacy / Tor: never call absolute external API origins from the browser. */
 function requestBase(): string {
   if (typeof window !== "undefined" && (isPrivacyMode() || isRunningViaTor())) {
@@ -496,12 +509,21 @@ export const api = {
 
   convertRate: (from: string, to: string, amount: number) =>
     isDemoMode()
-      ? demoApi.getRate(from, to).then((r) => ({
-          result: amount * r.rate,
-          rate: r.rate,
-          fee: 0,
-        }))
-      : request<{ result: number; rate: number; fee: number }>(
+      ? demoApi.getRate(from, to).then((r) => {
+          // Mirror the backend's 0.5% platform spread so demo mode shows the same fee UI.
+          const spreadBps = from.toUpperCase() === to.toUpperCase() ? 0 : PLATFORM_SPREAD_BPS;
+          const marketResult = amount * r.rate;
+          const result = marketResult * (1 - spreadBps / 10_000);
+          return {
+            result,
+            rate: amount > 0 ? result / amount : 0,
+            fee: Math.max(marketResult - result, 0),
+            marketRate: r.rate,
+            marketResult,
+            spreadBps,
+          };
+        })
+      : request<ConvertResult>(
           `/rates/convert?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&amount=${encodeURIComponent(String(amount))}`,
         ),
 
