@@ -4,6 +4,7 @@ import {
   ArrowLeftRight,
   BarChart3,
   Users,
+  Newspaper,
   Settings,
   ArrowUpRight,
   ArrowDownLeft,
@@ -21,6 +22,7 @@ const DESKTOP_NAV = [
   { to: "/", labelKey: "wallet" as const, icon: Wallet },
   { to: "/exchange", labelKey: "exchange" as const, icon: ArrowLeftRight },
   { to: "/p2p", labelKey: "p2p" as const, icon: Users },
+  { to: "/news", labelKey: "news" as const, icon: Newspaper },
   { to: "/stats", labelKey: "stats" as const, icon: BarChart3 },
   { to: "/settings", labelKey: "profile" as const, icon: Settings },
 ];

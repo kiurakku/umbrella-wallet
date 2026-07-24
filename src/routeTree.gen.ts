@@ -13,6 +13,7 @@ import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as StatsRouteImport } from './routes/stats'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as P2pRouteImport } from './routes/p2p'
+import { Route as NewsRouteImport } from './routes/news'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as ExchangeRouteImport } from './routes/exchange'
 import { Route as IndexRouteImport } from './routes/index'
@@ -39,6 +40,11 @@ const SettingsRoute = SettingsRouteImport.update({
 const P2pRoute = P2pRouteImport.update({
   id: '/p2p',
   path: '/p2p',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NewsRoute = NewsRouteImport.update({
+  id: '/news',
+  path: '/news',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HelpRoute = HelpRouteImport.update({
@@ -81,6 +87,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/exchange': typeof ExchangeRoute
   '/help': typeof HelpRoute
+  '/news': typeof NewsRoute
   '/p2p': typeof P2pRoute
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
@@ -94,6 +101,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/exchange': typeof ExchangeRoute
   '/help': typeof HelpRoute
+  '/news': typeof NewsRoute
   '/p2p': typeof P2pRoute
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
@@ -108,6 +116,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/exchange': typeof ExchangeRoute
   '/help': typeof HelpRoute
+  '/news': typeof NewsRoute
   '/p2p': typeof P2pRoute
   '/settings': typeof SettingsRoute
   '/stats': typeof StatsRoute
@@ -123,6 +132,7 @@ export interface FileRouteTypes {
     | '/'
     | '/exchange'
     | '/help'
+    | '/news'
     | '/p2p'
     | '/settings'
     | '/stats'
@@ -136,6 +146,7 @@ export interface FileRouteTypes {
     | '/'
     | '/exchange'
     | '/help'
+    | '/news'
     | '/p2p'
     | '/settings'
     | '/stats'
@@ -149,6 +160,7 @@ export interface FileRouteTypes {
     | '/'
     | '/exchange'
     | '/help'
+    | '/news'
     | '/p2p'
     | '/settings'
     | '/stats'
@@ -163,6 +175,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ExchangeRoute: typeof ExchangeRoute
   HelpRoute: typeof HelpRoute
+  NewsRoute: typeof NewsRoute
   P2pRoute: typeof P2pRoute
   SettingsRoute: typeof SettingsRoute
   StatsRoute: typeof StatsRoute
@@ -201,6 +214,13 @@ declare module '@tanstack/react-router' {
       path: '/p2p'
       fullPath: '/p2p'
       preLoaderRoute: typeof P2pRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/news': {
+      id: '/news'
+      path: '/news'
+      fullPath: '/news'
+      preLoaderRoute: typeof NewsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/help': {
@@ -259,6 +279,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ExchangeRoute: ExchangeRoute,
   HelpRoute: HelpRoute,
+  NewsRoute: NewsRoute,
   P2pRoute: P2pRoute,
   SettingsRoute: SettingsRoute,
   StatsRoute: StatsRoute,
