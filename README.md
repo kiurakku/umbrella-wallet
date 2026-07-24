@@ -196,6 +196,19 @@ Specs: [`UMBRA_BACKEND_SPEC.md`](./UMBRA_BACKEND_SPEC.md) · [`UMBRA_AGGREGATOR_
 
 </details>
 
+## 📖 Documentation
+
+The complete, self-contained project documentation lives in **[`docs/`](docs/README.md)** — written
+so a newcomer, a new engineer, or an AI assistant can understand the whole thing without hunting
+through code:
+
+| | |
+|---|---|
+| [Overview](docs/01-overview.md) · [Architecture](docs/02-architecture.md) · [Tech stack](docs/03-tech-stack.md) | what it is, how it fits together, what it's built with |
+| [Desktop](docs/04-desktop.md) · [Web](docs/05-web-frontend.md) · [Backend](docs/06-backend.md) | each product in depth |
+| [💸 Financial part](docs/07-financial.md) | **fees, sending mechanics, why TRC-20 costs what it does, where a service fee could go** |
+| [Security](docs/08-security.md) · [Build & deploy](docs/09-build-run-deploy.md) · [Extending](docs/10-extending.md) · [Glossary](docs/11-glossary.md) | threat model, commands, recipes, terms |
+
 ## ⚠️ The honest part
 
 Umbrella is **non-custodial**. That word means: *we never hold your money, so we can never lose it, freeze it — or recover it.* You are the bank now. 🏦 Guard your phrase, check addresses before sending, start with a small test amount. Crypto transactions are final; there is no undo button anywhere in the world. The software is provided as-is, without warranty — see [LICENSE](LICENSE). Nothing here is financial advice.
