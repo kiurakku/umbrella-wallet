@@ -11,7 +11,7 @@
 | **01** | [Overview](./01-overview.md) | What Umbra is, philosophy, product scope, supported chains, non-goals |
 | **02** | [Architecture](./02-architecture.md) | System diagrams, data flows, component map, golden rule (keys never leave device) |
 | **03** | [Tech Stack](./03-tech-stack.md) | Every library explained: frontend (React, TanStack), backend (NestJS, Prisma), crypto libs, why each |
-| **04** | [Desktop Vault](./04-desktop-vault.md) | Future: Tauri/Electron app, OS keychain, Tor integration, Monero support, screenshot protection |
+| **04** | [Desktop App](./04-desktop.md) | The shipped .NET 8 + Avalonia desktop wallet: project structure, vault, real multi-chain send, bundled Tor & Monero, developer fee, packaging |
 | **05** | [Web Routes](./05-web-routes.md) | Route map, onboarding flow, IndexedDB structure, demo mode, aggregator model, privacy mode, honest limits |
 | **06** | [Backend](./06-backend.md) | Module overview, DB schema, all API endpoints, auth flow, rate-limiting, WebSocket, Helmet config, hardening checklist |
 | **07** | [Financial Model](./07-financial.md) | 💸 **Revenue model, fees, swap spread, TRC-20 costs, anonymity constraints, user disclosure requirements** |
@@ -51,7 +51,7 @@
 2. **Aggregator** — Links external wallets/banks, doesn't create its own
 3. **Privacy-first** — Username-only signup, Tor support, no analytics
 4. **Self-sovereign** — Seed phrase is portable to any BIP39 wallet
-5. **Transparent fees** — Swap spread (0.5%) shown before confirmation, no hidden charges
+5. **Transparent fees** — any fee (the optional developer fee on sends, off by default) is shown before confirmation; no hidden charges
 
 ---
 
@@ -60,7 +60,7 @@
 - **Seed encryption:** Argon2id KDF (64MB, 3 iter) → AES-256-GCM → IndexedDB (client-only)
 - **Backend auth:** Argon2id password hash, JWT access (15min), refresh (30d, httpOnly cookie, rotated)
 - **P2P model:** Proof-based (tx hashes), NO escrow on backend (users trade directly)
-- **Fee model:** Swap spread (configurable, default 0.5%), shown to user, tracked in backend DB (not on-chain)
+- **Fee model:** Optional developer fee on sends — off by default, capped at 2%, disclosed before confirm, routed on-chain for BTC/LTC/XMR (same transaction). A disclosed swap-spread also drives the web Exchange quote. See [07-financial.md](./07-financial.md)
 - **Legal model:** Non-custodial aggregator, NOT a VASP/MSB (but consult lawyer before public launch)
 
 ---
@@ -121,7 +121,7 @@
 | On-chain fee address | 0.5% sent to fixed address | High (MSB risk) | Yes, extra gas |
 | Subscription | $5/month Pro tier | Medium (payment processing) | Yes, recurring charge |
 
-**Chosen model:** Swap spread (0.5%) — one-line change in `rates.service.ts`, transparent to users, no on-chain trace.
+**Chosen model:** an optional, disclosed **developer fee on sends** — off by default, configured in the admin panel with no server, routed on-chain for BTC/LTC/XMR in the same transaction. The swap-spread remains available for the web Exchange quote. Both are always shown before the user confirms.
 
 ---
 
@@ -143,7 +143,7 @@ Auto-enabled on `.onion` domains.
 - Custody user funds during P2P trades (no escrow on backend)
 - Collect real identity without explicit KYC consent
 - Operate as a Money Services Business or VASP (non-custodial aggregator only)
-- Charge withdrawal fees (contradicts non-custodial model)
+- Charge **hidden** fees — the developer fee on sends is off by default and always disclosed before the user confirms (see 07-financial.md)
 - Force KYC to use wallet (only for P2P above limits)
 
 ---

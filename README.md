@@ -205,9 +205,9 @@ through code:
 | | |
 |---|---|
 | [Overview](docs/01-overview.md) · [Architecture](docs/02-architecture.md) · [Tech stack](docs/03-tech-stack.md) | what it is, how it fits together, what it's built with |
-| [Desktop](docs/04-desktop.md) · [Web](docs/05-web-frontend.md) · [Backend](docs/06-backend.md) | each product in depth |
-| [💸 Financial part](docs/07-financial.md) | **fees, sending mechanics, why TRC-20 costs what it does, where a service fee could go** |
-| [Security](docs/08-security.md) · [Build & deploy](docs/09-build-run-deploy.md) · [Extending](docs/10-extending.md) · [Glossary](docs/11-glossary.md) | threat model, commands, recipes, terms |
+| [Desktop](docs/04-desktop.md) · [Web routes](docs/05-web-routes.md) · [Backend](docs/06-backend.md) | each product in depth |
+| [💸 Financial part](docs/07-financial.md) | **fees, sending mechanics, why TRC-20 costs what it does, the disclosed developer fee** |
+| [Security](docs/08-security.md) · [Build & deploy](docs/09-build-deploy.md) · [Extending](docs/10-extending.md) · [Glossary](docs/11-glossary.md) | threat model, commands, recipes, terms |
 
 ## ⚠️ The honest part
 

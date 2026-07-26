@@ -6,11 +6,13 @@
 |------|-----------|-------------|---------------|
 | `/` | `index.tsx` | Wallet dashboard: total balance, assets, recent P2P deals | ✓ |
 | `/p2p` | `p2p.tsx` | P2P market: offers, my deals, my offers | ✓ |
-| `/exchange` | `exchange.tsx` | Swap preview, rates, create offer shortcut | ✓ |
+| `/exchange` | `exchange.tsx` | Swap preview + live rates; discloses the platform fee (from `platformFee.ts`) before the P2P handoff | ✓ |
+| `/news` | `news.tsx` | Product news / updates | ✓ |
 | `/stats` | `stats.tsx` | Portfolio analytics, sparklines, distribution chart | ✓ |
-| `/nft` | `nft.tsx` | NFT gallery (read-only, demo data for now) | ✓ |
 | `/settings` | `settings.tsx` | Profile, wallets, seed, 2FA, KYC, privacy, language | ✓ |
+| `/admin` | `admin.tsx` | Developer/admin: platform-fee % + per-chain receiving addresses. Local, no server; behind a PIN | (PIN) |
 | `/help` | `help.tsx` | FAQ, support, documentation links | (public) |
+| `/verify-email` | `verify-email.tsx` | Email verification landing (token from the confirmation link) | (public) |
 | `/legal/terms` | `legal/terms.tsx` | Terms of Service | (public) |
 | `/legal/privacy` | `legal/privacy.tsx` | Privacy Policy | (public) |
 | `/legal/agreement` | `legal/agreement.tsx` | User Agreement | (public) |

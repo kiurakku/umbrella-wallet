@@ -110,6 +110,22 @@ never draw on an account the user never funded.
 > **Fees:** see [07-financial.md](07-financial.md). Short version: you pay the network's fee, not
 > ours. TRON USDT is the expensive outlier.
 
+## Developer fee (`DeveloperFeeConfig`, Settings → Developer)
+
+An optional platform fee, **off by default**. Configured in *Settings → Developer*: a percentage
+(basis points, capped at 2%) and a receiving address per chain, saved to `developer-fee.json` in the
+data folder — no backend involved. `DeveloperFeeConfig.QuoteFee(symbol, amount)` returns a fee only
+when it is enabled, an address is set, **and** the chain's send path actually routes it, so the
+disclosure can never claim a fee that isn't taken.
+
+- **Routed today:** BTC / LTC add the fee as an extra output in the *same* transaction; XMR adds it
+  as a second `destinations` entry in the same RingCT transfer — one network fee either way. An
+  invalid fee address is dropped rather than allowed to block the user's send.
+- **Configurable, routing pending:** ETH, SOL, TRX, USDT-TRC20 (a `%` fee via a second transaction
+  is uneconomic, and SOL would need a change to its pinned message serialization).
+- **Always disclosed** in the send review before the user confirms — there is no hidden collection.
+  The web wallet mirrors the config in its `/admin` panel; see [07-financial.md](07-financial.md).
+
 ## Bundled Tor (`EmbeddedTorService`)
 
 - `tor.exe` (or `tor` on Linux) ships in `Assets/tor/`, launched as a child process.

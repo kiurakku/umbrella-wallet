@@ -159,6 +159,41 @@ npm run build
 
 ---
 
+## Desktop app (build & release)
+
+The desktop wallet is **.NET 8 + Avalonia** (`desktop/`). Requires the .NET 8 SDK on PATH.
+
+```bash
+# From desktop/ — debug build (fast, for development):
+dotnet build src/Umbrella.Wallet.App/Umbrella.Wallet.App.csproj -c Debug
+```
+
+**Release (Windows)** — one script stages the bundled Tor + Monero binaries, publishes the
+installer payload and the portable single-file exe, and builds the Inno Setup installer:
+
+```powershell
+pwsh desktop/scripts/release-windows.ps1
+# → D:\umbrella-dist\portable\Umbrella.Wallet.App.exe
+# → D:\umbrella-dist\UmbrellaWallet-Setup-<version>.exe   (needs Inno Setup 6 / ISCC.exe)
+```
+
+**Release (Linux)** — self-contained tar.gz:
+
+```bash
+desktop/scripts/publish-linux.sh   # → dist/linux/umbrella-wallet-<version>-linux-x64.tar.gz
+```
+
+The version comes from `<Version>` in `Umbrella.Wallet.App.csproj`; keep `VERSION`, the csproj, and
+`desktop/installer/umbrella.iss` (`#define AppVersion`) in sync. The Tor (~35 MB) and monero-wallet-rpc
+(~39 MB) binaries are **not** committed — the `fetch-tor.ps1` / `fetch-monero.ps1` (and the Linux
+publish script) download them at build time.
+
+> **Troubleshooting:** if `dotnet` reports *"command not found"* while the SDK folders exist, the
+> `dotnet.exe` host is missing (antivirus quarantine is common on security-tooling machines).
+> Restore it with `winget install Microsoft.DotNet.SDK.8 --force`.
+
+---
+
 ## Docker Compose (development)
 
 ```yaml
