@@ -1,0 +1,60 @@
+<#
+  release-windows.ps1 — one-shot Windows release for Umbrella Wallet (desktop).
+
+  Produces, under $OutRoot (default D:\umbrella-dist, which the Inno Setup script expects):
+    app\         folder publish that the installer bundles
+    portable\    self-contained single-file Umbrella.Wallet.App.exe
+    UmbrellaWallet-Setup-<version>.exe   the installer (built by ISCC)
+
+  The version is read from the .csproj so it always matches VERSION / the .iss.
+  Run from anywhere:  pwsh desktop/scripts/release-windows.ps1
+  Requires: the .NET 8 SDK on PATH, and Inno Setup 6 (ISCC.exe) for the installer step.
+#>
+param(
+  [string]$OutRoot = "D:\umbrella-dist",
+  [string]$Iscc    = "$env:LocalAppData\Programs\Inno Setup 6\ISCC.exe",
+  [switch]$SkipInstaller
+)
+$ErrorActionPreference = "Stop"
+
+# Repo root = two levels up from this script (desktop/scripts/ -> repo/).
+$repo    = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
+$csproj  = Join-Path $repo "desktop\src\Umbrella.Wallet.App\Umbrella.Wallet.App.csproj"
+$iss     = Join-Path $repo "desktop\installer\umbrella.iss"
+
+if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) {
+  throw "dotnet not found on PATH. Restore the .NET 8 SDK first (winget install Microsoft.DotNet.SDK.8 --force)."
+}
+
+$version = ([xml](Get-Content $csproj)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
+Write-Host "Releasing Umbrella Wallet $version (win-x64)…" -ForegroundColor Cyan
+
+# 1) Stage the bundled Tor + Monero binaries (idempotent; skip if already present).
+& (Join-Path $PSScriptRoot "fetch-tor.ps1")
+& (Join-Path $PSScriptRoot "fetch-monero.ps1")
+
+$appDir      = Join-Path $OutRoot "app"
+$portableDir = Join-Path $OutRoot "portable"
+New-Item -ItemType Directory -Force -Path $appDir, $portableDir | Out-Null
+
+# 2) Folder publish (what the installer packages).
+dotnet publish $csproj -c Release -r win-x64 --self-contained true `
+  -p:PublishSingleFile=false -o $appDir
+
+# 3) Portable single-file build.
+dotnet publish $csproj -c Release -r win-x64 --self-contained true `
+  -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o $portableDir
+
+Write-Host "Portable: $(Join-Path $portableDir 'Umbrella.Wallet.App.exe')" -ForegroundColor Green
+
+# 4) Installer (Inno Setup). The .iss reads its own AppVersion; keep it in sync with $version.
+if ($SkipInstaller) {
+  Write-Host "Skipping installer (--SkipInstaller)." -ForegroundColor Yellow
+} elseif (-not (Test-Path $Iscc)) {
+  Write-Warning "ISCC.exe not found at '$Iscc' — skipping installer. Install Inno Setup 6 or pass -Iscc <path>."
+} else {
+  & $Iscc $iss
+  Write-Host "Installer: $(Join-Path $OutRoot ("UmbrellaWallet-Setup-{0}.exe" -f $version))" -ForegroundColor Green
+}
+
+Write-Host "Done. Verify by launching the portable exe, then unlock and open Settings -> Developer." -ForegroundColor Cyan
