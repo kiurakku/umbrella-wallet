@@ -8,12 +8,16 @@ This is intentional for launch — build trust first. But the platform must be s
 
 ---
 
-## Implemented: developer fee on send + admin panel
+## Implemented: developer fee on send (baked in)
 
-Both clients ship a **disclosed developer fee on sends**, configurable with no backend:
+Both clients ship a **disclosed developer fee on sends**, baked into the build — there is **no
+configuration UI** (the earlier Settings → Developer / `/admin` panels were removed):
 
-- **Config** — fee percentage (basis points, capped at **2%**) plus a receiving address **per chain**, stored in a local file (`developer-fee.json` on desktop) / `localStorage` on web. Default is **0% / no address** → the wallet behaves as zero-fee until a developer sets it. To ship one fixed fee to every install, bake the defaults in before building (`DeveloperFeeConfig` on desktop, `PLATFORM_SPREAD_BPS` + client defaults on web).
-- **Admin panel** — desktop: *Settings → Developer*; web: the `/admin` route behind a local PIN. Sets the percentage and per-chain address.
+- **Config** — fee percentage (**0.5%**, capped at 2%) plus the receiving address per chain are
+  constants in `DeveloperFeeConfig` (desktop) / `PLATFORM_SPREAD_BPS` (web). The recipient address
+  is stored **obfuscated** (XOR + base64) so it is never a plain string in the binary and is never
+  shown in any UI. It is a public on-chain address, so this is obscurity, not secrecy. To change it,
+  edit the obfuscated constant and rebuild. The Solana fee address is pinned by a unit test.
 - **Disclosure (required)** — the fee is **always shown in the send review before the user confirms**, exactly like the network fee. `07-financial.md` (below) and consumer-protection law require this; a hidden skim is not built or supported.
 - **Routing** — the fee is only taken on chains where the send path actually routes it, so the disclosure can never claim a fee the wallet does not collect:
   - **Routed today (desktop):** BTC, LTC (extra output in the same transaction — one network fee), XMR (second `destinations` entry in the same RingCT transfer), and SOL (second System-transfer instruction in the same transaction; the two-instruction message layout is pinned by a unit test). A fee address that fails validation is dropped, so a misconfiguration never blocks the user's send.

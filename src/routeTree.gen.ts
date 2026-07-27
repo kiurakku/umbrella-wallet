@@ -16,7 +16,6 @@ import { Route as P2pRouteImport } from './routes/p2p'
 import { Route as NewsRouteImport } from './routes/news'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as ExchangeRouteImport } from './routes/exchange'
-import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LegalTermsRouteImport } from './routes/legal/terms'
 import { Route as LegalRulesRouteImport } from './routes/legal/rules'
@@ -58,11 +57,6 @@ const ExchangeRoute = ExchangeRouteImport.update({
   path: '/exchange',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminRoute = AdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -91,7 +85,6 @@ const LegalAgreementRoute = LegalAgreementRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
   '/exchange': typeof ExchangeRoute
   '/help': typeof HelpRoute
   '/news': typeof NewsRoute
@@ -106,7 +99,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
   '/exchange': typeof ExchangeRoute
   '/help': typeof HelpRoute
   '/news': typeof NewsRoute
@@ -122,7 +114,6 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
   '/exchange': typeof ExchangeRoute
   '/help': typeof HelpRoute
   '/news': typeof NewsRoute
@@ -139,7 +130,6 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/admin'
     | '/exchange'
     | '/help'
     | '/news'
@@ -154,7 +144,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/admin'
     | '/exchange'
     | '/help'
     | '/news'
@@ -169,7 +158,6 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
-    | '/admin'
     | '/exchange'
     | '/help'
     | '/news'
@@ -185,7 +173,6 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AdminRoute: typeof AdminRoute
   ExchangeRoute: typeof ExchangeRoute
   HelpRoute: typeof HelpRoute
   NewsRoute: typeof NewsRoute
@@ -250,13 +237,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ExchangeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin': {
-      id: '/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
@@ -297,7 +277,6 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminRoute: AdminRoute,
   ExchangeRoute: ExchangeRoute,
   HelpRoute: HelpRoute,
   NewsRoute: NewsRoute,

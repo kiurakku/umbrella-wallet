@@ -110,13 +110,15 @@ never draw on an account the user never funded.
 > **Fees:** see [07-financial.md](07-financial.md). Short version: you pay the network's fee, not
 > ours. TRON USDT is the expensive outlier.
 
-## Developer fee (`DeveloperFeeConfig`, Settings → Developer)
+## Developer fee (`DeveloperFeeConfig`)
 
-An optional platform fee, **off by default**. Configured in *Settings → Developer*: a percentage
-(basis points, capped at 2%) and a receiving address per chain, saved to `developer-fee.json` in the
-data folder — no backend involved. `DeveloperFeeConfig.QuoteFee(symbol, amount)` returns a fee only
-when it is enabled, an address is set, **and** the chain's send path actually routes it, so the
-disclosure can never claim a fee that isn't taken.
+A platform fee **baked into the build** — there is no configuration UI. The percentage (0.5%,
+capped at 2%) and the receiving address per chain are constants in `DeveloperFeeConfig`; the address
+is stored **obfuscated** (XOR + base64) so it is never a plain string in the binary and is never
+shown anywhere in the app. It is a public on-chain receiving address, so this is obscurity, not
+secrecy. `DeveloperFeeConfig.QuoteFee(symbol, amount)` returns a fee only when a baked address
+exists for the chain **and** the chain's send path routes it — so the disclosure can never claim a
+fee that isn't taken. The Solana fee address is pinned by a unit test.
 
 - **Routed today:** BTC / LTC add the fee as an extra output in the *same* transaction; XMR adds it
   as a second `destinations` entry in the same RingCT transfer; SOL adds a second System-transfer

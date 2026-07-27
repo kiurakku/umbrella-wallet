@@ -208,7 +208,6 @@ public partial class MainViewModel : ViewModelBase
     public bool IsTabBackup => SettingsTab == "Backup";
     public bool IsTabGuide => SettingsTab == "Guide";
     public bool IsTabDanger => SettingsTab == "Danger";
-    public bool IsTabDeveloper => SettingsTab == "Developer";
 
     partial void OnSettingsTabChanged(string value)
     {
@@ -218,10 +217,6 @@ public partial class MainViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsTabBackup));
         OnPropertyChanged(nameof(IsTabGuide));
         OnPropertyChanged(nameof(IsTabDanger));
-        OnPropertyChanged(nameof(IsTabDeveloper));
-
-        // Entering the developer pane loads the saved fee config into the editable fields.
-        if (value == "Developer") LoadDeveloperFeeFields();
 
         // Leaving the backup pane must drop any revealed secret from the screen.
         if (value != "Backup")
@@ -235,10 +230,9 @@ public partial class MainViewModel : ViewModelBase
     [RelayCommand]
     private void SelectSettingsTab(string tab) => SettingsTab = tab;
 
-    // --- Developer fee (admin panel) -----------------------------------------
-    // A platform fee added on top of a send and routed to the developer's own address, per chain.
-    // Works with no backend — the config lives in a local file. The fee is ALWAYS shown in the
-    // send review before the user confirms; there is no hidden collection.
+    // --- Developer fee -------------------------------------------------------
+    // Baked into the build (DeveloperFeeConfig): the recipient address is obfuscated and never shown
+    // in the UI. The fee percentage is still disclosed in the send review before the user confirms.
     private readonly DeveloperFeeConfig _devFee = DeveloperFeeConfig.Load();
 
     /// <summary>Version shown in the status bar — read from the assembly so it never drifts from the csproj.</summary>
@@ -282,69 +276,6 @@ public partial class MainViewModel : ViewModelBase
     {
         await CopyTextAsync(UpdateChecker.ReleasesUrl);
         StatusMessage = "Download link copied — open it in your browser (or Tor Browser) to get the new build.";
-    }
-
-    [ObservableProperty] private string _devFeePercent = string.Empty;
-    [ObservableProperty] private string _devFeeAddressBtc = string.Empty;
-    [ObservableProperty] private string _devFeeAddressLtc = string.Empty;
-    [ObservableProperty] private string _devFeeAddressEth = string.Empty;
-    [ObservableProperty] private string _devFeeAddressSol = string.Empty;
-    [ObservableProperty] private string _devFeeAddressTrx = string.Empty;
-    [ObservableProperty] private string _devFeeAddressUsdt = string.Empty;
-    [ObservableProperty] private string _devFeeAddressXmr = string.Empty;
-    [ObservableProperty] private string _devFeeStatus = string.Empty;
-
-    private void LoadDeveloperFeeFields()
-    {
-        DevFeePercent = (_devFee.EffectiveBps / 100m).ToString("0.##", CultureInfo.InvariantCulture);
-        DevFeeAddressBtc = _devFee.AddressFor("BTC") ?? string.Empty;
-        DevFeeAddressLtc = _devFee.AddressFor("LTC") ?? string.Empty;
-        DevFeeAddressEth = _devFee.AddressFor("ETH") ?? string.Empty;
-        DevFeeAddressSol = _devFee.AddressFor("SOL") ?? string.Empty;
-        DevFeeAddressTrx = _devFee.AddressFor("TRX") ?? string.Empty;
-        DevFeeAddressUsdt = _devFee.AddressFor("USDT") ?? string.Empty;
-        DevFeeAddressXmr = _devFee.AddressFor("XMR") ?? string.Empty;
-        DevFeeStatus = string.Empty;
-    }
-
-    [RelayCommand]
-    private void SaveDeveloperFee()
-    {
-        // Percent → basis points, clamped so a fat-fingered value can never quote a wild fee.
-        var raw = DevFeePercent.Trim().Replace(',', '.');
-        if (!decimal.TryParse(raw, NumberStyles.Any, CultureInfo.InvariantCulture, out var percent) || percent < 0)
-        {
-            DevFeeStatus = "Enter the fee as a percentage, e.g. 0.5";
-            return;
-        }
-
-        var bps = (int)Math.Round(percent * 100m);
-        if (bps > DeveloperFeeConfig.MaxBps)
-        {
-            DevFeeStatus = $"Capped at {DeveloperFeeConfig.MaxBps / 100m:0.##}% — using that.";
-            bps = DeveloperFeeConfig.MaxBps;
-        }
-
-        _devFee.FeeBps = bps;
-        SetDevAddress("BTC", DevFeeAddressBtc);
-        SetDevAddress("LTC", DevFeeAddressLtc);
-        SetDevAddress("ETH", DevFeeAddressEth);
-        SetDevAddress("SOL", DevFeeAddressSol);
-        SetDevAddress("TRX", DevFeeAddressTrx);
-        SetDevAddress("USDT", DevFeeAddressUsdt);
-        SetDevAddress("XMR", DevFeeAddressXmr);
-        _devFee.Save();
-
-        DevFeeStatus = bps == 0
-            ? "Saved. Fee is off (0%) — no fee will be taken."
-            : $"Saved. {bps / 100m:0.##}% is taken on sends for chains with an address set (routed: BTC, LTC, XMR, SOL).";
-    }
-
-    private void SetDevAddress(string symbol, string value)
-    {
-        var trimmed = value.Trim();
-        if (string.IsNullOrEmpty(trimmed)) _devFee.Addresses.Remove(symbol);
-        else _devFee.Addresses[symbol] = trimmed;
     }
 
     // ETH send flow: quote → explicit confirm → broadcast result.

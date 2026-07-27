@@ -10,7 +10,6 @@
 | `/news` | `news.tsx` | Product news / updates | ✓ |
 | `/stats` | `stats.tsx` | Portfolio analytics, sparklines, distribution chart | ✓ |
 | `/settings` | `settings.tsx` | Profile, wallets, seed, 2FA, KYC, privacy, language | ✓ |
-| `/admin` | `admin.tsx` | Developer/admin: platform-fee % + per-chain receiving addresses. Local, no server; behind a PIN | (PIN) |
 | `/help` | `help.tsx` | FAQ, support, documentation links | (public) |
 | `/verify-email` | `verify-email.tsx` | Email verification landing (token from the confirmation link) | (public) |
 | `/legal/terms` | `legal/terms.tsx` | Terms of Service | (public) |

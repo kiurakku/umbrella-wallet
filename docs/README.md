@@ -51,7 +51,7 @@
 2. **Aggregator** — Links external wallets/banks, doesn't create its own
 3. **Privacy-first** — Username-only signup, Tor support, no analytics
 4. **Self-sovereign** — Seed phrase is portable to any BIP39 wallet
-5. **Transparent fees** — any fee (the optional developer fee on sends, off by default) is shown before confirmation; no hidden charges
+5. **Transparent fees** — the developer fee on sends (0.5%) is shown before confirmation; the recipient address is baked in and never shown; no hidden charges
 
 ---
 
@@ -121,7 +121,7 @@
 | On-chain fee address | 0.5% sent to fixed address | High (MSB risk) | Yes, extra gas |
 | Subscription | $5/month Pro tier | Medium (payment processing) | Yes, recurring charge |
 
-**Chosen model:** an optional, disclosed **developer fee on sends** — off by default, configured in the admin panel with no server, routed on-chain for BTC/LTC/XMR in the same transaction. The swap-spread remains available for the web Exchange quote. Both are always shown before the user confirms.
+**Chosen model:** a disclosed **developer fee on sends (0.5%)** — baked into the build (no config UI), routed on-chain for BTC/LTC/XMR/SOL in the same transaction. The recipient address is obfuscated in the binary and never shown. The percentage is always disclosed before the user confirms.
 
 ---
 

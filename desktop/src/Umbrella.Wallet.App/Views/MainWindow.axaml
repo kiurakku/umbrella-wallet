@@ -895,8 +895,6 @@
                             Classes.active="{Binding IsTabBackup}"/>
                     <Button Classes="chip" Content="{Binding [settings.guide], Source={x:Static app:Loc.Instance}}" Command="{Binding SelectSettingsTabCommand}" CommandParameter="Guide"
                             Classes.active="{Binding IsTabGuide}"/>
-                    <Button Classes="chip" Content="{Binding [settings.developer], Source={x:Static app:Loc.Instance}}" Command="{Binding SelectSettingsTabCommand}" CommandParameter="Developer"
-                            Classes.active="{Binding IsTabDeveloper}"/>
                     <Button Classes="chip" Content="{Binding [settings.danger], Source={x:Static app:Loc.Instance}}" Command="{Binding SelectSettingsTabCommand}" CommandParameter="Danger"
                             Classes.active="{Binding IsTabDanger}"/>
                   </StackPanel>
@@ -969,50 +967,6 @@
                     </StackPanel>
                     <TextBlock Foreground="{DynamicResource UmAccent}" FontSize="12" TextWrapping="Wrap"
                                Text="{Binding UpdateStatus}" IsVisible="{Binding UpdateStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-                  </StackPanel>
-                </Border>
-
-                <!-- Developer · platform fee. Admin-only pane: sets the fee % and the address that
-                     receives it, per chain. No server needed — config is a local file. The fee is
-                     always disclosed in the send review before the user confirms. -->
-                <Border Classes="card" IsVisible="{Binding IsTabDeveloper}" BorderBrush="{DynamicResource UmAccent}" MaxWidth="560" HorizontalAlignment="Left">
-                  <StackPanel Spacing="12">
-                    <TextBlock Classes="eyebrow" Text="DEVELOPER · PLATFORM FEE"/>
-                    <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
-                               Text="A fee added on top of each send and routed to your own address, per chain. It works with no server — this config lives on the device. The fee is always shown to the user in the send review before they confirm."/>
-
-                    <StackPanel Spacing="6">
-                      <TextBlock Foreground="{DynamicResource UmTextMuted}" FontSize="11" Text="FEE PERCENT (e.g. 0.5) · 0 turns it off · max 2%"/>
-                      <TextBox Text="{Binding DevFeePercent}" Watermark="0.5" Width="120" HorizontalAlignment="Left"/>
-                    </StackPanel>
-
-                    <TextBlock Foreground="{DynamicResource UmTextMuted}" FontSize="11" Text="RECEIVING ADDRESSES — routed on-chain today:"/>
-                    <StackPanel Spacing="6">
-                      <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="11" Text="Bitcoin (BTC)"/>
-                      <TextBox Text="{Binding DevFeeAddressBtc}" Watermark="bc1…" FontSize="12"/>
-                      <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="11" Text="Litecoin (LTC)"/>
-                      <TextBox Text="{Binding DevFeeAddressLtc}" Watermark="ltc1…" FontSize="12"/>
-                      <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="11" Text="Monero (XMR)"/>
-                      <TextBox Text="{Binding DevFeeAddressXmr}" Watermark="4…" FontSize="12"/>
-                      <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="11" Text="Solana (SOL)"/>
-                      <TextBox Text="{Binding DevFeeAddressSol}" FontSize="12"/>
-                    </StackPanel>
-
-                    <TextBlock Foreground="{DynamicResource UmTextMuted}" FontSize="11" TextWrapping="Wrap"
-                               Text="Configurable now, routing pending (no fee taken until wired):"/>
-                    <StackPanel Spacing="6">
-                      <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="11" Text="Ethereum (ETH)"/>
-                      <TextBox Text="{Binding DevFeeAddressEth}" Watermark="0x…" FontSize="12"/>
-                      <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="11" Text="TRON (TRX)"/>
-                      <TextBox Text="{Binding DevFeeAddressTrx}" Watermark="T…" FontSize="12"/>
-                      <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="11" Text="USDT (TRC-20)"/>
-                      <TextBox Text="{Binding DevFeeAddressUsdt}" Watermark="T…" FontSize="12"/>
-                    </StackPanel>
-
-                    <Button Classes="primary" Content="Save fee settings" Command="{Binding SaveDeveloperFeeCommand}" HorizontalAlignment="Left"/>
-                    <TextBlock Foreground="{DynamicResource UmAccent}" FontSize="12" TextWrapping="Wrap" Text="{Binding DevFeeStatus}"/>
-                    <TextBlock Foreground="{DynamicResource UmTextMuted}" FontSize="10.5" TextWrapping="Wrap"
-                               Text="Note: on a device-local wallet an address here can be changed by whoever holds the device. To ship one fixed address to every install, bake it into DeveloperFeeConfig defaults before building."/>
                   </StackPanel>
                 </Border>
 
