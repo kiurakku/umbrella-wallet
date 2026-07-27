@@ -243,7 +243,46 @@ public partial class MainViewModel : ViewModelBase
 
     /// <summary>Version shown in the status bar — read from the assembly so it never drifts from the csproj.</summary>
     public string AppVersionLabel =>
-        $"Umbrella Wallet v{typeof(MainViewModel).Assembly.GetName().Version?.ToString(3) ?? "1.8.0"} · the fear";
+        $"Umbrella Wallet v{CurrentVersion} · the fear";
+
+    private static string CurrentVersion =>
+        typeof(MainViewModel).Assembly.GetName().Version?.ToString(3) ?? "1.8.0";
+
+    // --- In-app update check (manual, Tor-aware; data is never touched) ------
+    [ObservableProperty] private string _updateStatus = string.Empty;
+    [ObservableProperty] private bool _updateAvailable;
+
+    [RelayCommand]
+    private async Task CheckForUpdates()
+    {
+        UpdateAvailable = false;
+        UpdateStatus = "Checking for updates…";
+        var r = await UpdateChecker.CheckAsync(CurrentVersion);
+        if (r.Error is not null)
+        {
+            UpdateStatus = $"Could not check right now: {r.Error}";
+            return;
+        }
+
+        if (r.Available)
+        {
+            UpdateAvailable = true;
+            UpdateStatus =
+                $"Update available: v{r.Latest} (you have v{CurrentVersion}). Your vault, keys and " +
+                "settings are kept — an update only replaces the app files, never the data folder.";
+        }
+        else
+        {
+            UpdateStatus = $"You're on the latest version (v{CurrentVersion}).";
+        }
+    }
+
+    [RelayCommand]
+    private async Task CopyReleasesLink()
+    {
+        await CopyTextAsync(UpdateChecker.ReleasesUrl);
+        StatusMessage = "Download link copied — open it in your browser (or Tor Browser) to get the new build.";
+    }
 
     [ObservableProperty] private string _devFeePercent = string.Empty;
     [ObservableProperty] private string _devFeeAddressBtc = string.Empty;

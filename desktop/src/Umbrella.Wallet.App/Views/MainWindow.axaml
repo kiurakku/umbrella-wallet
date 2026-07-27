@@ -956,6 +956,22 @@
                   </StackPanel>
                 </Border>
 
+                <!-- Updates: manual, Tor-aware. Data is never touched by an update. -->
+                <Border Classes="card" IsVisible="{Binding IsTabAppearance}">
+                  <StackPanel Spacing="10">
+                    <TextBlock Classes="eyebrow" Text="UPDATES"/>
+                    <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
+                               Text="Check GitHub for a newer version. The check is manual and goes through Tor when it's on — nothing is sent automatically. Your vault, keys and settings live in a separate data folder, so updating only replaces the app and never loses them."/>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <Button Classes="primary" Content="Check for updates" Command="{Binding CheckForUpdatesCommand}"/>
+                      <Button Classes="ghost" Content="Copy download link" Command="{Binding CopyReleasesLinkCommand}"
+                              IsVisible="{Binding UpdateAvailable}"/>
+                    </StackPanel>
+                    <TextBlock Foreground="{DynamicResource UmAccent}" FontSize="12" TextWrapping="Wrap"
+                               Text="{Binding UpdateStatus}" IsVisible="{Binding UpdateStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                  </StackPanel>
+                </Border>
+
                 <!-- Developer · platform fee. Admin-only pane: sets the fee % and the address that
                      receives it, per chain. No server needed — config is a local file. The fee is
                      always disclosed in the send review before the user confirms. -->
