@@ -92,8 +92,12 @@ export const privacySections: LegalSection[] = [
           <li>Coordinating P2P and notifying about deal status.</li>
           <li>Security (rate limits, fraud detection, removal of unsafe messages in Telegram).</li>
           <li>Compliance with KYC/AML requirements where applicable.</li>
-          <li>Product improvement (anonymized analytics).</li>
         </ul>
+        <p>
+          We run <strong>no analytics or telemetry of any kind</strong> — no Google, no third-party
+          trackers, no usage metrics. Fonts are self-hosted, so simply opening the wallet contacts
+          no outside party.
+        </p>
       </>
     ),
   },

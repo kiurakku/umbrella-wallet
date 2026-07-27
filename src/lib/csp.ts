@@ -20,10 +20,11 @@ export function buildContentSecurityPolicy(
     // 'wasm-unsafe-eval' — hash-wasm (argon2id) compiles WebAssembly for the seed vault.
     // No Google/Apple origins: Umbrella is anonymous-first, OAuth is removed by design.
     `script-src 'self' 'nonce-${nonce}' 'wasm-unsafe-eval' https://telegram.org https://verify.walletconnect.org https://verify.walletconnect.com`,
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    // Fonts are self-hosted under /fonts — no Google origins anywhere in the policy.
+    "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: https:",
     "connect-src 'self' wss: http://localhost:3001 https: https://api.monobank.ua https://api.coingecko.com https://blockstream.info https://api.mainnet-beta.solana.com https://check.torproject.org",
-    "font-src 'self' data: https://fonts.gstatic.com",
+    "font-src 'self' data:",
     "frame-src https://oauth.telegram.org https://verify.walletconnect.org https://verify.walletconnect.com",
     "object-src 'none'",
     "base-uri 'self'",

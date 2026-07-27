@@ -115,12 +115,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { rel: "icon", href: "/umbrella-icon.svg", type: "image/svg+xml" },
       { rel: "apple-touch-icon", href: "/umbrella-icon.svg" },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap",
-      },
+      // Fonts are self-hosted (see public/fonts/) — no request ever reaches Google, so the
+      // wallet leaks nothing to a third party just by loading. Anonymous-first, by design.
+      { rel: "stylesheet", href: "/fonts/fonts.css" },
     ],
   }),
   shellComponent: RootShell,
