@@ -835,20 +835,39 @@
                   <TextBlock Classes="serif" FontSize="26" VerticalAlignment="Center" Text="{Binding [nav.activity], Source={x:Static app:Loc.Instance}}"/>
                   <lottie:Lottie Path="avares://Umbrella.Wallet.App/Assets/stickers/fear-10.json" Width="42" Height="42" RepeatCount="-1" VerticalAlignment="Center"/>
                 </StackPanel>
-                <Border Classes="hairline">
+                <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12.5" Margin="2,0,0,4"
+                           Text="Everything this wallet does in a session — transfers and syncs. Rows with a transaction can be clicked to copy their explorer link. Nothing is written to disk."/>
+
+                <!-- Empty state: the bordered box on its own read as broken when there was no history. -->
+                <Border Classes="card" IsVisible="{Binding !HasActivity}" MinHeight="120">
+                  <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="6">
+                    <TextBlock HorizontalAlignment="Center" FontSize="14" Foreground="{DynamicResource UmTextDim}"
+                               Text="No activity yet"/>
+                    <TextBlock HorizontalAlignment="Center" FontSize="12" Foreground="{DynamicResource UmTextMuted}"
+                               Text="Your transfers and syncs will appear here."/>
+                  </StackPanel>
+                </Border>
+
+                <Border Classes="hairline" IsVisible="{Binding HasActivity}">
                   <ItemsControl ItemsSource="{Binding Activity}">
                     <ItemsControl.ItemTemplate>
                       <DataTemplate x:DataType="vm:ActivityRowViewModel">
-                        <Border BorderBrush="{DynamicResource UmBorder}" BorderThickness="0,0,0,1" Height="52" Padding="14,0">
-                          <Grid ColumnDefinitions="120,*,Auto,60">
-                            <TextBlock Text="{Binding Kind}" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="1" Classes="mono" FontSize="12" Foreground="{DynamicResource UmTextDim}"
-                                       Text="{Binding Counterparty}" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="2" Classes="mono" Text="{Binding Amount}" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="3" Foreground="{DynamicResource UmTextDim}" Text="{Binding When}"
-                                       HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                          </Grid>
-                        </Border>
+                        <Button Classes="ghost" Padding="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                                Command="{Binding #RootWindow.((vm:MainViewModel)DataContext).CopyActivityLinkCommand}"
+                                CommandParameter="{Binding}" IsEnabled="{Binding HasLink}">
+                          <Border BorderBrush="{DynamicResource UmBorder}" BorderThickness="0,0,0,1" Height="52" Padding="14,0" Background="Transparent">
+                            <Grid ColumnDefinitions="120,*,Auto,64">
+                              <TextBlock Text="{Binding Kind}" Foreground="{Binding KindColor}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                              <TextBlock Grid.Column="1" Classes="mono" FontSize="12" Foreground="{DynamicResource UmTextDim}"
+                                         Text="{Binding Counterparty}" VerticalAlignment="Center"/>
+                              <TextBlock Grid.Column="2" Classes="mono" Text="{Binding Amount}" VerticalAlignment="Center"/>
+                              <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="4" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="11" Text="{Binding When}"/>
+                                <TextBlock Foreground="{DynamicResource UmAccent}" FontSize="11" Text="↗" IsVisible="{Binding HasLink}"/>
+                              </StackPanel>
+                            </Grid>
+                          </Border>
+                        </Button>
                       </DataTemplate>
                     </ItemsControl.ItemTemplate>
                   </ItemsControl>

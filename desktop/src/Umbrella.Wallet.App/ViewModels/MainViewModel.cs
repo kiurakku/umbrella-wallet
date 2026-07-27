@@ -426,6 +426,10 @@ public partial class MainViewModel : ViewModelBase
     public ObservableCollection<WalletAccountViewModel> Accounts { get; } = [];
     public ObservableCollection<HoldingRowViewModel> Holdings { get; } = [];
     public ObservableCollection<ActivityRowViewModel> Activity { get; } = [];
+
+    /// <summary>Drives the Activity empty-state; raised whenever the log changes.</summary>
+    public bool HasActivity => Activity.Count > 0;
+
     public ObservableCollection<WatchAddress> WatchAddresses { get; } = [];
 
     /// <summary>Every coin the wallet accepts, with live price — readable while locked.</summary>
@@ -2035,7 +2039,9 @@ public partial class MainViewModel : ViewModelBase
             SendAmount = string.Empty;
             SendSuccess = $"Broadcast ✓  {reference}\nTrack it: {explorer}";
             StatusMessage = "Transaction broadcast · it will confirm shortly";
-            PushActivity("Sent", symbol, $"-{Fmt(amount)}", Shorten(to), "now");
+            var link = string.IsNullOrWhiteSpace(explorer) ? null
+                : explorer.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? explorer : $"https://{explorer}";
+            PushActivity("Sent", symbol, $"-{Fmt(amount)}", Shorten(to), "now", link);
             await RefreshLiveDataAsync();
         }
         else
@@ -2219,10 +2225,21 @@ public partial class MainViewModel : ViewModelBase
         }
     }
 
-    private void PushActivity(string kind, string asset, string amount, string counter, string when)
+    private void PushActivity(string kind, string asset, string amount, string counter, string when, string? explorer = null)
     {
-        Activity.Insert(0, new ActivityRowViewModel(kind, asset, amount, counter, when));
+        Activity.Insert(0, new ActivityRowViewModel(kind, asset, amount, counter, when, explorer));
         while (Activity.Count > 40) Activity.RemoveAt(Activity.Count - 1);
+        OnPropertyChanged(nameof(HasActivity));
+    }
+
+    /// <summary>Copy a transaction's explorer link to the clipboard — deliberately not opened in
+    /// the system browser, which would bypass Tor. Paste it into Tor Browser to view.</summary>
+    [RelayCommand]
+    private async Task CopyActivityLink(ActivityRowViewModel? row)
+    {
+        if (row?.Explorer is not { Length: > 0 } url) return;
+        await CopyTextAsync(url);
+        StatusMessage = "Explorer link copied — paste it into your browser to view the transaction";
     }
 
     private static Bitmap? BuildQr(string payload)
@@ -2473,7 +2490,20 @@ public sealed record ActivityRowViewModel(
     string Asset,
     string Amount,
     string Counterparty,
-    string When);
+    string When,
+    string? Explorer = null)
+{
+    /// <summary>A block-explorer link exists, so the row is actionable (copy the URL).</summary>
+    public bool HasLink => !string.IsNullOrWhiteSpace(Explorer);
+
+    /// <summary>Colour the type at a glance: outgoing red, incoming teal, housekeeping muted.</summary>
+    public string KindColor => Kind switch
+    {
+        "Sent" => "#E08A8A",
+        "Received" => "#5AC8B4",
+        _ => "#8A9099",
+    };
+}
 
 /// <summary>One entry in the News section: a tagged, dated product note.</summary>
 public sealed record NewsItemViewModel(string Tag, string Title, string Body, string Date)
