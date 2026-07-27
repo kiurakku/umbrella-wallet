@@ -241,6 +241,10 @@ public partial class MainViewModel : ViewModelBase
     // send review before the user confirms; there is no hidden collection.
     private readonly DeveloperFeeConfig _devFee = DeveloperFeeConfig.Load();
 
+    /// <summary>Version shown in the status bar — read from the assembly so it never drifts from the csproj.</summary>
+    public string AppVersionLabel =>
+        $"Umbrella Wallet v{typeof(MainViewModel).Assembly.GetName().Version?.ToString(3) ?? "1.8.0"} · the fear";
+
     [ObservableProperty] private string _devFeePercent = string.Empty;
     [ObservableProperty] private string _devFeeAddressBtc = string.Empty;
     [ObservableProperty] private string _devFeeAddressLtc = string.Empty;

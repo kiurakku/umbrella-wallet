@@ -1204,7 +1204,7 @@
                            Text="{Binding ActiveSection, StringFormat='{}{0}'}"/>
               </StackPanel>
               <TextBlock Grid.Column="1" Classes="mono" FontSize="10.5" Foreground="{DynamicResource UmTextDim}"
-                         VerticalAlignment="Center" Text="Umbrella Wallet v1.7.0 · the fear"/>
+                         VerticalAlignment="Center" Text="{Binding AppVersionLabel}"/>
             </Grid>
           </Border>
         </Grid>
