@@ -119,10 +119,11 @@ when it is enabled, an address is set, **and** the chain's send path actually ro
 disclosure can never claim a fee that isn't taken.
 
 - **Routed today:** BTC / LTC add the fee as an extra output in the *same* transaction; XMR adds it
-  as a second `destinations` entry in the same RingCT transfer — one network fee either way. An
-  invalid fee address is dropped rather than allowed to block the user's send.
-- **Configurable, routing pending:** ETH, SOL, TRX, USDT-TRC20 (a `%` fee via a second transaction
-  is uneconomic, and SOL would need a change to its pinned message serialization).
+  as a second `destinations` entry in the same RingCT transfer; SOL adds a second System-transfer
+  instruction in the same transaction (the two-instruction layout is pinned by a unit test) — one
+  network fee in every case. An invalid fee address is dropped rather than block the user's send.
+- **Configurable, routing pending:** ETH, TRX, USDT-TRC20 (a `%` fee needs a second transaction that
+  is uneconomic on ETH gas / TRON energy; a same-transaction fee there needs a batching contract).
 - **Always disclosed** in the send review before the user confirms — there is no hidden collection.
   The web wallet mirrors the config in its `/admin` panel; see [07-financial.md](07-financial.md).
 

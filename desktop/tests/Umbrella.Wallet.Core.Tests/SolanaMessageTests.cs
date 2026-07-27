@@ -54,6 +54,54 @@ public sealed class SolanaMessageTests
         Assert.Equal(message.Length, i);
     }
 
+    [Fact]
+    public void Transfer_with_developer_fee_has_two_instructions_and_four_accounts()
+    {
+        var from = Key(0x11);
+        var to = Key(0x22);
+        var fee = Key(0x33);
+        var blockhash = Key(0x44);
+        const ulong lamports = 1_000_000_000; // 1 SOL to the recipient
+        const ulong feeLamports = 5_000_000;  // 0.005 SOL to the developer
+
+        var message = SolanaTransactionSender.BuildTransferMessage(from, to, lamports, blockhash, fee, feeLamports);
+
+        var i = 0;
+        Assert.Equal(1, message[i++]);   // required signatures
+        Assert.Equal(0, message[i++]);   // readonly signed
+        Assert.Equal(1, message[i++]);   // readonly unsigned (system program)
+
+        Assert.Equal(4, message[i++]);   // account count: from, to, feeTo, systemProgram
+        Assert.Equal(from, message[i..(i + 32)]); i += 32;
+        Assert.Equal(to, message[i..(i + 32)]); i += 32;
+        Assert.Equal(fee, message[i..(i + 32)]); i += 32;
+        Assert.Equal(new byte[32], message[i..(i + 32)]); i += 32;   // System Program = all zero (index 3)
+
+        Assert.Equal(blockhash, message[i..(i + 32)]); i += 32;
+
+        Assert.Equal(2, message[i++]);   // two instructions
+
+        // Instruction 1: from → to
+        Assert.Equal(3, message[i++]);   // program id index → system program (account index 3)
+        Assert.Equal(2, message[i++]);   // account count
+        Assert.Equal(0, message[i++]);   // from
+        Assert.Equal(1, message[i++]);   // to
+        Assert.Equal(12, message[i++]);  // data length
+        Assert.Equal(2u, BitConverter.ToUInt32(message, i)); i += 4;
+        Assert.Equal(lamports, BitConverter.ToUInt64(message, i)); i += 8;
+
+        // Instruction 2: from → feeTo
+        Assert.Equal(3, message[i++]);   // program id index → system program
+        Assert.Equal(2, message[i++]);   // account count
+        Assert.Equal(0, message[i++]);   // from
+        Assert.Equal(2, message[i++]);   // feeTo
+        Assert.Equal(12, message[i++]);  // data length
+        Assert.Equal(2u, BitConverter.ToUInt32(message, i)); i += 4;
+        Assert.Equal(feeLamports, BitConverter.ToUInt64(message, i)); i += 8;
+
+        Assert.Equal(message.Length, i);
+    }
+
     /// <summary>The signature we attach must verify against the sending account's public key.</summary>
     [Fact]
     public void Signature_verifies_against_the_wallets_own_solana_key()

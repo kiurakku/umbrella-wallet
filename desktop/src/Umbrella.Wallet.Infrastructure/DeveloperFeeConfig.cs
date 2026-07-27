@@ -34,7 +34,7 @@ public sealed class DeveloperFeeConfig
     /// Others are configurable in the admin panel but marked "routing pending" until wired.
     /// </summary>
     public static readonly IReadOnlySet<string> RoutedChains =
-        new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "BTC", "LTC", "XMR" };
+        new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "BTC", "LTC", "XMR", "SOL" };
 
     /// <summary>
     /// Build-time defaults. Edit these before publishing to ship a fee to every install with no

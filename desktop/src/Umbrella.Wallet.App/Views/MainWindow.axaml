@@ -959,6 +959,8 @@
                       <TextBox Text="{Binding DevFeeAddressLtc}" Watermark="ltc1…" FontSize="12"/>
                       <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="11" Text="Monero (XMR)"/>
                       <TextBox Text="{Binding DevFeeAddressXmr}" Watermark="4…" FontSize="12"/>
+                      <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="11" Text="Solana (SOL)"/>
+                      <TextBox Text="{Binding DevFeeAddressSol}" FontSize="12"/>
                     </StackPanel>
 
                     <TextBlock Foreground="{DynamicResource UmTextMuted}" FontSize="11" TextWrapping="Wrap"
@@ -966,8 +968,6 @@
                     <StackPanel Spacing="6">
                       <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="11" Text="Ethereum (ETH)"/>
                       <TextBox Text="{Binding DevFeeAddressEth}" Watermark="0x…" FontSize="12"/>
-                      <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="11" Text="Solana (SOL)"/>
-                      <TextBox Text="{Binding DevFeeAddressSol}" FontSize="12"/>
                       <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="11" Text="TRON (TRX)"/>
                       <TextBox Text="{Binding DevFeeAddressTrx}" Watermark="T…" FontSize="12"/>
                       <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="11" Text="USDT (TRC-20)"/>

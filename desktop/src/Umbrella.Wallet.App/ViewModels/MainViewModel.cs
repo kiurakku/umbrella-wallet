@@ -294,7 +294,7 @@ public partial class MainViewModel : ViewModelBase
 
         DevFeeStatus = bps == 0
             ? "Saved. Fee is off (0%) — no fee will be taken."
-            : $"Saved. {bps / 100m:0.##}% is taken on sends for chains with an address set (routed: BTC, LTC, XMR).";
+            : $"Saved. {bps / 100m:0.##}% is taken on sends for chains with an address set (routed: BTC, LTC, XMR, SOL).";
     }
 
     private void SetDevAddress(string symbol, string value)
@@ -1894,11 +1894,16 @@ public partial class MainViewModel : ViewModelBase
 
                 case "SOL":
                 {
-                    var (quote, error) = await _solSender.PrepareAsync(from.Address, SendTo.Trim(), amount);
+                    var devFee = _devFee.QuoteFee("SOL", amount);
+                    var (quote, error) = await _solSender.PrepareAsync(
+                        from.Address, SendTo.Trim(), amount, devFee?.Address, devFee?.Amount ?? 0m);
                     if (quote is null) { SendError = error ?? "Could not prepare the transaction."; return; }
                     _solQuote = quote;
                     SendQuoteSummary = $"Send {Fmt(quote.AmountSol)} SOL  →  {quote.To}";
-                    SendQuoteFee = $"Network fee ≈ {Fmt(quote.FeeSol)} SOL";
+                    SendQuoteFee = quote.DevFeeLamports > 0
+                        ? $"Network fee ≈ {Fmt(quote.FeeSol)} SOL · service fee {_devFee.FeePercent:0.##}% ≈ " +
+                          $"{Fmt(quote.DevFeeLamports / 1_000_000_000m)} SOL to the developer (same transaction)"
+                        : $"Network fee ≈ {Fmt(quote.FeeSol)} SOL";
                     break;
                 }
             }

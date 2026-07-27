@@ -5,7 +5,9 @@ using Org.BouncyCastle.Math.EC.Rfc8032;
 
 namespace Umbrella.Wallet.Infrastructure.Network;
 
-public sealed record SolSendQuote(string From, string To, decimal AmountSol, ulong Lamports, decimal FeeSol);
+public sealed record SolSendQuote(
+    string From, string To, decimal AmountSol, ulong Lamports, decimal FeeSol,
+    string? DevFeeTo = null, ulong DevFeeLamports = 0);
 
 /// <summary>
 /// Real Solana transfers. Builds the legacy transaction message by hand (System Program
@@ -25,22 +27,36 @@ public sealed class SolanaTransactionSender
     private static HttpClient Http => PublicHttp.Shared;
 
     public async Task<(SolSendQuote? Quote, string? Error)> PrepareAsync(
-        string from, string to, decimal amountSol, CancellationToken ct = default)
+        string from, string to, decimal amountSol,
+        string? devFeeAddress = null, decimal devFeeAmount = 0m, CancellationToken ct = default)
     {
         if (amountSol <= 0) return (null, "Amount must be positive.");
         if (!TryDecodeAddress(to, out _)) return (null, "That is not a valid Solana address.");
 
         var lamports = (ulong)(amountSol * LamportsPerSol);
+
+        // Developer fee as a second transfer in the same transaction. Dropped if the address is
+        // not a valid Solana account, so a misconfiguration never blocks the user's send.
+        ulong devFeeLamports = 0;
+        string? devFeeTo = null;
+        if (!string.IsNullOrWhiteSpace(devFeeAddress) && devFeeAmount > 0 && TryDecodeAddress(devFeeAddress, out _))
+        {
+            devFeeLamports = (ulong)(devFeeAmount * LamportsPerSol);
+            if (devFeeLamports > 0) devFeeTo = devFeeAddress.Trim();
+        }
+
         var balance = await GetBalanceLamportsAsync(from, ct);
         if (balance is null) return (null, "Solana RPC is unreachable — check your connection (or Tor).");
-        if (balance < lamports + FeeLamports)
+        var needed = lamports + devFeeLamports + FeeLamports;
+        if (balance < needed)
         {
             return (null,
                 $"Insufficient funds: balance {balance.Value / (decimal)LamportsPerSol:0.#########} SOL, " +
-                $"need {(lamports + FeeLamports) / (decimal)LamportsPerSol:0.#########} SOL including fee.");
+                $"need {needed / (decimal)LamportsPerSol:0.#########} SOL including fee.");
         }
 
-        return (new SolSendQuote(from, to, amountSol, lamports, FeeLamports / (decimal)LamportsPerSol), null);
+        return (new SolSendQuote(
+            from, to, amountSol, lamports, FeeLamports / (decimal)LamportsPerSol, devFeeTo, devFeeLamports), null);
     }
 
     public async Task<(bool Ok, string? Signature, string? Error)> SignAndBroadcastAsync(
@@ -63,7 +79,15 @@ public sealed class SolanaTransactionSender
                 return (false, null, "Key does not match the sending address — refusing to sign.");
             }
 
-            var message = BuildTransferMessage(fromPub, toPub, quote.Lamports, blockhash);
+            byte[]? feePub = null;
+            if (quote.DevFeeTo is not null && quote.DevFeeLamports > 0 && TryDecodeAddress(quote.DevFeeTo, out var fp))
+            {
+                feePub = fp;
+            }
+
+            var message = BuildTransferMessage(
+                fromPub, toPub, quote.Lamports, blockhash,
+                feePub, feePub is not null ? quote.DevFeeLamports : 0);
 
             var signature = new byte[Ed25519.SignatureSize];
             Ed25519.Sign(privateKey, 0, message, 0, message.Length, signature, 0);
@@ -107,35 +131,73 @@ public sealed class SolanaTransactionSender
     }
 
     /// <summary>
-    /// Legacy Solana message: header, account keys, blockhash, one System-transfer instruction.
-    /// Accounts are ordered [from (signer, writable), to (writable), systemProgram (readonly)].
+    /// Legacy Solana message: header, account keys, blockhash, System-transfer instruction(s).
+    /// Without a developer fee: accounts [from (signer, writable), to (writable), systemProgram
+    /// (readonly)] and one transfer — byte-identical to the original, pinned layout.
+    /// With a developer fee: accounts [from, to, feeTo, systemProgram] and TWO transfers in the
+    /// same transaction (from→to, from→feeTo), so there is only one network fee.
     /// </summary>
-    public static byte[] BuildTransferMessage(byte[] fromPub, byte[] toPub, ulong lamports, byte[] blockhash)
+    public static byte[] BuildTransferMessage(
+        byte[] fromPub, byte[] toPub, ulong lamports, byte[] blockhash,
+        byte[]? feePub = null, ulong feeLamports = 0)
     {
+        var hasFee = feePub is not null && feeLamports > 0;
         using var ms = new MemoryStream();
         // Header: 1 required signature, 0 readonly-signed, 1 readonly-unsigned (the program).
         ms.WriteByte(1);
         ms.WriteByte(0);
         ms.WriteByte(1);
 
-        // Account keys (compact array of 3).
-        ms.WriteByte(3);
-        ms.Write(fromPub);
-        ms.Write(toPub);
-        ms.Write(SystemProgramId);
+        if (!hasFee)
+        {
+            // Account keys (compact array of 3).
+            ms.WriteByte(3);
+            ms.Write(fromPub);
+            ms.Write(toPub);
+            ms.Write(SystemProgramId);
 
-        // Recent blockhash.
-        ms.Write(blockhash);
+            ms.Write(blockhash);
 
-        // Instructions (compact array of 1).
-        ms.WriteByte(1);
-        ms.WriteByte(2);          // program id index → systemProgram
-        ms.WriteByte(2);          // account count
-        ms.WriteByte(0);          // from
-        ms.WriteByte(1);          // to
-        ms.WriteByte(12);         // data length: 4-byte instruction + 8-byte lamports
-        ms.Write(BitConverter.GetBytes(2u));            // System instruction 2 = Transfer (LE)
-        ms.Write(BitConverter.GetBytes(lamports));      // u64 LE
+            // Instructions (compact array of 1).
+            ms.WriteByte(1);
+            ms.WriteByte(2);          // program id index → systemProgram (account index 2)
+            ms.WriteByte(2);          // account count
+            ms.WriteByte(0);          // from
+            ms.WriteByte(1);          // to
+            ms.WriteByte(12);         // data length: 4-byte instruction + 8-byte lamports
+            ms.Write(BitConverter.GetBytes(2u));            // System instruction 2 = Transfer (LE)
+            ms.Write(BitConverter.GetBytes(lamports));      // u64 LE
+        }
+        else
+        {
+            // Account keys (compact array of 4): systemProgram is now at index 3.
+            ms.WriteByte(4);
+            ms.Write(fromPub);
+            ms.Write(toPub);
+            ms.Write(feePub!);
+            ms.Write(SystemProgramId);
+
+            ms.Write(blockhash);
+
+            // Instructions (compact array of 2), both System-Program transfers.
+            ms.WriteByte(2);
+
+            ms.WriteByte(3);          // program id index → systemProgram (account index 3)
+            ms.WriteByte(2);          // account count
+            ms.WriteByte(0);          // from
+            ms.WriteByte(1);          // to
+            ms.WriteByte(12);
+            ms.Write(BitConverter.GetBytes(2u));
+            ms.Write(BitConverter.GetBytes(lamports));
+
+            ms.WriteByte(3);          // program id index → systemProgram
+            ms.WriteByte(2);          // account count
+            ms.WriteByte(0);          // from
+            ms.WriteByte(2);          // feeTo
+            ms.WriteByte(12);
+            ms.Write(BitConverter.GetBytes(2u));
+            ms.Write(BitConverter.GetBytes(feeLamports));
+        }
 
         return ms.ToArray();
     }
