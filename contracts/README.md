@@ -7,26 +7,23 @@ forwards both legs atomically, and reverts if either fails. There is no owner, w
 
 This is the ETH counterpart to how BTC/LTC/XMR/SOL already collect the fee in a single transaction.
 
-## What's needed to activate it (not done yet — requires you)
+## Status
 
-1. **An Ethereum fee address.** The address you provided (`DRkL…46oCs`) is **Solana** — it can only
-   receive SOL. The batcher needs a mainnet **ETH** address (`0x…`) as `feeRecipient`. Give me that
-   and I'll bake it in (obfuscated) like the SOL one.
-2. **Deploy access + gas.** Deploying a contract is a real, paid on-chain transaction from a funded
-   key. I don't hold keys and won't move funds, so you (or your deploy pipeline) run the deploy. It
-   is a one-time cost.
+- **Fee recipient: baked in.** `feeRecipient` is hardcoded (immutable) to
+  `0x01d1a1413F6b15f58906c804c261AFc12C3DCdBe` (EIP-55 checksum verified). There is no constructor
+  arg and no setter — a deploy cannot point it elsewhere.
+- **Remaining (requires you): a one-time deploy.** Deploying is a real, paid on-chain transaction
+  from a funded key. I don't hold keys and won't move funds, so you (or your pipeline) run it.
 
-## Deploy (once you have the above)
+## Deploy (one zero-argument command)
 
 ```bash
-# Foundry
 forge create contracts/FeeSplitter.sol:FeeSplitter \
   --rpc-url https://eth.llamarpc.com \
-  --private-key <DEPLOY_KEY> \
-  --constructor-args <FEE_RECIPIENT_0x> 50    # 50 = 0.5% max-fee guard (cap 200 = 2%)
+  --private-key <DEPLOY_KEY>
 ```
 
-Record the deployed contract address.
+Then send me the deployed contract address (`0x…`).
 
 ## Integration (I wire this after deploy)
 
