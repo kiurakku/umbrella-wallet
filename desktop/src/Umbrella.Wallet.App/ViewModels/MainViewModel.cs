@@ -1344,7 +1344,10 @@ public partial class MainViewModel : ViewModelBase
 
             foreach (var account in Accounts.ToList())
             {
-                if (account.SupportStatus != "Ready") continue;
+                // Receive-only chains (TON, ADA) have public balance APIs — fetch them too. XMR is
+                // also receive-only but has no public balance API (handled by the Monero service),
+                // and GetBalanceAsync simply returns null for it, so this is safe.
+                if (account.SupportStatus is not ("Ready" or "Receive only")) continue;
                 var chain = ParseChain(account.Symbol);
                 if (chain is null) continue;
 

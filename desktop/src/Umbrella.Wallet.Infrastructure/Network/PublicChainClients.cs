@@ -116,6 +116,8 @@ public sealed class PublicChainBalanceClient
                 ChainId.Eth => await GetEthAsync(address, cancellationToken),
                 ChainId.Tron => await GetTronAsync(address, cancellationToken),
                 ChainId.Sol => await GetSolAsync(address, cancellationToken),
+                ChainId.Ton => await GetTonAsync(address, cancellationToken),
+                ChainId.Ada => await GetAdaAsync(address, cancellationToken),
                 _ => null,
             };
         }
@@ -123,6 +125,34 @@ public sealed class PublicChainBalanceClient
         {
             return null;
         }
+    }
+
+    /// <summary>TON native balance via toncenter (returns nanoTON as a string).</summary>
+    private static async Task<ChainBalance?> GetTonAsync(string address, CancellationToken ct)
+    {
+        using var res = await Http.GetAsync(
+            $"https://toncenter.com/api/v2/getAddressBalance?address={Uri.EscapeDataString(address)}", ct);
+        if (!res.IsSuccessStatusCode) return null;
+        using var doc = await JsonDocument.ParseAsync(await res.Content.ReadAsStreamAsync(ct), cancellationToken: ct);
+        if (!doc.RootElement.TryGetProperty("result", out var r)) return null;
+        var nano = r.ValueKind == JsonValueKind.String ? r.GetString() : r.GetRawText();
+        if (!decimal.TryParse(nano, NumberStyles.Any, CultureInfo.InvariantCulture, out var raw)) return null;
+        return new ChainBalance(ChainId.Ton, address, raw / 1_000_000_000m, "TON");
+    }
+
+    /// <summary>Cardano native (ADA) balance via Koios (returns lovelace as a string).</summary>
+    private static async Task<ChainBalance?> GetAdaAsync(string address, CancellationToken ct)
+    {
+        using var body = new StringContent(
+            $"{{\"_addresses\":[\"{address}\"]}}", Encoding.UTF8, "application/json");
+        using var res = await Http.PostAsync("https://api.koios.rest/api/v1/address_info", body, ct);
+        if (!res.IsSuccessStatusCode) return null;
+        using var doc = await JsonDocument.ParseAsync(await res.Content.ReadAsStreamAsync(ct), cancellationToken: ct);
+        if (doc.RootElement.ValueKind != JsonValueKind.Array || doc.RootElement.GetArrayLength() == 0) return null;
+        if (!doc.RootElement[0].TryGetProperty("balance", out var b)) return null;
+        var lovelace = b.ValueKind == JsonValueKind.String ? b.GetString() : b.GetRawText();
+        if (!decimal.TryParse(lovelace, NumberStyles.Any, CultureInfo.InvariantCulture, out var raw)) return null;
+        return new ChainBalance(ChainId.Ada, address, raw / 1_000_000m, "ADA");
     }
 
     private static async Task<ChainBalance?> GetBtcAsync(string address, CancellationToken ct)
