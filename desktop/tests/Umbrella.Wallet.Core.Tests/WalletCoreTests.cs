@@ -17,12 +17,13 @@ public class ChainCatalogTests
             ChainCatalog.Supported.Select(c => c.Id).ToArray());
 
         Assert.Equal(
-            [ChainId.Ton, ChainId.Ada],
+            [ChainId.Ada],
             ChainCatalog.Planned.Select(c => c.Id).ToArray());
 
-        // Monero derives a real address but has no public balance sync.
+        // TON derives a real v4R2 address (send/balance pending); Monero derives a real address
+        // but has no public balance sync. Both are receive-only.
         Assert.Equal(
-            [ChainId.Xmr],
+            [ChainId.Ton, ChainId.Xmr],
             ChainCatalog.ReceiveOnly.Select(c => c.Id).ToArray());
 
         Assert.All(ChainCatalog.Supported, c =>
@@ -202,7 +203,6 @@ public class HdAddressDeriverTests
     }
 
     [Theory]
-    [InlineData(ChainId.Ton)]
     [InlineData(ChainId.Ada)]
     public void DeriveReceiveAddress_rejects_planned_chains(ChainId chain)
     {

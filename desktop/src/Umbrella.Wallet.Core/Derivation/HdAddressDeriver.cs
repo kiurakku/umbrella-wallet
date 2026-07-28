@@ -70,8 +70,8 @@ public sealed class HdAddressDeriver
             ChainId.Tron => DeriveTron(masterKey, addressIndex),
             ChainId.Sol => DeriveSolana(parsed, addressIndex),
             ChainId.Xmr => DeriveMonero(parsed),
-            ChainId.Ton or ChainId.Ada =>
-                throw new UnsupportedChainException(chain),
+            ChainId.Ton => DeriveTon(parsed),
+            ChainId.Ada => throw new UnsupportedChainException(chain),
             _ => throw new ArgumentOutOfRangeException(nameof(chain), chain, "Unknown chain id."),
         };
     }
@@ -88,6 +88,20 @@ public sealed class HdAddressDeriver
         var address = Encoders.Base58.EncodeData(pub);
         var path = $"44'/501'/0'/{addressIndex}'";
         return new ReceiveAddress(ChainId.Sol, address, "m/" + path, addressIndex);
+    }
+
+    /// <summary>
+    /// TON: SLIP-0010 ed25519 at m/44'/607'/0', wallet v4R2 address (non-bounceable / UQ form).
+    /// Matches multi-coin wallets (e.g. Trust Wallet) that use coin type 607 + v4R2, so the same
+    /// BIP39 phrase recovers the funds there. The v4R2 address math is pinned to tonweb by a test.
+    /// </summary>
+    private static ReceiveAddress DeriveTon(Mnemonic parsed)
+    {
+        var seed = parsed.DeriveSeed();
+        var priv = Slip10Ed25519.DerivePrivateKey(seed, new[] { 44u, 607u, 0u });
+        var pub = Slip10Ed25519.PublicKey(priv);
+        var address = TonKeys.WalletV4R2Address(pub);
+        return new ReceiveAddress(ChainId.Ton, address, "m/44'/607'/0'", 0);
     }
 
     private static ReceiveAddress DeriveBitcoinLike(

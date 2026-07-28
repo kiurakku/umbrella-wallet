@@ -60,9 +60,9 @@ public static class ChainCatalog
                 ChainId.Ton,
                 "TON",
                 "TON",
-                ChainSupportLevel.Planned,
-                DerivationScheme: null,
-                ReceivePathTemplate: null),
+                ChainSupportLevel.ReceiveOnly,
+                "SLIP-0010 ed25519 · wallet v4R2",
+                "m/44'/607'/0'"),
             new ChainInfo(
                 ChainId.Ada,
                 "ADA",

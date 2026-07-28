@@ -89,7 +89,7 @@ public sealed class CreateWalletFlowTests : IDisposable
         var mnemonic = await vault.UnlockAsync(Password);
         var deriver = new HdAddressDeriver();
 
-        Assert.Contains(ChainCatalog.Planned, c => c.Id == ChainId.Ton);
+        Assert.Contains(ChainCatalog.Planned, c => c.Id == ChainId.Ada);
         foreach (var chain in ChainCatalog.Planned)
         {
             Assert.Throws<UnsupportedChainException>(
@@ -100,6 +100,11 @@ public sealed class CreateWalletFlowTests : IDisposable
         var monero = deriver.DeriveReceiveAddress(mnemonic, ChainId.Xmr);
         Assert.Equal(95, monero.Address.Length);
         Assert.StartsWith("4", monero.Address, StringComparison.Ordinal);
+
+        // TON is receive-only too: a real wallet-v4R2 address (48-char UQ form), not a stub.
+        var ton = deriver.DeriveReceiveAddress(mnemonic, ChainId.Ton);
+        Assert.Equal(48, ton.Address.Length);
+        Assert.StartsWith("UQ", ton.Address, StringComparison.Ordinal);
     }
 
     public void Dispose()
