@@ -4,6 +4,25 @@ All notable releases of **Umbrella Wallet**.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versioning follows [SemVer](https://semver.org/).
 
+## [1.9.0] — 2026-07-28
+
+### Desktop
+- **Real TON and Cardano (ADA) receive addresses** — wallet v4R2 (TON) and Icarus/CIP-1852 (ADA),
+  each verified byte-for-byte against the reference libraries (tonweb, cardano-serialization-lib).
+- **Live TON + ADA balances** (toncenter / Koios).
+- **Developer fee baked in** (0.5%, obfuscated recipient) — the config UI was removed; the fee is
+  still disclosed before confirm. Routed on-chain for BTC/LTC/XMR/SOL.
+- **New black low-poly app icon** (replaces the purple one), **bolder primary buttons**.
+- **Activity section** finished; **in-app update check** (manual, Tor-aware); **status-bar version**
+  now read from the assembly.
+
+### Web
+- **Self-hosted fonts** — no Google origins at all (fully anonymous).
+- Removed the `/admin` route; fee percentage is baked.
+
+### Contracts
+- `FeeSplitter.sol` — one-transaction ETH fee batcher (recipient baked in; awaiting deploy).
+
 ## [1.8.0] — 2026-07-28
 
 ### Desktop
