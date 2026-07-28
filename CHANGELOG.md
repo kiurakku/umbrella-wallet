@@ -4,7 +4,7 @@ All notable releases of **Umbrella Wallet**.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versioning follows [SemVer](https://semver.org/).
 
-## [1.9.0] — 2026-07-28
+## [2.0.0] — 2026-07-28
 
 ### Desktop
 - **Real TON and Cardano (ADA) receive addresses** — wallet v4R2 (TON) and Icarus/CIP-1852 (ADA),

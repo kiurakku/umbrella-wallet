@@ -175,7 +175,7 @@
         <Style Selector="Button.tile">
             <Setter Property="BorderBrush" Value="{DynamicResource UmBorder3}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="CornerRadius" Value="16" />
             <Setter Property="Background">
                 <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
                     <GradientStop Offset="0" Color="#24FFFFFF" />
@@ -183,11 +183,11 @@
                 </LinearGradientBrush>
             </Setter>
             <Setter Property="Foreground" Value="{DynamicResource UmTextSoft}" />
-            <Setter Property="Height" Value="60" />
+            <Setter Property="Height" Value="68" />
             <Setter Property="HorizontalAlignment" Value="Stretch" />
             <Setter Property="HorizontalContentAlignment" Value="Center" />
             <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontSize" Value="13.5" />
         </Style>
         <Style Selector="Button.tile /template/ ContentPresenter">
             <Setter Property="Transitions">

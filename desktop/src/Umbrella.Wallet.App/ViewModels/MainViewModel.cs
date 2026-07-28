@@ -405,25 +405,50 @@ public partial class MainViewModel : ViewModelBase
     /// <summary>Every coin the wallet accepts, with live price — readable while locked.</summary>
     public ObservableCollection<MarketRowViewModel> Market { get; } = [];
 
-    /// <summary>Product news, shown in the News section. Curated, offline; no network needed.</summary>
+    /// <summary>Product news, shown in the News section. Curated, offline; no network needed.
+    /// Click an item to read the full note. Newest first.</summary>
     public ObservableCollection<NewsItemViewModel> News { get; } =
     [
-        new("UPDATE", "Transparent 0.5% swap fee on the web exchange",
-            "Currency conversions now include a small, clearly-labelled spread, always shown before you confirm. There is no separate on-chain fee, so your network cost is unchanged.",
-            "2026-07-24"),
+        new("UPDATE", "Umbrella 2.0 — TON and Cardano join the wallet",
+            "TON and Cardano (ADA) now derive real receive addresses from your existing seed phrase — no separate wallet needed.\n\n" +
+            "TON uses the standard wallet v4R2 contract; Cardano uses Icarus / CIP-1852. Both were checked byte-for-byte against the reference libraries (tonweb and Cardano's own serialization library), so the addresses match what a compatible wallet produces — your funds are never sent to an address you can't control.\n\n" +
+            "For now TON and ADA are receive-only (you can see the address and its live balance). Sending for both is the next step. Because the keys come from your seed, the funds are always recoverable in any compatible wallet (Trust Wallet for TON, Eternl for ADA).",
+            "2026-07-28"),
+        new("SECURITY", "Fully anonymous — no Google, nothing phones home",
+            "The web wallet no longer loads anything from Google. Fonts are self-hosted, so simply opening the wallet contacts no third party at all.\n\n" +
+            "There is no account, no email, no OAuth, no analytics and no telemetry anywhere. Combined with the built-in Tor switch, opening and using the wallet leaks nothing about you.",
+            "2026-07-28"),
+        new("UPDATE", "A cleaner desktop — new icon and tidy full-screen layout",
+            "A new black low-poly umbrella icon replaces the old one. The content now sits in a centred column with a sensible maximum width, so a maximised or full-screen window looks tidy instead of stretching everything edge-to-edge. Buttons are a touch bolder.",
+            "2026-07-28"),
+        new("GUIDE", "How your keys are protected",
+            "Your 24-word seed is generated on this computer and encrypted with Argon2id (a memory-hard password hash) plus AES-256-GCM before it ever touches the disk. The vault password never leaves this device, and neither does the seed.\n\n" +
+            "Balances are read straight from public block explorers — no API keys, no middle-man — and hidden behind Tor when it's on. The seed is a standard BIP39 phrase, so you can restore it in any compatible wallet if you ever need to.",
+            "2026-07-27"),
         new("SECURITY", "Tor is built into the wallet",
-            "One switch in Settings routes all wallet traffic through the Tor network — no separate install. Your IP stays out of your finances.",
+            "One switch in Settings → Privacy routes all wallet traffic through the Tor network — no separate install. It runs on its own port so your Tor Browser is untouched. Your IP stays out of your finances.",
             "2026-07-20"),
         new("UPDATE", "Full Monero wallet, powered by Monero's own engine",
-            "XMR is a first-class coin here: real private balance and sending, with the Monero daemon running locally. Your keys never leave this device.",
+            "XMR is a first-class coin here: real private balance and sending, with the Monero daemon running locally. Your keys never leave this device. Because amounts are hidden on-chain, Settings can export your address and spend/view keys for 'Restore from keys' in Feather or the Monero CLI.",
             "2026-07-18"),
         new("GUIDE", "Why a USDT (TRC-20) transfer can cost several dollars",
-            "That fee is TRON's energy cost, not ours. A fresh, unstaked TRON account burns TRX for every USDT transfer. Stake TRX for energy, or use USDT on a cheaper network.",
+            "That fee is TRON's energy cost, not ours. A fresh, unstaked TRON account burns TRX for every USDT transfer, which can be $3–8. To avoid it: stake TRX to get free energy, or use USDT on a cheaper network (ERC-20 gas, or USDC on Solana for cents).",
             "2026-07-15"),
         new("UPDATE", "Ten themes, six languages, movable navigation",
-            "Make the wallet yours: pick from ten colour themes, six interface languages, and park the navigation panel on any edge — all in Settings.",
+            "Make the wallet yours: pick from ten colour themes, six interface languages (EN/UK/RU/ZH/ES/DE), and park the navigation panel on any edge — all in Settings.",
             "2026-07-12"),
     ];
+
+    // Clicking a news item opens it as a full-article overlay.
+    [ObservableProperty] private NewsItemViewModel? _selectedNews;
+    public bool IsNewsOpen => SelectedNews is not null;
+    partial void OnSelectedNewsChanged(NewsItemViewModel? value) => OnPropertyChanged(nameof(IsNewsOpen));
+
+    [RelayCommand]
+    private void OpenNews(NewsItemViewModel? item) => SelectedNews = item;
+
+    [RelayCommand]
+    private void CloseNews() => SelectedNews = null;
 
     /// <summary>
     /// Assets that can actually be sent, as a pick-list. Typing a ticker by hand is how people
