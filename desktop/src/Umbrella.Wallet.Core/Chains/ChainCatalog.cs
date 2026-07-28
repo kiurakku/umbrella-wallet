@@ -67,9 +67,9 @@ public static class ChainCatalog
                 ChainId.Ada,
                 "ADA",
                 "Cardano",
-                ChainSupportLevel.Planned,
-                DerivationScheme: null,
-                ReceivePathTemplate: null),
+                ChainSupportLevel.ReceiveOnly,
+                "Icarus CIP-1852 · BIP32-Ed25519",
+                "m/1852'/1815'/0'/0/0"),
             new ChainInfo(
                 ChainId.Xmr,
                 "XMR",

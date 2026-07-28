@@ -76,11 +76,11 @@ public sealed class CreateWalletFlowTests : IDisposable
     }
 
     /// <summary>
-    /// Monero has no BIP44 path and its own 25-word seed, so a BIP39-derived XMR address would
-    /// not be restorable in any real Monero wallet. It must refuse rather than invent one.
+    /// Every receive-only chain must produce a REAL, restorable address, never a stub — Monero
+    /// (its own 25-word account), TON (wallet v4R2) and Cardano (CIP-1852 base address).
     /// </summary>
     [Fact]
-    public async Task PlannedChains_RefuseToDeriveInsteadOfInventingAnAddress()
+    public async Task ReceiveOnlyChains_ProduceRealAddresses_NotStubs()
     {
         var vault = new EncryptedFileSeedVault(Path.Combine(_directory, "vault.json"));
         var phrase = new Bip39MnemonicService().Generate();
@@ -89,22 +89,23 @@ public sealed class CreateWalletFlowTests : IDisposable
         var mnemonic = await vault.UnlockAsync(Password);
         var deriver = new HdAddressDeriver();
 
-        Assert.Contains(ChainCatalog.Planned, c => c.Id == ChainId.Ada);
-        foreach (var chain in ChainCatalog.Planned)
-        {
-            Assert.Throws<UnsupportedChainException>(
-                () => deriver.DeriveReceiveAddress(mnemonic, chain.Id));
-        }
+        // Nothing is left "planned" — everything derives a real address.
+        Assert.Empty(ChainCatalog.Planned);
 
-        // Monero is receive-only: it MUST produce a real 95-char mainnet address, not a stub.
+        // Monero: a real 95-char mainnet address.
         var monero = deriver.DeriveReceiveAddress(mnemonic, ChainId.Xmr);
         Assert.Equal(95, monero.Address.Length);
         Assert.StartsWith("4", monero.Address, StringComparison.Ordinal);
 
-        // TON is receive-only too: a real wallet-v4R2 address (48-char UQ form), not a stub.
+        // TON: a real wallet-v4R2 address (48-char UQ form).
         var ton = deriver.DeriveReceiveAddress(mnemonic, ChainId.Ton);
         Assert.Equal(48, ton.Address.Length);
         Assert.StartsWith("UQ", ton.Address, StringComparison.Ordinal);
+
+        // Cardano: a real Shelley base address (bech32 addr1...).
+        var ada = deriver.DeriveReceiveAddress(mnemonic, ChainId.Ada);
+        Assert.StartsWith("addr1", ada.Address, StringComparison.Ordinal);
+        Assert.DoesNotContain("Adapter", ada.Address, StringComparison.Ordinal);
     }
 
     public void Dispose()

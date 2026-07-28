@@ -71,7 +71,7 @@ public sealed class HdAddressDeriver
             ChainId.Sol => DeriveSolana(parsed, addressIndex),
             ChainId.Xmr => DeriveMonero(parsed),
             ChainId.Ton => DeriveTon(parsed),
-            ChainId.Ada => throw new UnsupportedChainException(chain),
+            ChainId.Ada => DeriveAda(parsed),
             _ => throw new ArgumentOutOfRangeException(nameof(chain), chain, "Unknown chain id."),
         };
     }
@@ -102,6 +102,17 @@ public sealed class HdAddressDeriver
         var pub = Slip10Ed25519.PublicKey(priv);
         var address = TonKeys.WalletV4R2Address(pub);
         return new ReceiveAddress(ChainId.Ton, address, "m/44'/607'/0'", 0);
+    }
+
+    /// <summary>
+    /// Cardano: Icarus / CIP-1852 (BIP32-Ed25519) at m/1852'/1815'/0', Shelley base address.
+    /// The whole pipeline is pinned to cardano-serialization-lib, so the same phrase recovers the
+    /// funds in any CIP-1852 wallet.
+    /// </summary>
+    private static ReceiveAddress DeriveAda(Mnemonic parsed)
+    {
+        var address = AdaKeys.BaseAddress(parsed.ToString());
+        return new ReceiveAddress(ChainId.Ada, address, "m/1852'/1815'/0'/0/0", 0);
     }
 
     private static ReceiveAddress DeriveBitcoinLike(

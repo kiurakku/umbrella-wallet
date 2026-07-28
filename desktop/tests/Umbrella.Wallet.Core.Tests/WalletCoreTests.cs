@@ -16,14 +16,13 @@ public class ChainCatalogTests
             [ChainId.Btc, ChainId.Eth, ChainId.Ltc, ChainId.Doge, ChainId.Tron, ChainId.Sol],
             ChainCatalog.Supported.Select(c => c.Id).ToArray());
 
-        Assert.Equal(
-            [ChainId.Ada],
-            ChainCatalog.Planned.Select(c => c.Id).ToArray());
+        // Every chain now derives a real address; nothing is left "planned".
+        Assert.Empty(ChainCatalog.Planned);
 
-        // TON derives a real v4R2 address (send/balance pending); Monero derives a real address
-        // but has no public balance sync. Both are receive-only.
+        // TON (v4R2) and Cardano (CIP-1852) derive real addresses; Monero too, with no public
+        // balance sync. All three are receive-only (address now, send/balance later).
         Assert.Equal(
-            [ChainId.Ton, ChainId.Xmr],
+            [ChainId.Ton, ChainId.Ada, ChainId.Xmr],
             ChainCatalog.ReceiveOnly.Select(c => c.Id).ToArray());
 
         Assert.All(ChainCatalog.Supported, c =>
@@ -186,7 +185,7 @@ public class HdAddressDeriverTests
             case ChainId.Ton:
             case ChainId.Ada:
             case ChainId.Xmr:
-                throw new InvalidOperationException("Planned chains must not appear in supported vectors.");
+                throw new InvalidOperationException("Receive-only chains must not appear in supported vectors.");
             default:
                 throw new ArgumentOutOfRangeException(nameof(chain), chain, null);
         }
@@ -203,13 +202,15 @@ public class HdAddressDeriverTests
     }
 
     [Theory]
-    [InlineData(ChainId.Ada)]
-    public void DeriveReceiveAddress_rejects_planned_chains(ChainId chain)
+    [InlineData(ChainId.Ton, "UQ", 48)]   // wallet v4R2 user-friendly form
+    [InlineData(ChainId.Ada, "addr1", 103)] // Shelley base address (bech32)
+    public void ReceiveOnly_chains_derive_a_real_address(ChainId chain, string prefix, int length)
     {
-        var ex = Assert.Throws<UnsupportedChainException>(
-            () => _sut.DeriveReceiveAddress(Mnemonic, chain));
+        var derived = _sut.DeriveReceiveAddress(Mnemonic, chain);
 
-        Assert.Equal(chain, ex.ChainId);
-        Assert.False(ChainCatalog.IsSupported(chain));
+        Assert.StartsWith(prefix, derived.Address, StringComparison.Ordinal);
+        Assert.Equal(length, derived.Address.Length);
+        Assert.False(ChainCatalog.IsSupported(chain));       // receive-only, not "supported"
+        Assert.True(ChainCatalog.HasRealAddress(chain));     // but a genuine, non-stub address
     }
 }
