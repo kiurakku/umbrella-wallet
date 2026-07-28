@@ -230,7 +230,7 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
           `Hi, ${name}! 👋\n\n` +
             "Umbrella Wallet is a non-custodial aggregator: your keys stay in your wallet, and we help with balances, rates, and P2P.\n\n" +
             "Tap the button below to open the Mini App.\n\n" +
-            "☂️ Built by the fear",
+            "☂️ Built by Umbrella Wallet",
           { reply_markup: this.webAppKeyboard("🌑 Open Umbrella Wallet") },
         );
       } catch (error) {
@@ -255,7 +255,7 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
           "/notifications on|off — notifications\n" +
           "/ping — connection check\n" +
           "/support — help\n\n" +
-          "the fear · Umbrella Wallet",
+          "Umbrella Wallet",
         { reply_markup: this.webAppKeyboard("Open Umbrella") },
       );
     });
@@ -458,7 +458,7 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
 
     bot.command("support", async (ctx) => {
       await ctx.reply(
-        "Umbrella support:\n• /help — commands\n• Mini App — account settings\n• the fear — product development",
+        "Umbrella support:\n• /help — commands\n• Mini App — account settings\n• Umbrella team — product development",
         {
           reply_markup: this.webAppKeyboard("Open Umbrella"),
         },

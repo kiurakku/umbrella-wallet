@@ -110,25 +110,6 @@ never draw on an account the user never funded.
 > **Fees:** see [07-financial.md](07-financial.md). Short version: you pay the network's fee, not
 > ours. TRON USDT is the expensive outlier.
 
-## Developer fee (`DeveloperFeeConfig`)
-
-A platform fee **baked into the build** — there is no configuration UI. The percentage (0.5%,
-capped at 2%) and the receiving address per chain are constants in `DeveloperFeeConfig`; the address
-is stored **obfuscated** (XOR + base64) so it is never a plain string in the binary and is never
-shown anywhere in the app. It is a public on-chain receiving address, so this is obscurity, not
-secrecy. `DeveloperFeeConfig.QuoteFee(symbol, amount)` returns a fee only when a baked address
-exists for the chain **and** the chain's send path routes it — so the disclosure can never claim a
-fee that isn't taken. The Solana fee address is pinned by a unit test.
-
-- **Routed today:** BTC / LTC add the fee as an extra output in the *same* transaction; XMR adds it
-  as a second `destinations` entry in the same RingCT transfer; SOL adds a second System-transfer
-  instruction in the same transaction (the two-instruction layout is pinned by a unit test) — one
-  network fee in every case. An invalid fee address is dropped rather than block the user's send.
-- **Configurable, routing pending:** ETH, TRX, USDT-TRC20 (a `%` fee needs a second transaction that
-  is uneconomic on ETH gas / TRON energy; a same-transaction fee there needs a batching contract).
-- **Always disclosed** in the send review before the user confirms — there is no hidden collection.
-  The web wallet mirrors the config in its `/admin` panel; see [07-financial.md](07-financial.md).
-
 ## Bundled Tor (`EmbeddedTorService`)
 
 - `tor.exe` (or `tor` on Linux) ships in `Assets/tor/`, launched as a child process.
@@ -202,3 +183,4 @@ wrote under `%APPDATA%`/`%LOCALAPPDATA%` into the new location on first launch, 
 Gate.io, MEXC, Bitget, Telegram CryptoBot). Each connector calls only the venue's *balance* endpoint
 with its own signing scheme. Keys are verified before storage, encrypted at rest with a key derived
 from the seed, and never used for trading or withdrawal — **there is no such code**.
+

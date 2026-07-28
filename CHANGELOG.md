@@ -1,24 +1,25 @@
 # Changelog
 
-All notable releases of **Umbrella Wallet** by [kiurakku](https://github.com/kiurakku).
+All notable releases of **Umbrella Wallet**.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versioning follows [SemVer](https://semver.org/).
 
-## [1.8.0] — 2026-07-24
+## [1.8.0] — 2026-07-28
 
 ### Desktop
-- **News** section in the navigation — curated product updates, offline (no network needed).
-- **Developer fee on sends** (Settings → Developer): a configurable percentage (capped at 2%) and a receiving address per chain, **disclosed in the send review before the user confirms**. Routed on-chain today for **BTC, LTC and XMR** as an extra output in the *same* transaction (one network fee); ETH/SOL/TRON are configurable with routing pending. Default is 0% (off) — nothing is taken until configured. Works with no backend.
+- TON (wallet v4R2) and Cardano (ADA) receive addresses
+- Activity section completed
+- In-app update check (manual, Tor-aware)
+- Real app version in status bar
+- Windows portable build
 
-> Desktop binaries for 1.8.0 are pending a rebuild (the local .NET host was unavailable at authoring time).
+### Web
+- News section
+- Self-hosted fonts (no Google CDN)
+- Exchange rate improvements
 
-### Web & API
-- **`/admin`** panel (PIN-gated) to set the platform-fee percentage and per-chain receiving addresses, stored locally — no server required.
-- Exchange quote now discloses the locally-configured fee percentage, computed consistently from the mid-market rate.
-
-### Repo / tooling
-- Reorganized `.gitignore` into labelled sections; deduplicated the `.env` rules (templates stay tracked) and added OS/cache entries. No build artifacts or secrets are tracked.
-
+### Contracts
+- FeeSplitter utility for efficient ETH forwarding
 ## [1.7.0] — 2026-07-23
 
 ### Desktop
@@ -112,5 +113,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versioning follo
 
 ---
 
-**Owner:** [kiurakku](https://github.com/kiurakku) · **License:** [LICENSE](LICENSE)
+
+
+
 

@@ -97,7 +97,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content:
           "Umbrella Wallet — a discreet private crypto wallet with instant exchange, cards, and P2P trading.",
       },
-      { name: "author", content: "kiurakku" },
+      { name: "author", content: "Umbrella Wallet" },
       { property: "og:title", content: "Umbrella Wallet" },
       {
         property: "og:description",
@@ -106,7 +106,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://github.com/kiurakku/umbrella-wallet" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:creator", content: "@kiurakku" },
+      
     ],
     links: [
       {

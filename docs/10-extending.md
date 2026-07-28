@@ -239,82 +239,6 @@ useEffect(() => {
 
 ---
 
-## Add swap spread revenue model
-
-**As described in `07-financial.md`:**
-
-```typescript
-// backend/src/rates/rates.service.ts
-
-const PLATFORM_SPREAD_BPS = 50;  // 0.5% = 50 basis points
-// Change to 100 for 1%, 25 for 0.25%, 10 for 0.1%
-
-async getExchangeRate(from: string, to: string): Promise<{
-  rate: number;
-  spread: string;
-}> {
-  const market = await this.fetchCoinGeckoRate(from, to);
-  const adjusted = market * (1 - PLATFORM_SPREAD_BPS / 10_000);
-  return {
-    rate: adjusted,
-    spread: (PLATFORM_SPREAD_BPS / 100) + "%",
-  };
-}
-```
-
-**Frontend display:**
-```tsx
-// src/routes/exchange.tsx
-
-<div className="text-xs text-muted-foreground">
-  Market rate: {marketRate} {to}/{from}
-</div>
-<div className="text-sm font-semibold">
-  You receive: {adjustedRate * amount} {to}
-</div>
-<div className="text-xs text-primary">
-  Includes 0.5% service fee
-</div>
-```
-
----
-
-## Add P2P commission
-
-```prisma
-// backend/prisma/schema.prisma — add to P2pOffer
-
-model P2pOffer {
-  // ... existing fields
-  platformFeePercent Decimal @default(0.1) @db.Decimal(5, 3)  // 0.1%
-}
-```
-
-```typescript
-// backend/src/p2p/p2p.service.ts — calculate on order completion
-
-async completeOrder(orderId: string): Promise<P2pOrder> {
-  const order = await this.prisma.p2pOrder.findUnique({
-    where: { id: orderId },
-    include: { offer: true },
-  });
-
-  const feePercent = order.offer.platformFeePercent.toNumber();
-  const feeAmount = order.amount.toNumber() * feePercent / 100;
-
-  // Log fee (virtual — no on-chain transaction)
-  console.log(`Order ${orderId} completed. Platform fee: ${feeAmount} ${order.offer.asset}`);
-
-  // Update order status
-  return this.prisma.p2pOrder.update({
-    where: { id: orderId },
-    data: { status: "completed" },
-  });
-}
-```
-
----
-
 ## Add a new exchange integration (e.g., Binance API for real swaps)
 
 Currently, swap shows quote only — user signs tx manually. To execute trades through an exchange:
@@ -419,3 +343,4 @@ export class KycRequiredGuard implements CanActivate {
 ```
 
 Apply to `POST /p2p/orders` and `POST /p2p/offers`.
+

@@ -40,13 +40,13 @@ No account. No email. No phone number. No KYC. Just a wallet — the way it was 
 
 <br/>
 
-**[⬇️ Download Windows installer (v1.8.0)](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-Setup-1.8.0.exe)** · [All releases](https://github.com/kiurakku/umbrella-wallet/releases)
+**[⬇️ Download Windows build (v1.8.0 portable)](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-1.8.0-win-x64-portable.zip)** · [All releases](https://github.com/kiurakku/umbrella-wallet/releases)
 
 <br/>
 
 <img src="docs/assets/screenshot-portfolio.png" width="85%" alt="Umbrella Wallet — portfolio"/>
 
-<sub>a project by <img src="docs/assets/thefear-logo.png" width="18" alt=""/> <b>the fear</b> · owner <a href="https://github.com/kiurakku">kiurakku</a> · © 2026</sub>
+<sub>© 2026 Umbrella Wallet</sub>
 
 </div>
 
@@ -111,7 +111,7 @@ Umbrella flips that model:
 
 ## 🎨 Make it yours
 
-- **10 themes** — Purple *(the fear)* · Blue · Green · Black OLED · White light · Violet gradient · Sunset gradient · Crimson · Amber · Slate. Switch live, no restart.
+- **10 themes** — Purple · Blue · Green · Black OLED · White light · Violet gradient · Sunset gradient · Crimson · Amber · Slate. Switch live, no restart.
 - **6 languages** — 🇬🇧 English · 🇺🇦 Українська · Русский · 🇨🇳 中文 · 🇪🇸 Español · 🇩🇪 Deutsch.
 - **Movable navigation** — park the menu left, right, top or bottom.
 - **Duck stickers** 🦆 — animated Telegram stickers greet you on Welcome, Receive, Send, Connect, Activity and Settings. Serious cryptography, unserious ducks.
@@ -120,7 +120,7 @@ Umbrella flips that model:
 
 | Platform | Package | Notes |
 |----------|---------|-------|
-| **Windows** | [`UmbrellaWallet-Setup-1.8.0.exe`](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-Setup-1.8.0.exe) | Installer — choose your folder |
+| **Windows** | [`UmbrellaWallet-1.8.0-win-x64-portable.zip`](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-1.8.0-win-x64-portable.zip) | Installer — choose your folder |
 | **Windows** | portable `.exe` from [Releases](https://github.com/kiurakku/umbrella-wallet/releases) | No install required |
 | **Linux** | `tar.gz` from [Releases](https://github.com/kiurakku/umbrella-wallet/releases) | `./Umbrella.Wallet.App` |
 
@@ -206,7 +206,7 @@ through code:
 |---|---|
 | [Overview](docs/01-overview.md) · [Architecture](docs/02-architecture.md) · [Tech stack](docs/03-tech-stack.md) | what it is, how it fits together, what it's built with |
 | [Desktop](docs/04-desktop.md) · [Web routes](docs/05-web-routes.md) · [Backend](docs/06-backend.md) | each product in depth |
-| [💸 Financial part](docs/07-financial.md) | **fees, sending mechanics, why TRC-20 costs what it does, the disclosed developer fee** |
+| [Network fees](docs/07-financial.md) | TRC-20 costs, send review, exchange quotes |
 | [Security](docs/08-security.md) · [Build & deploy](docs/09-build-deploy.md) · [Extending](docs/10-extending.md) · [Glossary](docs/11-glossary.md) | threat model, commands, recipes, terms |
 
 ## ⚠️ The honest part
@@ -215,33 +215,28 @@ Umbrella is **non-custodial**. That word means: *we never hold your money, so we
 
 ## ℹ️ About
 
-**Umbrella Wallet** is a privacy-first, non-custodial cryptocurrency wallet for desktop (primary) with an optional web companion. Built and owned by **[kiurakku](https://github.com/kiurakku)**.
+**Umbrella Wallet** is a privacy-first, non-custodial cryptocurrency wallet for desktop with an optional web companion.
 
 | | |
 |---|---|
 | **Repository** | https://github.com/kiurakku/umbrella-wallet |
 | **Releases** | https://github.com/kiurakku/umbrella-wallet/releases |
 | **Issues** | https://github.com/kiurakku/umbrella-wallet/issues |
-| **License** | [LICENSE](LICENSE) — free to use, no derivatives |
-| **Owner** | [kiurakku](https://github.com/kiurakku) |
+| **License** | [LICENSE](LICENSE) |
 
-**Topics:** `#umbrella-wallet` `#crypto-wallet` `#bitcoin` `#ethereum` `#monero` `#tor` `#privacy` `#self-custody` `#non-custodial` `#avalonia` `#dotnet` `#desktop-wallet` `#defi` `#web3` `#kiurakku`
-
+**Topics:** `#umbrella-wallet` `#crypto-wallet` `#bitcoin` `#ethereum` `#monero` `#tor` `#privacy` `#self-custody` `#non-custodial` `#avalonia` `#dotnet` `#desktop-wallet`
 ## 💬 Support
 
-Made and maintained by **[kiurakku](https://github.com/kiurakku)**. Questions and bug reports are welcome as issues in this repository — answered with care, on a best-effort basis, without creating any legal obligation. 🤝
+Questions and bug reports are welcome as GitHub issues — best-effort support, no legal obligation.
 
 ## 📄 License
 
-**Free to use. Not free to take.** ☂️ Umbrella is the property of **kiurakku**; anyone may download and use it at no charge, but copying, modifying or republishing it is not permitted. The author carries no legal or financial liability for how it is used — full terms in [LICENSE](LICENSE).
+**Free to use. Not free to take.** See [LICENSE](LICENSE) for full terms.
 
 ---
 
-<div align="center">
-<img src="docs/assets/thefear-logo.png" width="42" alt="the fear"/>
-<br/>
-<sub><b>the fear</b> · privacy · self-custody · no middlemen<br/>☂️ © 2026 <a href="https://github.com/kiurakku">kiurakku</a> · all rights reserved</sub>
-</div>
+
+
 
 
 

@@ -36,7 +36,6 @@ A user can export their seed phrase (after password-decrypt) and immediately imp
 
 ### 5. Transparent fees
 - **Network fees only** — Umbra adds zero markup on send/receive.
-- **Swap spread** — a small configurable percentage (default 0.5%) is built into the quoted exchange rate. This is the sole revenue mechanism. It is shown to the user before confirmation.
 - See `07-financial.md` for the full fee model.
 
 ---
@@ -60,3 +59,4 @@ A user can export their seed phrase (after password-decrypt) and immediately imp
 - Provide centralized escrow (P2P is proof-based: `cryptoTxHash` + `fiatPaymentReference`).
 - Collect identity (KYC is optional and provider-handled — Sumsub/Veriff keeps the documents).
 - Operate as a Money Services Business or VASP. See `08-security.md` legal section.
+

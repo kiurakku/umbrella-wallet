@@ -11,13 +11,13 @@
 | **01** | [Overview](./01-overview.md) | What Umbra is, philosophy, product scope, supported chains, non-goals |
 | **02** | [Architecture](./02-architecture.md) | System diagrams, data flows, component map, golden rule (keys never leave device) |
 | **03** | [Tech Stack](./03-tech-stack.md) | Every library explained: frontend (React, TanStack), backend (NestJS, Prisma), crypto libs, why each |
-| **04** | [Desktop App](./04-desktop.md) | The shipped .NET 8 + Avalonia desktop wallet: project structure, vault, real multi-chain send, bundled Tor & Monero, developer fee, packaging |
+| **04** | [Desktop App](./04-desktop.md) | The shipped .NET 8 + Avalonia desktop wallet: project structure, vault, real multi-chain send, bundled Tor & Monero, packaging |
 | **05** | [Web Routes](./05-web-routes.md) | Route map, onboarding flow, IndexedDB structure, demo mode, aggregator model, privacy mode, honest limits |
 | **06** | [Backend](./06-backend.md) | Module overview, DB schema, all API endpoints, auth flow, rate-limiting, WebSocket, Helmet config, hardening checklist |
-| **07** | [Financial Model](./07-financial.md) | 💸 **Revenue model, fees, swap spread, TRC-20 costs, anonymity constraints, user disclosure requirements** |
+| **07** | [Financial Model](./07-financial.md) | Network fees, TRC-20 costs, user disclosure |
 | **08** | [Security](./08-security.md) | Threat model, audit status, legal classification (non-custodial aggregator), GDPR, incident response, bug bounty, compliance roadmap |
 | **09** | [Build & Deploy](./09-build-deploy.md) | Local dev setup, env vars, Docker, Prisma commands, production build, Vercel + Fly.io deploy, Tor hidden service, monitoring |
-| **10** | [Extending](./10-extending.md) | Recipes: add blockchain, add language, add theme, add Monero, add swap spread, add P2P commission, add exchange API, KYC enforcement |
+| **10** | [Extending](./10-extending.md) | Recipes: add blockchain, add language, add theme, add Monero, add exchange API, KYC enforcement |
 | **11** | [Glossary](./11-glossary.md) | Every technical term defined in one sentence |
 
 ---
@@ -36,7 +36,6 @@
 1. [08 — Security](./08-security.md) → threat model, legal model, GDPR
 2. [02 — Architecture](./02-architecture.md) → verify keys never reach server
 3. [06 — Backend](./06-backend.md) → check Helmet config, rate-limits, Argon2id usage
-4. [07 — Financial Model](./07-financial.md) → fee transparency, legal compliance
 
 **If you're adding features:**
 1. [10 — Extending](./10-extending.md) → all recipes in one place
@@ -51,7 +50,6 @@
 2. **Aggregator** — Links external wallets/banks, doesn't create its own
 3. **Privacy-first** — Username-only signup, Tor support, no analytics
 4. **Self-sovereign** — Seed phrase is portable to any BIP39 wallet
-5. **Transparent fees** — the developer fee on sends (0.5%) is shown before confirmation; the recipient address is baked in and never shown; no hidden charges
 
 ---
 
@@ -60,7 +58,6 @@
 - **Seed encryption:** Argon2id KDF (64MB, 3 iter) → AES-256-GCM → IndexedDB (client-only)
 - **Backend auth:** Argon2id password hash, JWT access (15min), refresh (30d, httpOnly cookie, rotated)
 - **P2P model:** Proof-based (tx hashes), NO escrow on backend (users trade directly)
-- **Fee model:** Optional developer fee on sends — off by default, capped at 2%, disclosed before confirm, routed on-chain for BTC/LTC/XMR (same transaction). A disclosed swap-spread also drives the web Exchange quote. See [07-financial.md](./07-financial.md)
 - **Legal model:** Non-custodial aggregator, NOT a VASP/MSB (but consult lawyer before public launch)
 
 ---
@@ -112,17 +109,6 @@
 
 ---
 
-## Revenue model summary (from 07-financial.md)
-
-| Method | How | Legal complexity | User-visible |
-|--------|-----|------------------|--------------|
-| **Swap spread** (recommended) | 0.5% built into exchange rate | Low | Yes, shown before confirm |
-| P2P matchmaking fee | 0.1-0.2% per completed deal | Medium | Yes, in order summary |
-| On-chain fee address | 0.5% sent to fixed address | High (MSB risk) | Yes, extra gas |
-| Subscription | $5/month Pro tier | Medium (payment processing) | Yes, recurring charge |
-
-**Chosen model:** a disclosed **developer fee on sends (0.5%)** — baked into the build (no config UI), routed on-chain for BTC/LTC/XMR/SOL in the same transaction. The recipient address is obfuscated in the binary and never shown. The percentage is always disclosed before the user confirms.
-
 ---
 
 ## Privacy mode (from 05-web-routes.md)
@@ -143,8 +129,7 @@ Auto-enabled on `.onion` domains.
 - Custody user funds during P2P trades (no escrow on backend)
 - Collect real identity without explicit KYC consent
 - Operate as a Money Services Business or VASP (non-custodial aggregator only)
-- Charge **hidden** fees — the developer fee on sends is off by default and always disclosed before the user confirms (see 07-financial.md)
-- Force KYC to use wallet (only for P2P above limits)
+- - Force KYC to use wallet (only for P2P above limits)
 
 ---
 
@@ -156,7 +141,6 @@ See [10 — Extending](./10-extending.md) for recipes:
 - Add a new language (translation file)
 - Add a new theme (CSS variables)
 - Add swap spread revenue (one constant)
-- Add P2P commission (Prisma field)
 - Add exchange integration (Binance example)
 - Add WebAuthn / Passkeys (biometric unlock)
 
@@ -178,3 +162,4 @@ Proprietary / AGPL-3.0 (choose one) — see LICENSE file.
 ---
 
 **This documentation is complete as of January 2026.** Update `docs/` when adding features.
+

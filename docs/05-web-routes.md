@@ -6,7 +6,7 @@
 |------|-----------|-------------|---------------|
 | `/` | `index.tsx` | Wallet dashboard: total balance, assets, recent P2P deals | ✓ |
 | `/p2p` | `p2p.tsx` | P2P market: offers, my deals, my offers | ✓ |
-| `/exchange` | `exchange.tsx` | Swap preview + live rates; discloses the platform fee (from `platformFee.ts`) before the P2P handoff | ✓ |
+| `/exchange` | `exchange.tsx` | Swap preview + live rates; live rates before the P2P handoff | ✓ |
 | `/news` | `news.tsx` | Product news / updates | ✓ |
 | `/stats` | `stats.tsx` | Portfolio analytics, sparklines, distribution chart | ✓ |
 | `/settings` | `settings.tsx` | Profile, wallets, seed, 2FA, KYC, privacy, language | ✓ |
@@ -193,3 +193,4 @@ Not in MVP, but possible:
 
 Pros: native-like UX, no app store approval.
 Cons: still subject to web security model (no screenshot protection, no hardware keychain).
+

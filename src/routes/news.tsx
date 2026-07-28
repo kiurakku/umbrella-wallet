@@ -49,8 +49,8 @@ const FALLBACK_NEWS: NewsItem[] = [
   {
     id: "spread",
     tag: "update",
-    title: "Exchange now shows a transparent 0.5% service fee",
-    body: "Currency conversions include a small, clearly-labelled spread — always shown before you confirm. No separate on-chain fee, so your network cost is unchanged.",
+    title: "Exchange rates update in real time",
+    body: "The Exchange page pulls live market quotes and shows the full conversion before you confirm.",
     date: "2026-07-24",
   },
   {
@@ -136,3 +136,4 @@ function NewsPage() {
     </AppShell>
   );
 }
+
