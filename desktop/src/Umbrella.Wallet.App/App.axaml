@@ -103,11 +103,14 @@
             <Setter Property="Background" Value="{DynamicResource UmHover}" />
         </Style>
 
-        <!-- Primary: solid white, the single strongest call to action on a screen. -->
+        <!-- Primary: solid, bold — the single strongest call to action on a screen. -->
         <Style Selector="Button.primary">
             <Setter Property="Background" Value="{DynamicResource UmInverse}" />
             <Setter Property="Foreground" Value="{DynamicResource UmInverseText}" />
-            <Setter Property="Padding" Value="20,12" />
+            <Setter Property="Padding" Value="22,13" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="FontSize" Value="14.5" />
+            <Setter Property="CornerRadius" Value="12" />
         </Style>
         <Style Selector="Button.primary /template/ ContentPresenter">
             <Setter Property="Transitions">
