@@ -17,13 +17,19 @@ const CHAIN_SYMBOL: Record<string, string> = {
   base: "ETH",
 };
 
+// Each coin's own brand colour, so token badges read at a glance across the app. Kept in oklch
+// to match the design system; every coin the wallet supports is covered so none fall back to grey.
 const COLORS: Record<string, string> = {
-  ETH: "oklch(0.68 0.14 265)",
   BTC: "oklch(0.75 0.18 60)",
+  ETH: "oklch(0.68 0.14 265)",
+  LTC: "oklch(0.62 0.11 255)",
+  DOGE: "oklch(0.8 0.13 90)",
   TON: "oklch(0.72 0.16 235)",
   USDT: "oklch(0.72 0.16 155)",
   SOL: "oklch(0.65 0.18 300)",
   TRX: "oklch(0.64 0.2 25)",
+  ADA: "oklch(0.6 0.16 255)",
+  XMR: "oklch(0.7 0.19 45)",
   MATIC: "oklch(0.62 0.2 290)",
   BNB: "oklch(0.78 0.16 85)",
   AVAX: "oklch(0.63 0.22 20)",

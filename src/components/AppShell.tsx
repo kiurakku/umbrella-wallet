@@ -86,7 +86,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                     }`}
                   >
                     <span
-                      className={`w-1 h-4 -ml-3 rounded-full ${active ? "bg-foreground" : "bg-transparent"}`}
+                      className={`w-1 h-4 -ml-3 rounded-full ${active ? "bg-[color:var(--brand)]" : "bg-transparent"}`}
                     />
                     <Icon className="h-[15px] w-[15px]" strokeWidth={1.5} />
                     <span>{label}</span>
@@ -116,7 +116,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div className="md:hidden px-5 pb-2 pt-3 flex items-center justify-between gap-3">
               <GraniteCredit compact className="opacity-80" />
               <div className="flex items-center gap-3 shrink-0">
-                <span className="text-[11px] text-muted-foreground tabular-nums">v1.0</span>
+                <span className="text-[11px] text-muted-foreground tabular-nums">v2.0</span>
                 <TorStatus />
               </div>
             </div>
@@ -153,7 +153,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <Link
                     to={to}
                     className={`flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors ${
-                      active ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                      active
+                        ? "text-[color:var(--brand)]"
+                        : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     <Icon className="h-5 w-5" strokeWidth={active ? 2.4 : 1.8} />

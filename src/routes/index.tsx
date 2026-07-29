@@ -178,8 +178,14 @@ function Index() {
         {!hasLinks && !isLoading && <LinkAccountsPrompt compact onLinked={() => refetch()} />}
 
         {/* Balance hero */}
-        <section>
-          <div className="flex items-baseline justify-between">
+        <section className="relative">
+          {/* soft brand halo under the title — atmosphere, the one spot of colour up top */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -top-6 -left-6 -z-10 h-40 w-72 rounded-full blur-3xl opacity-60"
+            style={{ background: "var(--brand-dim)" }}
+          />
+          <div className="relative flex items-baseline justify-between">
             <div className="eyebrow">{t.totalBalance} · USD</div>
             <div className="flex items-center gap-3">
               <button
@@ -207,7 +213,7 @@ function Index() {
                 "•••••••"
               ) : (
                 <>
-                  <span className="text-muted-foreground/70">$</span>
+                  <span className="text-[color:var(--brand)]">$</span>
                   {money.main}
                   <span className="text-[22px] md:text-[32px] text-muted-foreground/80 align-baseline">
                     .{money.cents}
@@ -293,8 +299,9 @@ function Index() {
         {/* Holdings */}
         <section>
           <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-baseline gap-3">
-              <h2 className="font-serif text-[22px] md:text-[26px]">{t.assets}</h2>
+            <div className="flex items-center gap-3">
+              <span className="h-6 w-1 rounded-full bg-[color:var(--brand)]" />
+              <h2 className="font-serif text-[24px] md:text-[28px] leading-none">{t.assets}</h2>
               <span className="eyebrow hidden sm:inline">{filteredAssets.length} assets</span>
             </div>
             <div className="flex hairline rounded-sm overflow-hidden self-start overflow-x-auto max-w-full">
@@ -303,9 +310,9 @@ function Index() {
                   key={c}
                   type="button"
                   onClick={() => setChainFilter(c)}
-                  className={`px-3 h-7 text-[11.5px] tracking-wide whitespace-nowrap ${
+                  className={`px-3 h-7 text-[11.5px] tracking-wide whitespace-nowrap transition-colors ${
                     chainFilter === c
-                      ? "bg-foreground text-primary-foreground"
+                      ? "bg-[color:var(--brand)] text-[color:var(--brand-foreground)] font-medium"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
@@ -340,11 +347,14 @@ function Index() {
                       } hover:bg-elevated/40 transition-colors`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 hairline rounded-full grid place-items-center bg-elevated font-mono text-[10px]">
+                        <div
+                          className="w-9 h-9 rounded-full grid place-items-center font-mono text-[10px] font-bold text-white shrink-0"
+                          style={{ background: a.color, boxShadow: `0 0 16px -3px ${a.color}` }}
+                        >
                           {a.symbol.slice(0, 3)}
                         </div>
                         <div>
-                          <div className="text-[13.5px]">{a.name}</div>
+                          <div className="text-[13.5px] font-medium">{a.name}</div>
                           <div className="text-[11px] text-muted-foreground font-mono">
                             {a.symbol}
                           </div>
@@ -392,8 +402,8 @@ function Index() {
                     className="flex items-center gap-3 hairline rounded-md bg-card p-3.5"
                   >
                     <div
-                      className="h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold text-primary-foreground"
-                      style={{ background: a.color }}
+                      className="h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0"
+                      style={{ background: a.color, boxShadow: `0 0 18px -4px ${a.color}` }}
                     >
                       {a.symbol[0]}
                     </div>
@@ -424,7 +434,10 @@ function Index() {
         {/* Recent activity */}
         <section className="pb-2">
           <div className="flex items-center justify-between mb-3 md:mb-5">
-            <h2 className="font-serif text-[22px] md:text-[26px]">{t.recent}</h2>
+            <div className="flex items-center gap-3">
+              <span className="h-6 w-1 rounded-full bg-[color:var(--brand)]" />
+              <h2 className="font-serif text-[24px] md:text-[28px] leading-none">{t.recent}</h2>
+            </div>
             <Link to="/p2p" className="eyebrow hover:text-foreground">
               {t.all} →
             </Link>
