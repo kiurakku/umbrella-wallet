@@ -13,16 +13,16 @@ public class ChainCatalogTests
     public void Catalog_marks_supported_and_planned_chains_explicitly()
     {
         Assert.Equal(
-            [ChainId.Btc, ChainId.Eth, ChainId.Ltc, ChainId.Doge, ChainId.Tron, ChainId.Sol],
+            [ChainId.Btc, ChainId.Eth, ChainId.Ltc, ChainId.Doge, ChainId.Tron, ChainId.Sol, ChainId.Ton],
             ChainCatalog.Supported.Select(c => c.Id).ToArray());
 
         // Every chain now derives a real address; nothing is left "planned".
         Assert.Empty(ChainCatalog.Planned);
 
-        // TON (v4R2) and Cardano (CIP-1852) derive real addresses; Monero too, with no public
-        // balance sync. All three are receive-only (address now, send/balance later).
+        // TON (v4R2) now sends too (transfer pinned against @ton/ton), so it is fully supported.
+        // Cardano (CIP-1852) and Monero remain receive-only: real address now, send later.
         Assert.Equal(
-            [ChainId.Ton, ChainId.Ada, ChainId.Xmr],
+            [ChainId.Ada, ChainId.Xmr],
             ChainCatalog.ReceiveOnly.Select(c => c.Id).ToArray());
 
         Assert.All(ChainCatalog.Supported, c =>
@@ -202,7 +202,6 @@ public class HdAddressDeriverTests
     }
 
     [Theory]
-    [InlineData(ChainId.Ton, "UQ", 48)]   // wallet v4R2 user-friendly form
     [InlineData(ChainId.Ada, "addr1", 103)] // Shelley base address (bech32)
     public void ReceiveOnly_chains_derive_a_real_address(ChainId chain, string prefix, int length)
     {
@@ -212,5 +211,15 @@ public class HdAddressDeriverTests
         Assert.Equal(length, derived.Address.Length);
         Assert.False(ChainCatalog.IsSupported(chain));       // receive-only, not "supported"
         Assert.True(ChainCatalog.HasRealAddress(chain));     // but a genuine, non-stub address
+    }
+
+    [Fact]
+    public void Ton_derives_supported_v4r2_address()
+    {
+        var derived = _sut.DeriveReceiveAddress(Mnemonic, ChainId.Ton);
+
+        Assert.StartsWith("UQ", derived.Address, StringComparison.Ordinal); // wallet v4R2 user-friendly form
+        Assert.Equal(48, derived.Address.Length);
+        Assert.True(ChainCatalog.IsSupported(ChainId.Ton)); // now fully supported: receive, balance and send
     }
 }

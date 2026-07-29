@@ -228,6 +228,21 @@ public sealed class HdAddressDeriver
         return Slip10Ed25519.DerivePrivateKey(parsed.DeriveSeed(), new[] { 44u, 501u, 0u, addressIndex });
     }
 
+    /// <summary>
+    /// TON ed25519 secret scalar (32 bytes) at m/44'/607'/0', for signing v4R2 transfers locally.
+    /// </summary>
+    public byte[] DeriveTonPrivateKey(string mnemonic)
+    {
+        var validation = _mnemonicService.Validate(mnemonic);
+        if (!validation.IsValid || validation.NormalizedMnemonic is null)
+        {
+            throw new ArgumentException(validation.Error ?? "Invalid mnemonic.", nameof(mnemonic));
+        }
+
+        var parsed = Bip39MnemonicService.ParseValidated(validation.NormalizedMnemonic);
+        return Slip10Ed25519.DerivePrivateKey(parsed.DeriveSeed(), new[] { 44u, 607u, 0u });
+    }
+
     private static ReceiveAddress DeriveEthereum(ExtKey masterKey, uint addressIndex)
     {
         var path = new KeyPath($"44'/60'/0'/0/{addressIndex}");

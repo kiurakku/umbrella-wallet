@@ -304,6 +304,7 @@ public partial class MainViewModel : ViewModelBase
     private BtcSendQuote? _btcQuote;
     private SolSendQuote? _solQuote;
     private TronSendQuote? _tronQuote;
+    private TonSendQuote? _tonQuote;
     private string _sendSymbol = "ETH";
     private decimal _moneroAmount;
     private string _moneroTo = string.Empty;
@@ -353,6 +354,7 @@ public partial class MainViewModel : ViewModelBase
     private readonly BitcoinTransactionSender _btcSender = new();
     private readonly SolanaTransactionSender _solSender = new();
     private readonly TronTransactionSender _tronSender = new();
+    private readonly TonTransactionSender _tonSender = new();
     private readonly EmbeddedTorService _tor = new();
     private readonly MoneroRpcService _monero = new();
     private CancellationTokenSource? _refreshCts;
@@ -1771,6 +1773,7 @@ public partial class MainViewModel : ViewModelBase
         SendSuccess = string.Empty;
         HasSendQuote = false;
         _sendQuote = null;
+        _tonQuote = null;
 
         if (!IsUnlocked || _unlockedMnemonic is null)
         {
@@ -1867,10 +1870,10 @@ public partial class MainViewModel : ViewModelBase
             return;
         }
 
-        if (chain is not ("ETH" or "BTC" or "LTC" or "SOL"))
+        if (chain is not ("ETH" or "BTC" or "LTC" or "SOL" or "TON"))
         {
             SendError =
-                $"Sending {chain} is not available. This build broadcasts ETH, BTC, LTC, SOL, XMR, TRX and USDT (TRC-20).";
+                $"Sending {chain} is not available. This build broadcasts ETH, BTC, LTC, SOL, TON, XMR, TRX and USDT (TRC-20).";
             return;
         }
 
@@ -1929,6 +1932,18 @@ public partial class MainViewModel : ViewModelBase
                         : $"Network fee ≈ {Fmt(quote.FeeSol)} SOL";
                     break;
                 }
+
+                case "TON":
+                {
+                    var (quote, error) = await _tonSender.PrepareAsync(from.Address, SendTo.Trim(), amount);
+                    if (quote is null) { SendError = error ?? "Could not prepare the transaction."; return; }
+                    _tonQuote = quote;
+                    SendQuoteSummary = $"Send {Fmt(quote.AmountTon)} TON  →  {quote.To}";
+                    SendQuoteFee = quote.Deploy
+                        ? $"Network fee ≈ {Fmt(quote.FeeTon)} TON · first send also deploys your wallet (seqno 0)"
+                        : $"Network fee ≈ {Fmt(quote.FeeTon)} TON · seqno {quote.Seqno}";
+                    break;
+                }
             }
 
             HasSendQuote = true;
@@ -1946,7 +1961,7 @@ public partial class MainViewModel : ViewModelBase
     private async Task ConfirmSendAsync()
     {
         var haveQuote = _sendQuote is not null || _btcQuote is not null || _solQuote is not null
-                        || (_sendSymbol == "XMR" && _moneroAmount > 0);
+                        || _tonQuote is not null || (_sendSymbol == "XMR" && _moneroAmount > 0);
         if (_unlockedMnemonic is null || !haveQuote)
         {
             SendError = "Prepare the transfer first.";
@@ -2014,6 +2029,24 @@ public partial class MainViewModel : ViewModelBase
                     var (ok, txId, error) = await _tronSender.SignAndBroadcastAsync(quote, key);
                     await FinishSendAsync(ok, txId, error, quote.Symbol, quote.Amount, quote.To,
                         txId is null ? "" : $"tronscan.org/#/transaction/{txId}");
+                    break;
+                }
+
+                case "TON" when _tonQuote is not null:
+                {
+                    var quote = _tonQuote;
+                    var priv = _deriver.DeriveTonPrivateKey(_unlockedMnemonic!);
+                    try
+                    {
+                        var (ok, _, error) = await _tonSender.SignAndBroadcastAsync(quote, priv);
+                        await FinishSendAsync(ok, ok ? quote.To : null, error,
+                            "TON", quote.AmountTon, quote.To, $"tonviewer.com/{quote.From}");
+                    }
+                    finally
+                    {
+                        System.Security.Cryptography.CryptographicOperations.ZeroMemory(priv);
+                    }
+
                     break;
                 }
 

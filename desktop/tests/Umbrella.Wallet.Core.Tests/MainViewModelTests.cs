@@ -193,9 +193,9 @@ public sealed class MainViewModelTests : IDisposable
         Assert.Contains("Monero wallet service", vm.SendError);
         Assert.False(vm.HasSendQuote);
 
-        // A chain with no derivation at all is still refused outright.
-        vm.SendChain = "TON";
-        vm.SendTo = "EQCD39VS5jcptHL8vMjEXrzGaRcCVYto7HUn4bpAOg8xqB2N";
+        // A receive-only chain without a send path yet (ADA) is refused outright.
+        vm.SendChain = "ADA";
+        vm.SendTo = "addr1qxy2lpan99fcnhhybr2c5t8lmv2y2v0nq2f5s0j3d9jz2sv0";
         await vm.PrepareSendCommand.ExecuteAsync(null);
         Assert.Contains("not available", vm.SendError);
         Assert.False(vm.HasSendQuote);

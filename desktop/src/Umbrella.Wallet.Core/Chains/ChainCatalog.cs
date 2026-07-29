@@ -60,7 +60,7 @@ public static class ChainCatalog
                 ChainId.Ton,
                 "TON",
                 "TON",
-                ChainSupportLevel.ReceiveOnly,
+                ChainSupportLevel.Supported,
                 "SLIP-0010 ed25519 · wallet v4R2",
                 "m/44'/607'/0'"),
             new ChainInfo(
