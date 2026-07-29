@@ -141,6 +141,23 @@ public partial class MainViewModel : ViewModelBase
     // --- Navigation panel placement ----------------------------------------
     public IReadOnlyList<string> SidebarPositions { get; } = ["Left", "Right", "Top", "Bottom"];
 
+    /// <summary>Motion toggle, persisted. Drives every looping sticker via <see cref="LottieRepeat"/>.</summary>
+    public bool AnimationsEnabled
+    {
+        get => _uiSettings.AnimationsEnabled;
+        set
+        {
+            if (_uiSettings.AnimationsEnabled == value) return;
+            _uiSettings.AnimationsEnabled = value;
+            _uiSettings.Save();
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(LottieRepeat));
+        }
+    }
+
+    /// <summary>-1 = loop forever (animations on); 0 = play once and settle (animations off).</summary>
+    public int LottieRepeat => AnimationsEnabled ? -1 : 0;
+
     /// <summary>Where the navigation panel sits. Persisted like the theme.</summary>
     public string SidebarPosition
     {

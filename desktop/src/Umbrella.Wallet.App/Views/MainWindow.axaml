@@ -96,7 +96,7 @@
               <Image Source="{Binding LogoImage}"
                      Width="132" Stretch="Uniform" VerticalAlignment="Center"/>
               <lottie:Lottie Path="avares://Umbrella.Wallet.App/Assets/stickers/wau.json"
-                             Width="96" Height="96" VerticalAlignment="Center" RepeatCount="-1"/>
+                             Width="96" Height="96" VerticalAlignment="Center" RepeatCount="{Binding #RootWindow.((vm:MainViewModel)DataContext).LottieRepeat}"/>
             </StackPanel>
             <TextBlock Text="UMBRELLA WALLET" FontSize="30" FontWeight="SemiBold" LetterSpacing="4"
                        HorizontalAlignment="Center" Margin="0,16,0,0"/>
@@ -231,7 +231,7 @@
           <StackPanel IsVisible="{Binding IsBackupStage}" MaxWidth="640" Margin="24,44,24,24"
                       HorizontalAlignment="Center" Spacing="0">
             <lottie:Lottie Path="avares://Umbrella.Wallet.App/Assets/stickers/secret.json"
-                           Width="120" Height="120" HorizontalAlignment="Center" RepeatCount="-1"/>
+                           Width="120" Height="120" HorizontalAlignment="Center" RepeatCount="{Binding #RootWindow.((vm:MainViewModel)DataContext).LottieRepeat}"/>
             <TextBlock Classes="serif" FontSize="30" Text="Write down your recovery phrase"
                        HorizontalAlignment="Center" Margin="0,10,0,0"/>
             <TextBlock Foreground="{DynamicResource UmTextDim}" TextWrapping="Wrap" TextAlignment="Center" Margin="0,10,0,0"
@@ -337,9 +337,10 @@
                that padding — which is what clipped the Receive QR card. A margin is measured. -->
           <ScrollViewer Grid.Row="0" AllowAutoHide="True"
                         HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-            <!-- Cap the content column and centre it so a full-screen / large window doesn't
-                 stretch the tiles and tables edge-to-edge — it reads as one tidy column at any size. -->
-            <StackPanel Spacing="24" Margin="34,28,34,88" MaxWidth="1080" HorizontalAlignment="Center">
+            <!-- Cap the content column and left-align it (flowing from the sidebar) so a full-screen
+                 or large window doesn't stretch the tiles and tables edge-to-edge — it reads as one
+                 tidy column at any size instead of sprawling. -->
+            <StackPanel Spacing="24" Margin="34,32,34,88" MaxWidth="1120" HorizontalAlignment="Left">
 
               <!-- Portfolio -->
               <StackPanel Classes="page" IsVisible="{Binding IsPortfolio}" Spacing="18">
@@ -405,7 +406,7 @@
 
                 <Border Classes="hairline">
                   <StackPanel>
-                    <Grid ColumnDefinitions="2.2*,1.1*,1.4*,1.1*,0.85*,Auto" Height="34" Background="{DynamicResource UmCard}">
+                    <Grid ColumnDefinitions="2.2*,1.2*,1.5*,1.2*,0.9*,Auto" ColumnSpacing="18" Height="34" Background="{DynamicResource UmCard}">
                       <TextBlock Classes="eyebrow" Text="ASSET" Margin="16,0,0,0" VerticalAlignment="Center"/>
                       <TextBlock Grid.Column="1" Classes="eyebrow" Text="PRICE" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                       <TextBlock Grid.Column="2" Classes="eyebrow" Text="BALANCE" HorizontalAlignment="Right" VerticalAlignment="Center"/>
@@ -417,7 +418,7 @@
                       <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="vm:HoldingRowViewModel">
                           <Border BorderBrush="{DynamicResource UmBorder}" BorderThickness="0,1,0,0" Height="60">
-                            <Grid ColumnDefinitions="2.2*,1.1*,1.4*,1.1*,0.85*,Auto" Margin="16,0">
+                            <Grid ColumnDefinitions="2.2*,1.2*,1.5*,1.2*,0.9*,Auto" ColumnSpacing="18" Margin="16,0">
                               <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
                                 <Border Width="32" Height="32" CornerRadius="16" Background="{DynamicResource UmCardAlt}" BorderBrush="{DynamicResource UmAccentDim}" BorderThickness="1">
                                   <TextBlock Classes="mono" FontSize="10" Text="{Binding Symbol}"
@@ -455,7 +456,7 @@
                   <StackPanel Orientation="Horizontal" Spacing="10">
                     <TextBlock Classes="serif" FontSize="26" VerticalAlignment="Center"
                                Text="{Binding [receive.title], Source={x:Static app:Loc.Instance}}"/>
-                    <lottie:Lottie Path="avares://Umbrella.Wallet.App/Assets/stickers/fear-04.json" Width="42" Height="42" RepeatCount="-1" VerticalAlignment="Center"/>
+                    <lottie:Lottie Path="avares://Umbrella.Wallet.App/Assets/stickers/fear-04.json" Width="42" Height="42" RepeatCount="{Binding #RootWindow.((vm:MainViewModel)DataContext).LottieRepeat}" VerticalAlignment="Center"/>
                   </StackPanel>
                   <TextBlock Foreground="{DynamicResource UmTextDim}" TextWrapping="Wrap" FontSize="12.5"
                              Text="Pick a coin, then share its address or QR. Green = live and safe to receive. Always check the network line — sending on the wrong network loses the coins."/>
@@ -493,7 +494,7 @@
               <StackPanel Classes="page" IsVisible="{Binding IsSend}" Spacing="14" MaxWidth="620" HorizontalAlignment="Left">
                 <StackPanel Orientation="Horizontal" Spacing="10">
                   <TextBlock Classes="serif" FontSize="26" VerticalAlignment="Center" Text="{Binding [send.title], Source={x:Static app:Loc.Instance}}"/>
-                  <lottie:Lottie Path="avares://Umbrella.Wallet.App/Assets/stickers/fear-08.json" Width="42" Height="42" RepeatCount="-1" VerticalAlignment="Center"/>
+                  <lottie:Lottie Path="avares://Umbrella.Wallet.App/Assets/stickers/fear-08.json" Width="42" Height="42" RepeatCount="{Binding #RootWindow.((vm:MainViewModel)DataContext).LottieRepeat}" VerticalAlignment="Center"/>
                 </StackPanel>
                 <TextBlock Foreground="{DynamicResource UmTextDim}" TextWrapping="Wrap" FontSize="12.5"
                            Text="Transfers to any wallet or exchange. The transaction is built and signed on this PC — only the signed bytes go out. Live for ETH, BTC, LTC and SOL. Monero is receive-only here: export its keys in Settings and spend from Feather."/>
@@ -548,7 +549,7 @@
                 <Border Classes="card" IsVisible="{Binding IsBusy}">
                   <StackPanel Orientation="Horizontal" Spacing="14" HorizontalAlignment="Center">
                     <lottie:Lottie Path="avares://Umbrella.Wallet.App/Assets/stickers/sending.json"
-                                   Width="64" Height="64" RepeatCount="-1"/>
+                                   Width="64" Height="64" RepeatCount="{Binding #RootWindow.((vm:MainViewModel)DataContext).LottieRepeat}"/>
                     <TextBlock Text="{Binding StatusMessage}" Foreground="{DynamicResource UmTextDim}" FontSize="12.5"
                                VerticalAlignment="Center" TextWrapping="Wrap"/>
                   </StackPanel>
@@ -559,7 +560,7 @@
                         IsVisible="{Binding SendSuccess, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
                   <StackPanel Orientation="Horizontal" Spacing="14">
                     <lottie:Lottie Path="avares://Umbrella.Wallet.App/Assets/stickers/money.json"
-                                   Width="56" Height="56" RepeatCount="-1" VerticalAlignment="Top"/>
+                                   Width="56" Height="56" RepeatCount="{Binding #RootWindow.((vm:MainViewModel)DataContext).LottieRepeat}" VerticalAlignment="Top"/>
                     <TextBlock Classes="mono" FontSize="12" Foreground="{DynamicResource UmPos}" TextWrapping="Wrap"
                                Text="{Binding SendSuccess}" VerticalAlignment="Center"/>
                   </StackPanel>
@@ -570,7 +571,7 @@
               <StackPanel Classes="page" IsVisible="{Binding IsConnect}" Spacing="16">
                 <StackPanel Orientation="Horizontal" Spacing="10">
                   <TextBlock Classes="serif" FontSize="26" VerticalAlignment="Center" Text="{Binding [connect.title], Source={x:Static app:Loc.Instance}}"/>
-                  <lottie:Lottie Path="avares://Umbrella.Wallet.App/Assets/stickers/fear-09.json" Width="42" Height="42" RepeatCount="-1" VerticalAlignment="Center"/>
+                  <lottie:Lottie Path="avares://Umbrella.Wallet.App/Assets/stickers/fear-09.json" Width="42" Height="42" RepeatCount="{Binding #RootWindow.((vm:MainViewModel)DataContext).LottieRepeat}" VerticalAlignment="Center"/>
                 </StackPanel>
                 <TextBlock Foreground="{DynamicResource UmTextDim}" TextWrapping="Wrap" MaxWidth="640"
                            Text="Add watch-only addresses from MetaMask, Ledger, explorers, or hardware wallets. Balances sync via public APIs — no private keys imported."/>
@@ -829,7 +830,7 @@
                 <StackPanel Orientation="Horizontal" Spacing="10">
                   <TextBlock Classes="serif" FontSize="26" VerticalAlignment="Center"
                              Text="{Binding [nav.news], Source={x:Static app:Loc.Instance}}"/>
-                  <lottie:Lottie Path="avares://Umbrella.Wallet.App/Assets/stickers/fear-12.json" Width="42" Height="42" RepeatCount="-1" VerticalAlignment="Center"/>
+                  <lottie:Lottie Path="avares://Umbrella.Wallet.App/Assets/stickers/fear-12.json" Width="42" Height="42" RepeatCount="{Binding #RootWindow.((vm:MainViewModel)DataContext).LottieRepeat}" VerticalAlignment="Center"/>
                 </StackPanel>
                 <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12.5"
                            Text="Product updates, security notes and guides."/>
@@ -864,7 +865,7 @@
               <StackPanel Classes="page" IsVisible="{Binding IsActivity}" Spacing="12">
                 <StackPanel Orientation="Horizontal" Spacing="10">
                   <TextBlock Classes="serif" FontSize="26" VerticalAlignment="Center" Text="{Binding [nav.activity], Source={x:Static app:Loc.Instance}}"/>
-                  <lottie:Lottie Path="avares://Umbrella.Wallet.App/Assets/stickers/fear-10.json" Width="42" Height="42" RepeatCount="-1" VerticalAlignment="Center"/>
+                  <lottie:Lottie Path="avares://Umbrella.Wallet.App/Assets/stickers/fear-10.json" Width="42" Height="42" RepeatCount="{Binding #RootWindow.((vm:MainViewModel)DataContext).LottieRepeat}" VerticalAlignment="Center"/>
                 </StackPanel>
                 <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12.5" Margin="2,0,0,4"
                            Text="Everything this wallet does in a session — transfers and syncs. Rows with a transaction can be clicked to copy their explorer link. Nothing is written to disk."/>
@@ -910,7 +911,7 @@
               <StackPanel Classes="page" IsVisible="{Binding IsSettings}" Spacing="14" MaxWidth="760" HorizontalAlignment="Left">
                 <StackPanel Orientation="Horizontal" Spacing="10">
                   <TextBlock Classes="serif" FontSize="26" VerticalAlignment="Center" Text="{Binding [settings.title], Source={x:Static app:Loc.Instance}}"/>
-                  <lottie:Lottie Path="avares://Umbrella.Wallet.App/Assets/stickers/fear-11.json" Width="42" Height="42" RepeatCount="-1" VerticalAlignment="Center"/>
+                  <lottie:Lottie Path="avares://Umbrella.Wallet.App/Assets/stickers/fear-11.json" Width="42" Height="42" RepeatCount="{Binding #RootWindow.((vm:MainViewModel)DataContext).LottieRepeat}" VerticalAlignment="Center"/>
                 </StackPanel>
 
                 <Border Classes="hairline" Padding="4" HorizontalAlignment="Left">
@@ -982,6 +983,17 @@
                     <ComboBox ItemsSource="{Binding SidebarPositions}"
                               SelectedValue="{Binding SidebarPosition, Mode=TwoWay}"
                               Width="260" HorizontalAlignment="Left"/>
+                  </StackPanel>
+                </Border>
+
+                <!-- Motion: turn the looping stickers / subtle animation on or off. -->
+                <Border Classes="card" IsVisible="{Binding IsTabAppearance}">
+                  <StackPanel Spacing="10">
+                    <TextBlock Classes="eyebrow" Text="MOTION"/>
+                    <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
+                               Text="Looping stickers and subtle motion give the wallet a bit of atmosphere. Turn it off for a calmer, fully static interface."/>
+                    <ToggleSwitch IsChecked="{Binding AnimationsEnabled, Mode=TwoWay}"
+                                  OnContent="Animations on" OffContent="Animations off"/>
                   </StackPanel>
                 </Border>
 
@@ -1090,13 +1102,13 @@
                                  Text="Open Receive, pick a green (Ready) coin, and share the address or QR with the sender — a person, another wallet, or an exchange withdrawal. Addresses are safe to share publicly. Never share the 24 words."/>
                       <TextBlock Classes="eyebrow" Foreground="{DynamicResource UmTextSoft}" Text="3 · SEND"/>
                       <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
-                                 Text="Send builds the transaction here, signs it with your key locally, and broadcasts only the signed bytes through a public RPC. You always get a review step with the exact fee before anything is signed. ETH is live today; for BTC/LTC/SOL restore the same phrase in Electrum or Phantom — same addresses, same funds."/>
+                                 Text="Send builds the transaction here, signs it with your key locally, and broadcasts only the signed bytes through a public RPC/explorer. You always get a two-step Review → Confirm with the exact network fee before anything is signed, and the key is wiped from memory straight after. Sending is live for Bitcoin, Ethereum, Litecoin, Solana, TRON, USDT (TRC-20) and Monero. TON and Cardano are receive-only for now — you can receive and see the balance; sending is on the way (meanwhile the same phrase spends them in a compatible wallet)."/>
                       <TextBlock Classes="eyebrow" Foreground="{DynamicResource UmTextSoft}" Text="4 · BACKUP AND RESTORE"/>
                       <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
                                  Text="Your 24 words are the wallet. Write them on paper, keep them offline. The vault file only protects the copy on this PC — if the PC dies, the words restore everything in any BIP39 wallet. While the phrase is on screen, the window is excluded from screenshots and screen sharing."/>
                       <TextBlock Classes="eyebrow" Foreground="{DynamicResource UmTextSoft}" Text="5 · WHICH COINS, AND ON WHICH NETWORK"/>
                       <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
-                                 Text="Every row in Receive and Holdings prints the network under the coin name, because sending on the wrong network is the most common way people lose funds. Full support (address + balance + send): Bitcoin (BIP84 native SegWit), Ethereum, Litecoin (BIP84), Solana. Address + balance only: Dogecoin, TRON — plus USDT as TRC-20 on TRON, read from your TRON address. Receive only: Monero. Not yet derived at all: TON and Cardano — nothing is shown for them rather than a guessed address."/>
+                                 Text="Every row in Receive and Holdings prints the network under the coin name, because sending on the wrong network is the most common way people lose funds. Full support (address + balance + send): Bitcoin (BIP84 native SegWit), Ethereum, Litecoin (BIP84), Solana, Dogecoin, TRON, and USDT as TRC-20 on TRON (same address as TRX). Receive only (real address + balance, sending coming): TON (wallet v4R2) and Cardano (CIP-1852). Receive only, no public balance: Monero (amounts are hidden on-chain). Nothing is ever shown as a guessed/fake address."/>
 
                       <TextBlock Classes="eyebrow" Foreground="{DynamicResource UmTextSoft}" Text="6 · USDT (TRC-20)"/>
                       <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
@@ -1117,6 +1129,18 @@
                       <TextBlock Classes="eyebrow" Foreground="{DynamicResource UmTextSoft}" Text="10 · SECURITY HABITS THAT ACTUALLY MATTER"/>
                       <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
                                  Text="Write the 24 words on paper, never in a photo, cloud note or password manager you don't control. While the phrase or Monero keys are on screen the window is excluded from screenshots and screen sharing — but a camera pointed at the screen still works, so reveal them alone. The vault auto-locks after 5 minutes idle; Ctrl+L locks instantly. Always send a small test amount first to a new address. A blockchain transfer is final: there is no support desk that can reverse it."/>
+
+                      <TextBlock Classes="eyebrow" Foreground="{DynamicResource UmTextSoft}" Text="11 · TON AND CARDANO"/>
+                      <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
+                                 Text="Both derive a real receive address from your existing 24-word seed. TON uses the standard wallet v4R2 contract (coin type 607); Cardano uses Icarus / CIP-1852. Neither is a guess: the address maths was checked byte-for-byte against the reference libraries (tonweb for TON, Cardano's own serialization library for ADA), so it matches what a compatible wallet produces — funds are never sent somewhere you can't spend. They are receive-only in the app for now (you see the address and its live balance); sending is next. Because the key comes from your seed, you can already spend them by restoring the phrase in Trust Wallet (TON) or Eternl (ADA)."/>
+
+                      <TextBlock Classes="eyebrow" Foreground="{DynamicResource UmTextSoft}" Text="12 · THE PLATFORM FEE"/>
+                      <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
+                                 Text="There is a small platform fee (0.5%) added on some sends and shown to you in the Review step before you confirm — never hidden. It rides along in the same transaction (one network fee) on the chains that support that, and it is always disclosed. You pay only the network's own miner/validator fee plus, where it applies, this clearly-labelled 0.5%. There is no subscription, no withdrawal fee, and no account fee."/>
+
+                      <TextBlock Classes="eyebrow" Foreground="{DynamicResource UmTextSoft}" Text="13 · WHAT POWERS THIS (THE STACK)"/>
+                      <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
+                                 Text="Under the hood: a .NET 8 / Avalonia desktop app, fully self-contained (no runtime to install). Your seed is a BIP39 phrase; keys derive via BIP32 (Bitcoin-family), SLIP-0010 ed25519 (Solana, TON), Cardano's BIP32-Ed25519, and Monero's own scheme. The vault is Argon2id (memory-hard) → AES-256-GCM. Signing uses the chains' reference crypto (NBitcoin, Nethereum, BouncyCastle ed25519); every derivation is pinned by unit tests to official test vectors. Balances and prices come straight from public explorers/RPCs (Blockstream, Esplora, toncenter, Koios, CoinGecko), routed through the bundled Tor when it's on. Monero runs the real monero-wallet-rpc locally. Nothing is custodial and nothing phones home."/>
                     </StackPanel>
                   </StackPanel>
                 </Border>
