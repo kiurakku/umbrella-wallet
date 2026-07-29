@@ -349,16 +349,22 @@
                   <Button Grid.Column="1" Classes="chip" Content="{Binding HideBalanceLabel}"
                           Command="{Binding ToggleBalanceHiddenCommand}"/>
                 </Grid>
-                <StackPanel Orientation="Horizontal" Spacing="18">
-                  <StackPanel Orientation="Horizontal">
+                <!-- Hero: the big balance, the 24h change, and an ambient mascot on the right that
+                     gives the title area some atmosphere. The sticker loops when animations are on
+                     and settles on its first frame when they're off (Settings → Appearance). -->
+                <Grid ColumnDefinitions="Auto,Auto,*,Auto">
+                  <StackPanel Grid.Column="0" Orientation="Horizontal">
                     <TextBlock Classes="serif" FontSize="62" Foreground="{DynamicResource UmTextDim}" Text="$" Margin="0,0,2,6" VerticalAlignment="Bottom"/>
                     <TextBlock Classes="serif" FontSize="62" Text="{Binding BalanceDisplayMain}" VerticalAlignment="Bottom"/>
                     <TextBlock Classes="serif" FontSize="28" Foreground="{DynamicResource UmTextDim}" Text="{Binding BalanceDisplayCents}"
                                VerticalAlignment="Bottom" Margin="0,0,0,12"/>
                   </StackPanel>
-                  <TextBlock Text="{Binding Change24hLabel}" Foreground="{DynamicResource UmPos}" FontSize="12"
-                             VerticalAlignment="Bottom" Margin="0,0,0,16"/>
-                </StackPanel>
+                  <TextBlock Grid.Column="1" Text="{Binding Change24hLabel}" Foreground="{DynamicResource UmPos}" FontSize="12"
+                             VerticalAlignment="Bottom" Margin="18,0,0,16"/>
+                  <lottie:Lottie Grid.Column="3" Path="avares://Umbrella.Wallet.App/Assets/stickers/fear-00.json"
+                                 Width="104" Height="104" VerticalAlignment="Center" Opacity="0.92"
+                                 RepeatCount="{Binding #RootWindow.((vm:MainViewModel)DataContext).LottieRepeat}"/>
+                </Grid>
 
                 <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="12">
                   <Button Classes="tile" Command="{Binding SelectSectionCommand}" CommandParameter="Receive">
