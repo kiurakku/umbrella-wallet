@@ -2492,6 +2492,29 @@ public sealed record HoldingRowViewModel(
 
     /// <summary>The chain this holding sits on — shown under the coin name.</summary>
     public string NetworkLabel => CoinNetworks.For(Symbol, Chain);
+
+    /// <summary>Each coin's own brand colour, so the token badges read at a glance instead of
+    /// being ten identical grey discs. Falls back to the app violet for anything unmapped.</summary>
+    public string BadgeColor => Symbol.ToUpperInvariant() switch
+    {
+        "BTC" => "#F7931A",
+        "ETH" => "#627EEA",
+        "LTC" => "#4C6FB1",
+        "DOGE" => "#C2A633",
+        "TRX" => "#EF0027",
+        "SOL" => "#14A87A",
+        "TON" => "#0098EA",
+        "ADA" => "#2A5ED9",
+        "XMR" => "#F26822",
+        "USDT" => "#26A17B",
+        _ => "#6E5FB8",
+    };
+
+    /// <summary>A soft glow of the coin's own colour under its badge — the thematic, bolder touch.
+    /// Typed as <see cref="Avalonia.Media.BoxShadows"/> so the binding is an identity assignment;
+    /// a raw string would not runtime-convert to the BoxShadow property the way a colour string does.</summary>
+    public Avalonia.Media.BoxShadows BadgeShadow =>
+        Avalonia.Media.BoxShadows.Parse($"0 0 15 0 #59{BadgeColor[1..]}");
 }
 
 /// <summary>One entry in an asset / network picker.</summary>

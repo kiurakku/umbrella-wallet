@@ -98,6 +98,8 @@
         <Style Selector="Button.nav.active">
             <Setter Property="Foreground" Value="{DynamicResource UmText}" />
             <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="BorderBrush" Value="{DynamicResource UmAccentBright}" />
+            <Setter Property="BorderThickness" Value="3,0,0,0" />
         </Style>
         <Style Selector="Button.nav.active /template/ ContentPresenter">
             <Setter Property="Background" Value="{DynamicResource UmHover}" />
@@ -300,10 +302,11 @@
             <Setter Property="Foreground" Value="{DynamicResource UmTextSoft}" />
         </Style>
         <Style Selector="Button.chip.active">
-            <Setter Property="Foreground" Value="{DynamicResource UmBg}" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="FontWeight" Value="SemiBold" />
         </Style>
         <Style Selector="Button.chip.active /template/ ContentPresenter">
-            <Setter Property="Background" Value="{DynamicResource UmText}" />
+            <Setter Property="Background" Value="{DynamicResource UmAccentBright}" />
         </Style>
 
         <!-- Dropdowns: matched to the glass inputs instead of the default Fluent chrome. -->
@@ -382,6 +385,7 @@
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="16" />
             <Setter Property="Padding" Value="22" />
+            <Setter Property="BoxShadow" Value="0 12 34 -10 #5C000000" />
             <Setter Property="Background">
                 <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
                     <GradientStop Offset="0" Color="{DynamicResource UmCardTop}" />
@@ -395,6 +399,9 @@
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="12" />
             <Setter Property="Background" Value="{DynamicResource UmBgAlt}" />
+            <!-- Lift the panel off the page so the layout reads as stacked cards, not flat text.
+                 Kept soft with a negative spread so it stays subtle on small pill containers too. -->
+            <Setter Property="BoxShadow" Value="0 8 22 -8 #4A000000" />
         </Style>
 
         <!-- Section fade+rise on switch. Applied to the top-level panel of each workspace

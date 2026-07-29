@@ -337,10 +337,10 @@
                that padding — which is what clipped the Receive QR card. A margin is measured. -->
           <ScrollViewer Grid.Row="0" AllowAutoHide="True"
                         HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-            <!-- Cap the content column and left-align it (flowing from the sidebar) so a full-screen
-                 or large window doesn't stretch the tiles and tables edge-to-edge — it reads as one
-                 tidy column at any size instead of sprawling. -->
-            <StackPanel Spacing="24" Margin="34,32,34,88" MaxWidth="1120" HorizontalAlignment="Left">
+            <!-- Cap the content column and CENTRE it, so a full-screen or large window doesn't
+                 stretch the tiles and tables edge-to-edge and doesn't sit lopsided against the left
+                 either — it reads as one tidy, balanced column at any size. -->
+            <StackPanel Spacing="24" Margin="34,32,34,88" MaxWidth="1120" HorizontalAlignment="Center">
 
               <!-- Portfolio -->
               <StackPanel Classes="page" IsVisible="{Binding IsPortfolio}" Spacing="18">
@@ -354,8 +354,8 @@
                      and settles on its first frame when they're off (Settings → Appearance). -->
                 <Grid ColumnDefinitions="Auto,Auto,*,Auto">
                   <StackPanel Grid.Column="0" Orientation="Horizontal">
-                    <TextBlock Classes="serif" FontSize="62" Foreground="{DynamicResource UmTextDim}" Text="$" Margin="0,0,2,6" VerticalAlignment="Bottom"/>
-                    <TextBlock Classes="serif" FontSize="62" Text="{Binding BalanceDisplayMain}" VerticalAlignment="Bottom"/>
+                    <TextBlock Classes="serif" FontSize="62" Foreground="{DynamicResource UmAccentBright}" Text="$" Margin="0,0,3,6" VerticalAlignment="Bottom"/>
+                    <TextBlock Classes="serif" FontSize="66" FontWeight="Medium" Text="{Binding BalanceDisplayMain}" VerticalAlignment="Bottom"/>
                     <TextBlock Classes="serif" FontSize="28" Foreground="{DynamicResource UmTextDim}" Text="{Binding BalanceDisplayCents}"
                                VerticalAlignment="Bottom" Margin="0,0,0,12"/>
                   </StackPanel>
@@ -395,7 +395,10 @@
                 </Grid>
 
                 <Grid ColumnDefinitions="*,Auto" Margin="0,8,0,0">
-                  <TextBlock Classes="serif" FontSize="24" Text="Holdings"/>
+                  <StackPanel Orientation="Horizontal" Spacing="11" VerticalAlignment="Center">
+                    <Border Width="4" Height="24" CornerRadius="2" Background="{DynamicResource UmAccentBright}"/>
+                    <TextBlock Classes="serif" FontSize="26" Text="Holdings" VerticalAlignment="Center"/>
+                  </StackPanel>
                   <Border Grid.Column="1" Classes="hairline" Padding="4">
                     <StackPanel Orientation="Horizontal" Spacing="2">
                       <Button Classes="chip" Content="All" Command="{Binding SetChainFilterCommand}" CommandParameter="All"
@@ -426,8 +429,9 @@
                           <Border BorderBrush="{DynamicResource UmBorder}" BorderThickness="0,1,0,0" Height="60">
                             <Grid ColumnDefinitions="2.2*,1.2*,1.5*,1.2*,0.9*,Auto" ColumnSpacing="18" Margin="16,0">
                               <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                                <Border Width="32" Height="32" CornerRadius="16" Background="{DynamicResource UmCardAlt}" BorderBrush="{DynamicResource UmAccentDim}" BorderThickness="1">
-                                  <TextBlock Classes="mono" FontSize="10" Text="{Binding Symbol}"
+                                <Border Width="38" Height="38" CornerRadius="19" Background="{Binding BadgeColor}"
+                                        BoxShadow="{Binding BadgeShadow}">
+                                  <TextBlock Classes="mono" FontSize="10.5" FontWeight="Bold" Foreground="#FFFFFF" Text="{Binding Symbol}"
                                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
                                 <StackPanel VerticalAlignment="Center" MinWidth="0">
