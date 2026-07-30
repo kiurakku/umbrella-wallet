@@ -55,21 +55,23 @@ public static class Theming
             "#F4F4F5", "#C8C8CC", "#8E8E96", "#6E6E76", "#7DCF8F",
             "#F4F4F5", "#FFFFFF", "#0A0A0B",
         ],
+        // Electric-cyan glass on near-black — the neon-glass wallet mood.
         ["blue"] =
         [
-            "#0A0E16", "#101725", "#141C2E", "#121927", "#1B2740", "#223354",
-            "#1E2A42", "#2A3A58", "#33456A",
-            "#2F5C9E", "#4A83D6", "#3C6FBF", "#274E86", "#26405F",
-            "#F2F5FA", "#C3CDDB", "#8792A5", "#6F7A8C", "#5AC8B4",
-            "#F2F5FA", "#FFFFFF", "#0A0E16",
+            "#07090C", "#0C1016", "#111823", "#0E141C", "#16202E", "#1C2A3C",
+            "#182430", "#23384A", "#2E4A63",
+            "#1E6FA8", "#35C0FF", "#2AA0E0", "#143A54", "#123246",
+            "#EAF4FB", "#B8CFDE", "#7E93A4", "#647686", "#6FD3A0",
+            "#EAF4FB", "#FFFFFF", "#07090C",
         ],
+        // Neon mint/emerald on near-black — the Neon Wallet mood.
         ["green"] =
         [
-            "#08110C", "#0E1A13", "#12211A", "#101E17", "#1A2E22", "#22402F",
-            "#1C2E23", "#294436", "#325240",
-            "#2F7A4E", "#4FB877", "#429B63", "#276542", "#27503A",
-            "#F1F8F3", "#C2D6C8", "#86998C", "#6E8175", "#7DCF8F",
-            "#F1F8F3", "#FFFFFF", "#08110C",
+            "#06100B", "#0A1811", "#0F2016", "#0C1B13", "#16301F", "#1E4029",
+            "#163024", "#22452F", "#2E5C3E",
+            "#1E9E6A", "#43F5A5", "#35D08C", "#114A30", "#0F3A28",
+            "#EBFBF1", "#C0DECB", "#86A692", "#6E8677", "#43F5A5",
+            "#EBFBF1", "#FFFFFF", "#06100B",
         ],
         ["black"] =
         [
@@ -88,11 +90,12 @@ public static class Theming
             "#14161C", "#3A3F4B", "#5C6373", "#79808F", "#1E8E4A",
             "#1E2029", "#33374A", "#FFFFFF",
         ],
+        // Vivid violet over a violet-black sweep — the purple wallet mood.
         ["gradient"] =
         [
             "#0E0A1C", "#140F26", "#1B1533", "#181229", "#251C46", "#2E2358",
             "#2A2148", "#382C63", "#443673",
-            "#5B3F9E", "#8A5FD6", "#6E4CBF", "#472F86", "#3E2F66",
+            "#7C4DD6", "#B06BFF", "#9457E6", "#4B2F8E", "#402C6E",
             "#F6F3FB", "#CFC7DE", "#948CA6", "#7C748E", "#6FD3C5",
             "#F6F3FB", "#FFFFFF", "#0E0A1C",
         ],
@@ -129,13 +132,14 @@ public static class Theming
             "#FCF7EC", "#E0D2B4", "#A89673", "#8C7F63", "#7DCF8F",
             "#FCF7EC", "#FFFFFF", "#120E05",
         ],
+        // Teal cyber on gunmetal — the tech/HUD mood.
         ["slate"] =
         [
-            "#0B0E11", "#111519", "#161B21", "#12171C", "#1F262E", "#28313B",
-            "#1C232A", "#28323B", "#33404B",
-            "#3E5568", "#6E93AE", "#547491", "#334657", "#2E3E4B",
-            "#F1F4F7", "#C4CDD6", "#8794A1", "#6F7B86", "#6FD3A0",
-            "#F1F4F7", "#FFFFFF", "#0B0E11",
+            "#0A0C0D", "#0F1315", "#141A1C", "#111618", "#1B2528", "#243236",
+            "#182123", "#243234", "#304446",
+            "#1B8C7E", "#2DE0C0", "#23BEA6", "#124038", "#0F3730",
+            "#EAF6F4", "#C0D4D0", "#849792", "#6C7E7A", "#2DE0C0",
+            "#EAF6F4", "#FFFFFF", "#0A0C0D",
         ],
     };
 

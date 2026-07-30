@@ -36,25 +36,10 @@
 
   <Grid RowDefinitions="36,*">
 
-    <!-- Title bar. Keep content on the left/centre only — the right edge is reserved for the
-         native minimise / maximise / close buttons, which the old Refresh button overlapped.
-         PointerPressed drags the window (double-click maximises). -->
-    <Border Grid.Row="0" Background="{DynamicResource UmBgAlt}" BorderBrush="{DynamicResource UmBorder}" BorderThickness="0,0,0,1" Padding="14,0,150,0"
-            PointerPressed="OnTitleBarPressed">
-      <Grid ColumnDefinitions="Auto,*,Auto">
-        <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-          <Image Source="avares://Umbrella.Wallet.App/Assets/umbrella-mark-white.png"
-                 Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center"/>
-          <TextBlock Classes="mono" FontSize="11" LetterSpacing="2.5" VerticalAlignment="Center"
-                     Foreground="{DynamicResource UmText}" Text="{Binding WalletTitle}"/>
-        </StackPanel>
-        <TextBlock Grid.Column="1" Margin="24,0" VerticalAlignment="Center" FontSize="11"
-                   Foreground="{DynamicResource UmTextDim}" Text="{Binding StatusMessage}" TextTrimming="CharacterEllipsis"/>
-        <!-- Lock status, editorial mono — replaces the old "local vault" label. -->
-        <TextBlock Grid.Column="2" Classes="mono" FontSize="9.5" LetterSpacing="1" VerticalAlignment="Center"
-                   Margin="0,0,8,0" Foreground="{DynamicResource UmTextMuted}" Text="{Binding AutoLockLabel}"/>
-      </Grid>
-    </Border>
+    <!-- No visible chrome panel (per design): just an invisible strip so the window still drags
+         (double-click maximises) and the native min/max/close buttons have their room. Status and
+         errors surface on the screens that need them (e.g. the unlock form), not a top bar. -->
+    <Border Grid.Row="0" Background="Transparent" PointerPressed="OnTitleBarPressed"/>
 
     <Grid Grid.Row="1">
 
@@ -331,7 +316,7 @@
           </StackPanel>
         </Border>
 
-        <Grid RowDefinitions="*,28">
+        <Grid RowDefinitions="*">
           <!-- Padding lives on the content, NOT the ScrollViewer. With horizontal scrolling
                disabled Avalonia measures content at the full viewport width and only then
                insets it by the ScrollViewer's padding, so the right edge overflowed by exactly
@@ -1233,20 +1218,6 @@
             </StackPanel>
           </ScrollViewer>
 
-          <Border Grid.Row="1" Background="{DynamicResource UmBgAlt}" BorderBrush="{DynamicResource UmBorder}" BorderThickness="0,1,0,0" Padding="20,0">
-            <Grid ColumnDefinitions="*,Auto">
-              <StackPanel Orientation="Horizontal" Spacing="14" VerticalAlignment="Center">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                  <Ellipse Width="6" Height="6" Fill="{DynamicResource UmPos}"/>
-                  <TextBlock Classes="mono" FontSize="10.5" Foreground="{DynamicResource UmTextDim}" Text="Local · public RPC"/>
-                </StackPanel>
-                <TextBlock Classes="mono" FontSize="10.5" Foreground="{DynamicResource UmTextDim}"
-                           Text="{Binding ActiveSection, StringFormat='{}{0}'}"/>
-              </StackPanel>
-              <TextBlock Grid.Column="1" Classes="mono" FontSize="10.5" Foreground="{DynamicResource UmTextDim}"
-                         VerticalAlignment="Center" Text="{Binding AppVersionLabel}"/>
-            </Grid>
-          </Border>
         </Grid>
       </DockPanel>
     </Grid>
