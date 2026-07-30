@@ -1,6 +1,6 @@
 {
   "name": "umbrella-wallet-backend",
-  "version": "2.2.0",
+  "version": "2.2.2",
     "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "scripts": {
