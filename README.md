@@ -20,7 +20,7 @@ No account. No email. No phone number. No KYC. Just a wallet — the way it was 
 
 <br/>
 
-![Version](https://img.shields.io/badge/version-1.8.0-4B3F86)
+![Version](https://img.shields.io/badge/version-2.1.4-4B3F86)
 ![Windows](https://img.shields.io/badge/Windows-ready-4B3F86?logo=windows&logoColor=white)
 ![Linux](https://img.shields.io/badge/Linux-ready-6E5FB8?logo=linux&logoColor=white)
 ![Desktop](https://img.shields.io/badge/desktop-Avalonia%20·%20.NET%208-8A5FD6)
@@ -40,7 +40,7 @@ No account. No email. No phone number. No KYC. Just a wallet — the way it was 
 
 <br/>
 
-**[⬇️ Download Windows build (v1.8.0 portable)](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-1.8.0-win-x64-portable.zip)** · [All releases](https://github.com/kiurakku/umbrella-wallet/releases)
+**[⬇️ Download Windows build (v2.1.4)](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-2.1.4-win-x64-portable.zip)** · [All releases](https://github.com/kiurakku/umbrella-wallet/releases)
 
 <br/>
 
@@ -107,11 +107,11 @@ Umbrella flips that model:
 | 🟣 Solana (SOL) | ✅ | ✅ | |
 | 🔺 TRON (TRX) | ✅ | ✅ | |
 | 🐕 Dogecoin (DOGE) | ✅ | ➖ | receive + balance |
-| 💎 TON · 🔵 Cardano | 🚧 | 🚧 | coming — held back until address generation is verified to the letter, because a wrong address loses coins |
+| 💎 TON | ✅ | ✅ | wallet v4R2, signed on device`n| 🔵 Cardano (ADA) | ✅ | ➖ | receive + balance
 
 ## 🎨 Make it yours
 
-- **10 themes** — Purple · Blue · Green · Black OLED · White light · Violet gradient · Sunset gradient · Crimson · Amber · Slate. Switch live, no restart.
+- **12+ themes** — editorial red-orange primary, Ember, electric glass palettes, OLED black, gradients, and more. Switch live, no restart.
 - **6 languages** — 🇬🇧 English · 🇺🇦 Українська · Русский · 🇨🇳 中文 · 🇪🇸 Español · 🇩🇪 Deutsch.
 - **Movable navigation** — park the menu left, right, top or bottom.
 - **Duck stickers** 🦆 — animated Telegram stickers greet you on Welcome, Receive, Send, Connect, Activity and Settings. Serious cryptography, unserious ducks.
@@ -120,13 +120,13 @@ Umbrella flips that model:
 
 | Platform | Package | Notes |
 |----------|---------|-------|
-| **Windows** | [`UmbrellaWallet-1.8.0-win-x64-portable.zip`](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-1.8.0-win-x64-portable.zip) | Installer — choose your folder |
-| **Windows** | portable `.exe` from [Releases](https://github.com/kiurakku/umbrella-wallet/releases) | No install required |
-| **Linux** | `tar.gz` from [Releases](https://github.com/kiurakku/umbrella-wallet/releases) | `./Umbrella.Wallet.App` |
+| **Windows** | [`UmbrellaWallet-2.1.4-win-x64-portable.zip`](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-2.1.4-win-x64-portable.zip) | Portable — unzip and run `Umbrella.Wallet.App.exe` |
+| **Linux** | [`UmbrellaWallet-2.1.4-linux-x64.tar.gz`](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-2.1.4-linux-x64.tar.gz) | Unpack, run `./Umbrella.Wallet.App` | No install required |
+ `./Umbrella.Wallet.App` |
 
 ## 🚀 Get started
 
-1. ⬇️ **Windows** — download `UmbrellaWallet-Setup.exe` (installer, choose your folder) or the portable exe.
+1. ⬇️ **Windows** — download the portable zip, unzip, run `Umbrella.Wallet.App.exe`.
 2. 🐧 **Linux** — grab the tar.gz build, unpack, run `./Umbrella.Wallet.App`.
 3. 🌐 **Web** — the browser version keeps your phrase in the browser; the server only ever sees *public* data.
 4. 🖊️ Create a wallet → **write the 24 words on paper** → done. You now have a bank in your pocket that answers to no one.
@@ -161,7 +161,7 @@ No — it's inside the app. One switch in <i>Settings → Privacy & Tor</i>, and
 
 ## 🗺️ Roadmap
 
-- 💎 **TON** and 🔵 **Cardano** — full receive/send, gated on letter-perfect address verification
+- 🔵 **Cardano sending** — next chain after TON
 - 🐕 Dogecoin sending
 - 📱 More platforms
 - 🔔 Price alerts
@@ -234,6 +234,7 @@ Questions and bug reports are welcome as GitHub issues — best-effort support, 
 **Free to use. Not free to take.** See [LICENSE](LICENSE) for full terms.
 
 ---
+
 
 
 

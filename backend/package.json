@@ -1,8 +1,7 @@
 {
   "name": "umbrella-wallet-backend",
-  "version": "1.8.0",
-  "author": "kiurakku",
-  "license": "SEE LICENSE IN LICENSE",
+  "version": "2.1.4",
+    "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "scripts": {
     "build": "nest build",

@@ -1,8 +1,7 @@
 {
   "name": "umbrella-wallet",
   "version": "2.1.4",
-  "author": "kiurakku",
-  "license": "SEE LICENSE IN LICENSE",
+    "license": "SEE LICENSE IN LICENSE",
   "private": true,
   "sideEffects": false,
   "type": "module",
