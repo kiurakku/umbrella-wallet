@@ -183,6 +183,29 @@ public partial class MainWindow : Window
         }
     }
 
+    // --- Parallax hero: the backdrop drifts a few px opposite the cursor, easing via the transform's
+    // own transitions, and settles back when the pointer leaves. ---
+    private Avalonia.Media.TranslateTransform? _heroShift;
+
+    private void OnHeroPointerMoved(object? sender, PointerEventArgs e)
+    {
+        if (sender is not Control card) return;
+        _heroShift ??= this.FindControl<Image>("HeroBg")?.RenderTransform as Avalonia.Media.TranslateTransform;
+        if (_heroShift is null) return;
+        var p = e.GetPosition(card);
+        var nx = (p.X / Math.Max(1, card.Bounds.Width)) - 0.5;
+        var ny = (p.Y / Math.Max(1, card.Bounds.Height)) - 0.5;
+        _heroShift.X = -nx * 14;
+        _heroShift.Y = -ny * 10;
+    }
+
+    private void OnHeroPointerExited(object? sender, PointerEventArgs e)
+    {
+        if (_heroShift is null) return;
+        _heroShift.X = 0;
+        _heroShift.Y = 0;
+    }
+
     private void OnUserActivity(object? sender, EventArgs eventArgs) => ResetAutoLock();
 
     private void ResetAutoLock()

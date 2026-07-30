@@ -453,6 +453,52 @@
             <Setter Property="RenderTransform" Value="translateX(3px)"/>
         </Style>
 
+        <!-- ===== Premium motion & glass ===== -->
+        <!-- Cards lift and their edge brightens on hover; the whole surface eases (250ms). -->
+        <Style Selector="Border.card">
+            <Setter Property="RenderTransformOrigin" Value="50%,50%"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.22" Easing="CubicEaseOut"/>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.22"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Border.card:pointerover">
+            <Setter Property="RenderTransform" Value="translateY(-3px)"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource UmAccentDim}"/>
+        </Style>
+        <!-- Panels (tables, rail cards) glow their edge on hover without moving. -->
+        <Style Selector="Border.hairline">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.2"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Border.hairline:pointerover">
+            <Setter Property="BorderBrush" Value="{DynamicResource UmBorder3}"/>
+        </Style>
+
+        <!-- Shimmer skeleton, for loading placeholders (apply Classes="skeleton"). -->
+        <Style Selector="Border.skeleton">
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Background">
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                    <GradientStop Offset="0" Color="#12FFFFFF"/>
+                    <GradientStop Offset="0.5" Color="#26FFFFFF"/>
+                    <GradientStop Offset="1" Color="#12FFFFFF"/>
+                </LinearGradientBrush>
+            </Setter>
+            <Style.Animations>
+                <Animation Duration="0:0:1.3" IterationCount="INFINITE" Easing="SineEaseInOut">
+                    <KeyFrame Cue="0%"><Setter Property="Opacity" Value="0.5"/></KeyFrame>
+                    <KeyFrame Cue="50%"><Setter Property="Opacity" Value="1"/></KeyFrame>
+                    <KeyFrame Cue="100%"><Setter Property="Opacity" Value="0.5"/></KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+
         <!-- Ambient "rain" for the fear theme: faint translucent streaks drifting down over the UI.
              The base class carries the look; a speed class carries the fall animation, so each drop
              runs exactly one animation. The whole layer is gated by the motion toggle in markup. -->

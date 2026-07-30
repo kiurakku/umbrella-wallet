@@ -358,9 +358,22 @@
                 <!-- Cinematic balance hero: the generated backdrop, with the balance overlaid on the
                      left and the brand mark over the 'portal' on the right. -->
                 <Border CornerRadius="20" ClipToBounds="True" Height="212" BorderBrush="{DynamicResource UmBorder}"
-                        BorderThickness="1" BoxShadow="0 16 44 -16 #80000000">
+                        BorderThickness="1" BoxShadow="0 16 44 -16 #80000000"
+                        PointerMoved="OnHeroPointerMoved" PointerExited="OnHeroPointerExited">
                   <Panel>
-                    <Image Source="avares://Umbrella.Wallet.App/Assets/hero-bg.png" Stretch="UniformToFill"/>
+                    <!-- Oversized so the parallax shift never reveals an edge. -->
+                    <Image x:Name="HeroBg" Source="avares://Umbrella.Wallet.App/Assets/hero-bg.png" Stretch="UniformToFill" Margin="-18">
+                      <Image.RenderTransform>
+                        <TranslateTransform>
+                          <TranslateTransform.Transitions>
+                            <Transitions>
+                              <DoubleTransition Property="X" Duration="0:0:0.18" Easing="CubicEaseOut"/>
+                              <DoubleTransition Property="Y" Duration="0:0:0.18" Easing="CubicEaseOut"/>
+                            </Transitions>
+                          </TranslateTransform.Transitions>
+                        </TranslateTransform>
+                      </Image.RenderTransform>
+                    </Image>
                     <Border Background="#4D000000"/>
                     <!-- Wash the cinematic backdrop with the theme's accent, so coloured themes get a
                          matching glow instead of the neutral portal alone. -->
@@ -1404,9 +1417,10 @@
           </Border>
           </Grid>
 
-          <!-- Bottom price ticker + status -->
-          <Border Grid.Row="1" Height="34" Background="{DynamicResource UmBgAlt}"
-                  BorderBrush="{DynamicResource UmBorder}" BorderThickness="0,1,0,0" Padding="16,0">
+          <!-- Floating dock: the price ticker + status, detached from the edges like a macOS dock. -->
+          <Border Grid.Row="1" Height="42" Margin="14,4,14,12" CornerRadius="16" Background="{DynamicResource UmCard}"
+                  BorderBrush="{DynamicResource UmBorder2}" BorderThickness="1" Padding="18,0"
+                  BoxShadow="0 14 38 -12 #90000000, inset 0 1 0 0 #16FFFFFF">
             <Grid ColumnDefinitions="*,Auto">
               <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" ClipToBounds="True">
                 <ItemsControl ItemsSource="{Binding Market}">
