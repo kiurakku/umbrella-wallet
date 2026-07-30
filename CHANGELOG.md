@@ -4,6 +4,18 @@ All notable releases of **Umbrella Wallet**.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versioning follows [SemVer](https://semver.org/).
 
+## [2.2.2] — 2026-07-31
+
+### Desktop
+- Full wallet + data deletion (Danger zone); Tor/Monero bundles preserved.
+- Settings text overflow fix; localized delete confirmation keyword.
+
+## [2.2.1] — 2026-07-31
+
+### Desktop
+- Delete-vault keyword localized; settings layout overflow fixed.
+- README header refresh.
+
 ## [2.2.0] — 2026-07-31
 
 A large desktop pass over 2.1.x, consolidated.
