@@ -305,6 +305,9 @@ public sealed class PublicChainBalanceClient
 /// USD prices from public endpoints, no API key. CoinGecko first, Binance as a fallback so a
 /// single provider being down or rate-limiting does not blank the whole wallet.
 /// </summary>
+/// <summary>One OHLC candle for the candlestick chart.</summary>
+public readonly record struct PriceCandle(double Open, double High, double Low, double Close);
+
 public sealed class PublicMarketRatesClient
 {
     private static HttpClient Http => PublicHttp.Shared;
@@ -394,6 +397,61 @@ public sealed class PublicMarketRatesClient
         }
 
         return await GetGeckoSeriesAsync(symbol, days, cancellationToken);
+    }
+
+    /// <summary>Real OHLC candles for a coin/window from Binance klines, for the candlestick chart.
+    /// Falls back to degenerate candles (O=H=L=C) from the CoinGecko close series when there is no
+    /// Binance pair, so the chart still renders (as thin marks) rather than going blank.</summary>
+    public async Task<IReadOnlyList<PriceCandle>> GetCandlesAsync(
+        string symbol, string range, CancellationToken cancellationToken = default)
+    {
+        var (interval, limit, days) = range.ToUpperInvariant() switch
+        {
+            "1H" => ("1m", 60, "1"),
+            "24H" => ("15m", 96, "1"),
+            "7D" => ("2h", 84, "7"),
+            "30D" => ("8h", 90, "30"),
+            _ => ("1d", 365, "365"),
+        };
+
+        var pair = BinancePairs.GetValueOrDefault(symbol.ToUpperInvariant());
+        if (pair is not null)
+        {
+            try
+            {
+                var url = $"https://api.binance.com/api/v3/klines?symbol={pair}&interval={interval}&limit={limit}";
+                using var res = await Http.GetAsync(url, cancellationToken);
+                if (res.IsSuccessStatusCode)
+                {
+                    using var doc = await JsonDocument.ParseAsync(
+                        await res.Content.ReadAsStreamAsync(cancellationToken),
+                        cancellationToken: cancellationToken);
+
+                    var candles = new List<PriceCandle>();
+                    foreach (var k in doc.RootElement.EnumerateArray())
+                    {
+                        // [openTime, open(1), high(2), low(3), close(4), ...]
+                        if (k.GetArrayLength() > 4 &&
+                            double.TryParse(k[1].GetString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var o) &&
+                            double.TryParse(k[2].GetString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var h) &&
+                            double.TryParse(k[3].GetString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var l) &&
+                            double.TryParse(k[4].GetString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var c))
+                        {
+                            candles.Add(new PriceCandle(o, h, l, c));
+                        }
+                    }
+
+                    if (candles.Count > 1) return candles;
+                }
+            }
+            catch
+            {
+                // fall through to CoinGecko
+            }
+        }
+
+        var series = await GetGeckoSeriesAsync(symbol, days, cancellationToken);
+        return series.Select(c => new PriceCandle(c, c, c, c)).ToList();
     }
 
     private async Task<IReadOnlyList<double>> GetGeckoSeriesAsync(

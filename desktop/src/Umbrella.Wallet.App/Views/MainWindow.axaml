@@ -848,10 +848,32 @@
                           <TextBlock Canvas.Left="2" Canvas.Top="93"  Classes="mono" FontSize="9.5" Width="52" TextAlignment="Right" Foreground="{DynamicResource UmTextMuted}" Text="{Binding ChartLevel3}"/>
                           <TextBlock Canvas.Left="2" Canvas.Top="123" Classes="mono" FontSize="9.5" Width="52" TextAlignment="Right" Foreground="{DynamicResource UmTextMuted}" Text="{Binding ChartLevel4}"/>
 
-                          <!-- Area under the curve, then the curve itself on top. -->
-                          <Polygon Points="{Binding ChartArea}" Fill="{Binding SelectedMarketChangeColor}" Opacity="0.16"/>
+                          <!-- Faint close-line + area behind the candlesticks. -->
+                          <Polygon Points="{Binding ChartArea}" Fill="{Binding SelectedMarketChangeColor}" Opacity="0.07"/>
                           <Polyline Points="{Binding ChartPoints}" Stroke="{Binding SelectedMarketChangeColor}"
-                                    StrokeThickness="1.9" StrokeLineCap="Round" StrokeJoin="Round"/>
+                                    StrokeThickness="1" Opacity="0.3" StrokeLineCap="Round" StrokeJoin="Round"/>
+
+                          <!-- Real OHLC candlesticks (Binance klines): green up, red down. Reflection
+                               bindings on the container (its DataContext is the CandleVm, not the VM). -->
+                          <ItemsControl ItemsSource="{Binding ChartCandles}" x:CompileBindings="False">
+                            <ItemsControl.ItemsPanel>
+                              <ItemsPanelTemplate><Canvas/></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.Styles>
+                              <Style Selector="ContentPresenter">
+                                <Setter Property="Canvas.Left" Value="{Binding ItemX}"/>
+                                <Setter Property="Canvas.Top" Value="{Binding ItemY}"/>
+                              </Style>
+                            </ItemsControl.Styles>
+                            <ItemsControl.ItemTemplate>
+                              <DataTemplate x:DataType="vm:CandleVm">
+                                <Canvas Width="{Binding W}" Height="{Binding H}">
+                                  <Rectangle Canvas.Left="{Binding WickLocalX}" Width="1.4" Height="{Binding H}" Fill="{Binding Color}"/>
+                                  <Rectangle Canvas.Top="{Binding BodyLocalY}" Width="{Binding W}" Height="{Binding BodyH}" Fill="{Binding Color}"/>
+                                </Canvas>
+                              </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                          </ItemsControl>
 
                           <TextBlock Canvas.Left="40"  Canvas.Top="135" Classes="mono" FontSize="9.5" Width="36" TextAlignment="Center" Foreground="{DynamicResource UmTextMuted}" Text="{Binding ChartTime0}"/>
                           <TextBlock Canvas.Left="240" Canvas.Top="135" Classes="mono" FontSize="9.5" Width="36" TextAlignment="Center" Foreground="{DynamicResource UmTextMuted}" Text="{Binding ChartTime1}"/>

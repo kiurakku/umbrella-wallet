@@ -1231,8 +1231,8 @@ public partial class MainViewModel : ViewModelBase
 
         try
         {
-            var series = await _rates.GetPriceSeriesAsync(row.Symbol, ChartRange, CancellationToken.None);
-            BuildDetailChart(series);
+            var candles = await _rates.GetCandlesAsync(row.Symbol, ChartRange, CancellationToken.None);
+            BuildDetailChart(candles);
             if (ChartPoints.Count == 0)
             {
                 MarketStatus = $"No chart data for {row.Symbol} right now";
@@ -1294,6 +1294,9 @@ public partial class MainViewModel : ViewModelBase
     /// <summary>Closed polygon under the price line, so the chart reads as an area not a wire.</summary>
     [ObservableProperty] private List<Avalonia.Point> _chartArea = [];
 
+    /// <summary>Candlesticks (real OHLC) drawn over the area — green up, red down, like a pro chart.</summary>
+    [ObservableProperty] private List<CandleVm> _chartCandles = [];
+
     // Price levels, top to bottom.
     [ObservableProperty] private string _chartLevel0 = string.Empty;
     [ObservableProperty] private string _chartLevel1 = string.Empty;
@@ -1315,34 +1318,52 @@ public partial class MainViewModel : ViewModelBase
     /// Turns a price series into a plotted chart: gridlines with price labels, time labels along
     /// the bottom, a stroked line and the filled area beneath it.
     /// </summary>
-    private void BuildDetailChart(IReadOnlyList<double> series)
+    private void BuildDetailChart(IReadOnlyList<PriceCandle> candles)
     {
         ChartArea = [];
         ChartPoints = [];
+        ChartCandles = [];
         ChartHigh = ChartLow = string.Empty;
-        if (series.Count < 2) return;
+        if (candles.Count < 2) return;
 
-        var min = series.Min();
-        var max = series.Max();
+        var min = candles.Min(c => c.Low);
+        var max = candles.Max(c => c.High);
         var range = max - min;
         // A dead-flat series would divide by zero; give it a nominal band so it renders centred.
         if (range <= 0) { min -= 1; max += 1; range = max - min; }
 
         var plotW = PlotRight - PlotLeft;
         var plotH = PlotBottom - PlotTop;
+        double Y(double price) => PlotTop + (1 - (price - min) / range) * plotH;
 
-        var line = new List<Avalonia.Point>(series.Count);
-        for (var i = 0; i < series.Count; i++)
+        // Faint close-line + area behind the candles.
+        var line = new List<Avalonia.Point>(candles.Count);
+        for (var i = 0; i < candles.Count; i++)
         {
-            var x = PlotLeft + plotW * i / (series.Count - 1);
-            var y = PlotTop + (1 - (series[i] - min) / range) * plotH;
-            line.Add(new Avalonia.Point(x, y));
+            var x = PlotLeft + plotW * i / (candles.Count - 1);
+            line.Add(new Avalonia.Point(x, Y(candles[i].Close)));
         }
 
         ChartPoints = line;
+        ChartArea = new List<Avalonia.Point>(line) { new(PlotRight, PlotBottom), new(PlotLeft, PlotBottom) };
 
-        var area = new List<Avalonia.Point>(line) { new(PlotRight, PlotBottom), new(PlotLeft, PlotBottom) };
-        ChartArea = area;
+        // Candlesticks: green when close ≥ open, red otherwise (TradingView colours).
+        var w = Math.Max(1.5, plotW / candles.Count * 0.62);
+        var built = new List<CandleVm>(candles.Count);
+        for (var i = 0; i < candles.Count; i++)
+        {
+            var c = candles[i];
+            var xc = PlotLeft + plotW * (i + 0.5) / candles.Count;
+            var yHigh = Y(c.High);
+            var yLow = Y(c.Low);
+            var bodyTop = Math.Min(Y(c.Open), Y(c.Close));
+            built.Add(new CandleVm(
+                xc - (w / 2), yHigh, w, Math.Max(1, yLow - yHigh),
+                (w / 2) - 0.7, bodyTop - yHigh, Math.Max(1, Math.Abs(Y(c.Close) - Y(c.Open))),
+                c.Close >= c.Open ? "#26A69A" : "#EF5350"));
+        }
+
+        ChartCandles = built;
 
         // Five price levels, top to bottom.
         ChartLevel0 = FormatPrice(max);
@@ -2667,6 +2688,12 @@ public static class CoinNetworks
         _ => fallback,
     };
 }
+
+/// <summary>One candlestick, pre-computed to pixel coordinates: the container sits at (ItemX,ItemY)
+/// with size W×H; inside, the wick is a thin bar at WickLocalX and the body starts at BodyLocalY.</summary>
+public sealed record CandleVm(
+    double ItemX, double ItemY, double W, double H,
+    double WickLocalX, double BodyLocalY, double BodyH, string Color);
 
 public sealed record HoldingRowViewModel(
     string Symbol,
