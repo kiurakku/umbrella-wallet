@@ -4,6 +4,18 @@ All notable releases of **Umbrella Wallet**.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versioning follows [SemVer](https://semver.org/).
 
+## [2.1.4] — 2026-07-30
+
+### Desktop
+- **Themes restyle the buttons**, not just the colours — the primary CTA takes each theme's accent
+  with an auto-contrast label, and quick-action tiles glow in the accent on hover.
+- **Linux build** — shipped from the same codebase as Windows (identical features, themes and
+  bundled Tor/Monero), as a `linux-x64` tarball.
+
+### Notes
+- The mobile experience is the responsive web app / Telegram mini-app; there is no separate native
+  Android build in this repo.
+
 ## [2.1.3] — 2026-07-30
 
 ### Desktop
