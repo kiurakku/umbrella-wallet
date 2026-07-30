@@ -251,6 +251,8 @@
                 Width="248" Background="{DynamicResource UmBgAlt}" BorderBrush="{DynamicResource UmBorder}" BorderThickness="0,0,1,0">
           <Grid RowDefinitions="Auto,*,Auto">
             <StackPanel Margin="20,22,16,12" Spacing="10">
+              <!-- Brand mark restored to the sidebar (the umbrella), theme-aware via LogoImage. -->
+              <Image Source="{Binding LogoImage}" Width="42" Height="42" Stretch="Uniform" HorizontalAlignment="Left"/>
               <TextBlock Classes="eyebrow" Text="WALLET"/>
               <Grid ColumnDefinitions="*,Auto">
                 <StackPanel>
@@ -342,6 +344,9 @@
                   <Panel>
                     <Image Source="avares://Umbrella.Wallet.App/Assets/hero-bg.png" Stretch="UniformToFill"/>
                     <Border Background="#4D000000"/>
+                    <!-- Wash the cinematic backdrop with the theme's accent, so coloured themes get a
+                         matching glow instead of the neutral portal alone. -->
+                    <Border Background="{DynamicResource UmAccentWash}"/>
                     <Grid Margin="30,24" ColumnDefinitions="*,Auto">
                       <StackPanel VerticalAlignment="Center" Spacing="3">
                         <StackPanel Orientation="Horizontal" Spacing="10">
@@ -426,7 +431,7 @@
 
                 <Border Classes="hairline">
                   <StackPanel>
-                    <Grid ColumnDefinitions="2.2*,1.2*,1.5*,1.2*,0.9*,Auto" ColumnSpacing="18" Height="34" Background="{DynamicResource UmCard}">
+                    <Grid ColumnDefinitions="2.4*,1.2*,1.5*,1.2*,0.9*,Auto" ColumnSpacing="18" Height="34" Background="{DynamicResource UmCard}">
                       <TextBlock Classes="eyebrow" Text="ASSET" Margin="16,0,0,0" VerticalAlignment="Center"/>
                       <TextBlock Grid.Column="1" Classes="eyebrow" Text="PRICE" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                       <TextBlock Grid.Column="2" Classes="eyebrow" Text="BALANCE" HorizontalAlignment="Right" VerticalAlignment="Center"/>
@@ -438,20 +443,23 @@
                       <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="vm:HoldingRowViewModel">
                           <Border BorderBrush="{DynamicResource UmBorder}" BorderThickness="0,1,0,0" Height="60">
-                            <Grid ColumnDefinitions="2.2*,1.2*,1.5*,1.2*,0.9*,Auto" ColumnSpacing="18" Margin="16,0">
-                              <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                                <Border Width="38" Height="38" CornerRadius="19" Background="{Binding BadgeColor}"
+                            <Grid ColumnDefinitions="2.4*,1.2*,1.5*,1.2*,0.9*,Auto" ColumnSpacing="18" Margin="16,0">
+                              <!-- Asset cell as a bounded grid (Auto badge, * text): in a horizontal
+                                   StackPanel the long network label sized unbounded and spilled into
+                                   the Price column. A * column clips it and lets it ellipsize. -->
+                              <Grid ColumnDefinitions="Auto,*" VerticalAlignment="Center" ClipToBounds="True">
+                                <Border Width="38" Height="38" CornerRadius="19" Margin="0,0,10,0" Background="{Binding BadgeColor}"
                                         BoxShadow="{Binding BadgeShadow}">
                                   <TextBlock FontFamily="Segoe UI Symbol, Segoe UI Variable, Segoe UI" FontSize="18" FontWeight="Bold"
                                              Foreground="#FFFFFF" Text="{Binding BadgeGlyph}"
                                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
-                                <StackPanel VerticalAlignment="Center" MinWidth="0">
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center" MinWidth="0">
                                   <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis"/>
                                   <TextBlock FontSize="10.5" Foreground="{DynamicResource UmTextMuted}" Text="{Binding NetworkLabel}"
                                              TextTrimming="CharacterEllipsis"/>
                                 </StackPanel>
-                              </StackPanel>
+                              </Grid>
                               <TextBlock Grid.Column="1" Classes="mono" FontSize="12" Text="{Binding PriceLabel}" HorizontalAlignment="Right" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                               <TextBlock Grid.Column="2" Classes="mono" FontSize="12" Foreground="{DynamicResource UmTextDim}" Text="{Binding AmountLabel}" HorizontalAlignment="Right" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                               <TextBlock Grid.Column="3" Classes="mono" FontSize="12" Text="{Binding ValueLabel}" HorizontalAlignment="Right" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
@@ -718,9 +726,12 @@
                 <Border Classes="hairline" Padding="40" MinHeight="320">
                   <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="12">
                     <Path Classes="tileIcon" Width="46" Height="46" Data="M4 16 L9 11 L13 15 L20 8 M4 5 H20 V19 H4 Z"/>
+                    <Border Background="{DynamicResource UmAccentWash}" CornerRadius="20" Padding="12,4" HorizontalAlignment="Center">
+                      <TextBlock Classes="eyebrow" Foreground="{DynamicResource UmAccentBright}" Text="IN DEVELOPMENT"/>
+                    </Border>
                     <TextBlock Classes="serif" FontSize="20" Text="Your NFTs will live here" HorizontalAlignment="Center"/>
                     <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12.5" MaxWidth="420" TextAlignment="Center" TextWrapping="Wrap"
-                               Text="NFT collections across your chains — viewing and sending — are on the roadmap. Your keys already cover these networks, so nothing new to set up when it lands."/>
+                               Text="NFT collections across your chains — viewing and sending — are in development. Your keys already cover these networks, so there'll be nothing new to set up when it lands."/>
                   </StackPanel>
                 </Border>
               </StackPanel>
@@ -734,9 +745,12 @@
                 <Border Classes="hairline" Padding="40" MinHeight="320">
                   <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="12">
                     <Path Classes="tileIcon" Width="46" Height="46" Data="M12 3 L20 7 V13 C20 17 16 20 12 21 C8 20 4 17 4 13 V7 Z M9 12 L11 14 L15 10"/>
+                    <Border Background="{DynamicResource UmAccentWash}" CornerRadius="20" Padding="12,4" HorizontalAlignment="Center">
+                      <TextBlock Classes="eyebrow" Foreground="{DynamicResource UmAccentBright}" Text="IN DEVELOPMENT"/>
+                    </Border>
                     <TextBlock Classes="serif" FontSize="20" Text="Staking is on the way" HorizontalAlignment="Center"/>
                     <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12.5" MaxWidth="420" TextAlignment="Center" TextWrapping="Wrap"
-                               Text="Stake ETH, SOL, ADA and TON straight from the wallet and track rewards here. Non-custodial — you keep the keys; we never take your assets. Coming in a future update."/>
+                               Text="Stake ETH, SOL, ADA and TON straight from the wallet and track rewards here. Non-custodial — you keep the keys; we never take your assets. In development."/>
                   </StackPanel>
                 </Border>
               </StackPanel>
