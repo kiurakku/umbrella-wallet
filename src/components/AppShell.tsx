@@ -43,6 +43,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         className="w-full max-w-md md:max-w-[1180px] md:h-[min(820px,calc(100vh-3rem))] min-h-screen md:min-h-0 flex flex-col md:overflow-hidden md:rounded-[10px] bg-background relative"
         style={{ boxShadow: "var(--shadow-window)" }}
       >
+        {/* Ambient rain over the whole app — a faint atmospheric veil, non-interactive. */}
+        <div className="fear-rain absolute inset-0 z-30 md:rounded-[10px]" aria-hidden />
         {/* Desktop title bar */}
         <div className="hidden md:flex items-center justify-between h-9 pl-4 hairline-b bg-surface select-none shrink-0">
           <div className="flex items-center gap-3">

@@ -263,7 +263,7 @@ function Index() {
           </button>
 
           {/* Quick actions */}
-          <div className="mt-5 grid grid-cols-4 gap-0 hairline rounded-md overflow-hidden">
+          <div className="glass-sheen mt-5 grid grid-cols-4 gap-0 hairline rounded-2xl overflow-hidden">
             <button
               onClick={() => openSheet("withdraw")}
               className="group flex flex-col md:flex-row items-center justify-center gap-1.5 md:gap-2.5 h-14 text-[11px] md:text-[13px] hover:bg-elevated transition-colors"

@@ -80,7 +80,7 @@
  * destructive — everything else is pure greyscale on purpose.
  */
 :root {
-  --radius: 0.625rem;
+  --radius: 0.85rem;
   --background: oklch(0.985 0 0);
   --foreground: oklch(0.145 0 0);
   --surface: oklch(0.97 0 0);
@@ -306,8 +306,68 @@
     -webkit-backdrop-filter: blur(12px);
   }
 
+  /* Ambient "rain" for the fear theme: a faint curtain of near-vertical streaks drifting down
+     over the app, painted as a moving repeating gradient. Non-interactive, and it settles to a
+     static wash under prefers-reduced-motion. */
+  .fear-rain {
+    pointer-events: none;
+    opacity: 0.55;
+    background-image: repeating-linear-gradient(
+      96deg,
+      transparent 0 13px,
+      oklch(1 0 0 / 0.055) 13px 14px
+    );
+    background-size: 120px 200px;
+    animation: fear-rain-fall 0.9s linear infinite;
+    mix-blend-mode: screen;
+  }
+  :root:not(.dark) .fear-rain {
+    background-image: repeating-linear-gradient(
+      96deg,
+      transparent 0 13px,
+      oklch(0 0 0 / 0.045) 13px 14px
+    );
+    mix-blend-mode: multiply;
+    opacity: 0.4;
+  }
+  @keyframes fear-rain-fall {
+    to {
+      background-position: -26px 200px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .fear-rain {
+      animation: none;
+      opacity: 0.28;
+    }
+  }
+
   .neon-card-glow {
     background: radial-gradient(ellipse at 50% 0%, var(--neon-cyan-dim) 0%, transparent 70%);
+  }
+
+  /* Glassy surface with a specular top-edge sheen — for the quick-action tiles and CTAs. */
+  .glass-sheen {
+    background-image: linear-gradient(
+      to bottom,
+      oklch(1 0 0 / 0.12),
+      oklch(1 0 0 / 0.02) 42%,
+      transparent
+    );
+    box-shadow:
+      inset 0 1px 0 0 oklch(1 0 0 / 0.22),
+      0 8px 22px -14px oklch(0 0 0 / 0.6);
+  }
+  :root:not(.dark) .glass-sheen {
+    background-image: linear-gradient(
+      to bottom,
+      oklch(1 0 0 / 0.9),
+      oklch(1 0 0 / 0.5) 45%,
+      oklch(0.97 0 0)
+    );
+    box-shadow:
+      inset 0 1px 0 0 oklch(1 0 0 / 0.9),
+      0 8px 20px -14px oklch(0 0 0 / 0.25);
   }
 
   .tg-wallet-hero {
