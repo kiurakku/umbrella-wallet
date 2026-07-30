@@ -61,6 +61,24 @@ public partial class MainWindow : Window
                 });
                 return opened.Count > 0 ? opened[0].TryGetLocalPath() : null;
             };
+
+            // Profile images (avatar / banner / sidebar background): the user picks their own file.
+            backupVm.PickImageAsync = async () =>
+            {
+                var opened = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+                {
+                    Title = "Choose an image",
+                    AllowMultiple = false,
+                    FileTypeFilter =
+                    [
+                        new FilePickerFileType("Images")
+                        {
+                            Patterns = ["*.png", "*.jpg", "*.jpeg", "*.webp", "*.bmp", "*.gif"],
+                        },
+                    ],
+                });
+                return opened.Count > 0 ? opened[0].TryGetLocalPath() : null;
+            };
         }
 
         Closed += (_, _) =>

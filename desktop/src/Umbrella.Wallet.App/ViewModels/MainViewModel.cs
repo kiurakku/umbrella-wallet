@@ -438,6 +438,7 @@ public partial class MainViewModel : ViewModelBase
         SelectedSendAsset = SendableAssets[0];
         SelectedWatchNetwork = WatchableNetworks[0];
         BuildGuide();
+        LoadProfileImages();
 
         _ = LoadWatchAddressesAsync();
         _ = RefreshMarketAsync();
@@ -1689,6 +1690,71 @@ public partial class MainViewModel : ViewModelBase
 
     /// <summary>Set by the view so the view-model can raise a file dialog without knowing about windows.</summary>
     public Func<string, bool, Task<string?>>? PickFileAsync { get; set; }
+
+    /// <summary>Raised by the view to pick an image file (avatar/banner/background) to open.</summary>
+    public Func<Task<string?>>? PickImageAsync { get; set; }
+
+    // --- Profile customisation: the user's own avatar, banner and sidebar background. Each is a
+    // file they pick; we copy it into the data folder so it survives and never has to be bundled. ---
+    [ObservableProperty] private Bitmap? _avatarImage;
+    [ObservableProperty] private Bitmap? _bannerImage;
+    [ObservableProperty] private Bitmap? _sidebarBgImage;
+
+    public bool HasAvatar => AvatarImage is not null;
+    public bool HasBanner => BannerImage is not null;
+    public bool HasSidebarBg => SidebarBgImage is not null;
+
+    partial void OnAvatarImageChanged(Bitmap? value) => OnPropertyChanged(nameof(HasAvatar));
+    partial void OnBannerImageChanged(Bitmap? value) => OnPropertyChanged(nameof(HasBanner));
+    partial void OnSidebarBgImageChanged(Bitmap? value) => OnPropertyChanged(nameof(HasSidebarBg));
+
+    private static string ProfileDir => System.IO.Path.Combine(AppPaths.DataRoot, "profile");
+
+    private static Bitmap? LoadBitmap(string path)
+    {
+        try { return string.IsNullOrWhiteSpace(path) || !System.IO.File.Exists(path) ? null : new Bitmap(path); }
+        catch { return null; }
+    }
+
+    public void LoadProfileImages()
+    {
+        AvatarImage = LoadBitmap(_uiSettings.AvatarPath);
+        BannerImage = LoadBitmap(_uiSettings.BannerPath);
+        SidebarBgImage = LoadBitmap(_uiSettings.SidebarBackgroundPath);
+    }
+
+    private async Task PickProfileImageAsync(string name, Action<string> setPath)
+    {
+        if (PickImageAsync is null) return;
+        var src = await PickImageAsync();
+        if (string.IsNullOrWhiteSpace(src) || !System.IO.File.Exists(src)) return;
+        try
+        {
+            System.IO.Directory.CreateDirectory(ProfileDir);
+            var dest = System.IO.Path.Combine(ProfileDir, name + System.IO.Path.GetExtension(src));
+            System.IO.File.Copy(src, dest, overwrite: true);
+            setPath(dest);
+            _uiSettings.Save();
+            LoadProfileImages();
+            StatusMessage = "Profile image updated";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Could not set the image: {ex.Message}";
+        }
+    }
+
+    [RelayCommand] private Task PickAvatar() => PickProfileImageAsync("avatar", p => _uiSettings.AvatarPath = p);
+    [RelayCommand] private Task PickBanner() => PickProfileImageAsync("banner", p => _uiSettings.BannerPath = p);
+    [RelayCommand] private Task PickSidebarBg() => PickProfileImageAsync("sidebar", p => _uiSettings.SidebarBackgroundPath = p);
+
+    [RelayCommand]
+    private void ClearProfileImages()
+    {
+        _uiSettings.AvatarPath = _uiSettings.BannerPath = _uiSettings.SidebarBackgroundPath = "";
+        _uiSettings.Save();
+        LoadProfileImages();
+    }
 
     [RelayCommand]
     private async Task ExportBackupAsync()

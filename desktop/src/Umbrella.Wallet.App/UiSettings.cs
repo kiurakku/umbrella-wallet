@@ -22,6 +22,12 @@ public sealed class UiSettings
     /// <summary>A user-chosen label for this wallet, shown in the top bar; blank uses the brand only.</summary>
     public string WalletName { get; set; } = "";
 
+    /// <summary>Absolute paths to the user's own profile images (copied into the data folder when
+    /// chosen), so their photos work without the app ever bundling them. Blank = use the defaults.</summary>
+    public string AvatarPath { get; set; } = "";
+    public string BannerPath { get; set; } = "";
+    public string SidebarBackgroundPath { get; set; } = "";
+
     private static string Path => System.IO.Path.Combine(AppPaths.DataRoot, "ui-settings.json");
 
     public static UiSettings Load()

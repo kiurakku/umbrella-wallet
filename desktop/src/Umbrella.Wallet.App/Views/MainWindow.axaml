@@ -249,22 +249,40 @@
              bar on the top or bottom. -->
         <Border DockPanel.Dock="{Binding SidebarDock}" IsVisible="{Binding IsSidebarVertical}"
                 Width="248" Background="{DynamicResource UmBgAlt}" BorderBrush="{DynamicResource UmBorder}" BorderThickness="0,0,1,0">
-          <Grid RowDefinitions="Auto,*,Auto">
-            <StackPanel Margin="20,22,16,12" Spacing="10">
-              <!-- Brand mark restored to the sidebar (the umbrella), theme-aware via LogoImage. -->
-              <Image Source="{Binding LogoImage}" Width="42" Height="42" Stretch="Uniform" HorizontalAlignment="Left"/>
-              <TextBlock Classes="eyebrow" Text="WALLET"/>
-              <Grid ColumnDefinitions="*,Auto">
-                <StackPanel>
-                  <TextBlock Classes="serif" FontSize="22" Text="{Binding WalletLabel}"/>
-                  <TextBlock Classes="mono" FontSize="11" Foreground="{DynamicResource UmTextDim}" Margin="0,6,0,0"
-                             Text="{Binding ShortAddress}"/>
-                </StackPanel>
-                <Button Grid.Column="1" Width="30" Height="30" Classes="ghost" Padding="0"
-                        Command="{Binding CopyPrimaryAddressCommand}" ToolTip.Tip="Copy address">
-                  <TextBlock Text="⧉" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                </Button>
-              </Grid>
+          <Grid RowDefinitions="Auto,*,Auto" ClipToBounds="True">
+            <!-- Optional user background photo behind the whole sidebar, with a scrim for legibility. -->
+            <Image Grid.RowSpan="3" Source="{Binding SidebarBgImage}" Stretch="UniformToFill"
+                   IsVisible="{Binding HasSidebarBg}" Opacity="0.30"/>
+            <Border Grid.RowSpan="3" Background="#B3000000" IsVisible="{Binding HasSidebarBg}"/>
+
+            <StackPanel Grid.Row="0">
+              <!-- Profile banner (the user's own photo), full width at the top. -->
+              <Panel Height="84" IsVisible="{Binding HasBanner}" ClipToBounds="True">
+                <Image Source="{Binding BannerImage}" Stretch="UniformToFill"/>
+              </Panel>
+              <StackPanel Margin="20,14,16,12" Spacing="9">
+                <!-- Avatar: the user's photo, or the umbrella brand mark when none is set. -->
+                <Border Width="54" Height="54" CornerRadius="27" ClipToBounds="True" HorizontalAlignment="Left"
+                        Background="{DynamicResource UmCard}" BorderBrush="{DynamicResource UmBorder2}" BorderThickness="2">
+                  <Panel>
+                    <Image Source="{Binding AvatarImage}" Stretch="UniformToFill" IsVisible="{Binding HasAvatar}"/>
+                    <Image Source="{Binding LogoImage}" Width="30" Height="30" Stretch="Uniform"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding !HasAvatar}"/>
+                  </Panel>
+                </Border>
+                <TextBlock Classes="eyebrow" Text="WALLET"/>
+                <Grid ColumnDefinitions="*,Auto">
+                  <StackPanel>
+                    <TextBlock Classes="serif" FontSize="22" Text="{Binding WalletLabel}"/>
+                    <TextBlock Classes="mono" FontSize="11" Foreground="{DynamicResource UmTextDim}" Margin="0,6,0,0"
+                               Text="{Binding ShortAddress}"/>
+                  </StackPanel>
+                  <Button Grid.Column="1" Width="30" Height="30" Classes="ghost" Padding="0" VerticalAlignment="Top"
+                          Command="{Binding CopyPrimaryAddressCommand}" ToolTip.Tip="Copy address">
+                    <TextBlock Text="⧉" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                  </Button>
+                </Grid>
+              </StackPanel>
             </StackPanel>
 
             <StackPanel Grid.Row="1" Margin="10,4,10,0" Spacing="3">
@@ -1066,12 +1084,28 @@
                 </Border>
 
                 <Border Classes="card" IsVisible="{Binding IsTabAppearance}">
-                  <StackPanel Spacing="10">
-                    <TextBlock Classes="eyebrow" Text="WALLET NAME"/>
+                  <StackPanel Spacing="12">
+                    <TextBlock Classes="eyebrow" Text="PROFILE"/>
                     <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
-                               Text="A label for this wallet, shown in the top bar. Leave it blank to show the Umbrella name. It is stored only on this device."/>
-                    <TextBox Text="{Binding WalletName, Mode=TwoWay}" Watermark="e.g. Cold storage · Daily · the fear"
-                             MaxWidth="320" HorizontalAlignment="Left"/>
+                               Text="Make this wallet yours — a name, an avatar, a banner and a sidebar background. Pick your own image files; they're copied into the data folder and stay on this device."/>
+                    <TextBox Text="{Binding WalletName, Mode=TwoWay}" Watermark="Wallet name — e.g. Cold storage · Daily"
+                             MaxWidth="360" HorizontalAlignment="Left"/>
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                      <Border Width="58" Height="58" CornerRadius="29" ClipToBounds="True" Background="{DynamicResource UmCard}"
+                              BorderBrush="{DynamicResource UmBorder2}" BorderThickness="2" VerticalAlignment="Top">
+                        <Panel>
+                          <Image Source="{Binding AvatarImage}" Stretch="UniformToFill" IsVisible="{Binding HasAvatar}"/>
+                          <Image Source="{Binding LogoImage}" Width="32" Height="32" HorizontalAlignment="Center"
+                                 VerticalAlignment="Center" IsVisible="{Binding !HasAvatar}"/>
+                        </Panel>
+                      </Border>
+                      <WrapPanel Grid.Column="1" VerticalAlignment="Center">
+                        <Button Classes="ghost" Content="Choose avatar…" Margin="0,0,8,8" Command="{Binding PickAvatarCommand}"/>
+                        <Button Classes="ghost" Content="Choose banner…" Margin="0,0,8,8" Command="{Binding PickBannerCommand}"/>
+                        <Button Classes="ghost" Content="Sidebar background…" Margin="0,0,8,8" Command="{Binding PickSidebarBgCommand}"/>
+                        <Button Classes="ghost" Content="Reset" Margin="0,0,8,8" Command="{Binding ClearProfileImagesCommand}"/>
+                      </WrapPanel>
+                    </Grid>
                   </StackPanel>
                 </Border>
 
