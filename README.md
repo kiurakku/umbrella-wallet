@@ -20,7 +20,7 @@ No account. No email. No phone number. No KYC. Just a wallet — the way it was 
 
 <br/>
 
-![Version](https://img.shields.io/badge/version-2.1.14-4B3F86)
+![Version](https://img.shields.io/badge/version-2.2.0-4B3F86)
 ![Windows](https://img.shields.io/badge/Windows-ready-4B3F86?logo=windows&logoColor=white)
 ![Linux](https://img.shields.io/badge/Linux-ready-6E5FB8?logo=linux&logoColor=white)
 ![Desktop](https://img.shields.io/badge/desktop-Avalonia%20·%20.NET%208-8A5FD6)
@@ -40,7 +40,7 @@ No account. No email. No phone number. No KYC. Just a wallet — the way it was 
 
 <br/>
 
-**[⬇️ Download Windows build (v2.1.14)](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-2.1.14-win-x64-portable.zip)** · [All releases](https://github.com/kiurakku/umbrella-wallet/releases)
+**[⬇️ Download Windows build (v2.2.0)](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-2.2.0-win-x64-portable.zip)** · [All releases](https://github.com/kiurakku/umbrella-wallet/releases)
 
 <br/>
 
@@ -121,7 +121,7 @@ Umbrella flips that model:
 
 | Platform | Package | Notes |
 |----------|---------|-------|
-| **Windows** | [`UmbrellaWallet-2.1.4-win-x64-portable.zip`](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-2.1.4-win-x64-portable.zip) | Portable — unzip and run `Umbrella.Wallet.App.exe` |
+| **Windows** | [`UmbrellaWallet-2.2.0-win-x64-portable.zip`](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-2.2.0-win-x64-portable.zip) | Portable — unzip and run `Umbrella.Wallet.App.exe` |
 | **Linux** | [`UmbrellaWallet-2.1.4-linux-x64.tar.gz`](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-2.1.4-linux-x64.tar.gz) | Unpack, run `./Umbrella.Wallet.App` | No install required |
  `./Umbrella.Wallet.App` |
 
@@ -235,6 +235,7 @@ Questions and bug reports are welcome as GitHub issues — best-effort support, 
 **Free to use. Not free to take.** See [LICENSE](LICENSE) for full terms.
 
 ---
+
 
 
 
