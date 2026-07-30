@@ -189,8 +189,19 @@ public static class Theming
         resources["UmCardTop"] = Lighten(card, id == "white" ? 1.0 : 1.10);
         resources["UmCardBottom"] = Lighten(card, id == "white" ? 0.985 : 0.90);
 
+        // Readable text colour ON the accent, chosen by the accent's brightness — so accent-filled
+        // buttons stay legible whether the theme accent is dark (red/violet) or light (mint/cyan).
+        var accent = Color.Parse(palette[Array.IndexOf(Keys, "UmAccentBright")]);
+        resources["UmAccentText"] = new SolidColorBrush(
+            Luminance(accent) > 0.62 ? Color.Parse("#0A0A0B") : Colors.White);
+        // A soft translucent wash of the accent, for hover fills and glows that follow the theme.
+        resources["UmAccentWash"] = new SolidColorBrush(accent) { Opacity = 0.16 };
+
         Current = id;
     }
+
+    /// <summary>Perceptual-ish brightness in 0..1, to decide dark-vs-light text on a colour.</summary>
+    private static double Luminance(Color c) => ((0.299 * c.R) + (0.587 * c.G) + (0.114 * c.B)) / 255.0;
 
     /// <summary>Scales a colour's channels, clamped so bright themes don't wrap around to black.</summary>
     private static Color Lighten(Color colour, double factor) => Color.FromRgb(

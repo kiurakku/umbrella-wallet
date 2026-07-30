@@ -490,6 +490,10 @@ public partial class MainViewModel : ViewModelBase
     /// Click an item to read the full note. Newest first.</summary>
     public ObservableCollection<NewsItemViewModel> News { get; } =
     [
+        new("UPDATE", "Themes now restyle the buttons too — and Linux is here",
+            "Themes no longer change only the colours: the primary buttons now take on each theme's accent (orange on The fear, cyan on Blue, mint on Green, violet on Gradient, teal on Slate), with the label colour picked automatically for contrast, and the quick-action tiles glow in the accent on hover.\n\n" +
+            "The wallet also ships for Linux now, built from the same code as Windows — identical features, themes and bundled Tor/Monero. The mobile experience is the web app (it's responsive and runs as a Telegram mini-app); there is no separate Android build.",
+            "2026-07-30"),
         new("UPDATE", "A cleaner window and a full theme refresh",
             "The window chrome is gone — no top strip, no bottom status bar — so the wallet is all content, edge to edge. Status and errors now surface where they belong (the unlock form and the review step), not in a bar.\n\n" +
             "Every theme except the primary was re-skinned to match the app's mood: neon-cyan glass (Blue), mint/emerald (Green), vivid violet (Gradient) and teal cyber (Slate), plus the red editorial primary (The fear · noir) and Ember. Coin badges now show each coin's own symbol mark.",

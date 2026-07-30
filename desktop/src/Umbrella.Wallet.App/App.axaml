@@ -106,9 +106,11 @@
         </Style>
 
         <!-- Primary: solid, bold — the single strongest call to action on a screen. -->
+        <!-- Primary now carries the theme's accent (auto-contrast label), so each theme restyles the
+             main call-to-action, not just the neutrals — orange on The fear, cyan on Blue, and so on. -->
         <Style Selector="Button.primary">
-            <Setter Property="Background" Value="{DynamicResource UmInverse}" />
-            <Setter Property="Foreground" Value="{DynamicResource UmInverseText}" />
+            <Setter Property="Background" Value="{DynamicResource UmAccentBright}" />
+            <Setter Property="Foreground" Value="{DynamicResource UmAccentText}" />
             <Setter Property="Padding" Value="22,13" />
             <Setter Property="FontWeight" Value="Bold" />
             <Setter Property="FontSize" Value="14.5" />
@@ -122,10 +124,10 @@
             </Setter>
         </Style>
         <Style Selector="Button.primary:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="{DynamicResource UmInverseHover}" />
+            <Setter Property="Background" Value="{DynamicResource UmAccentHover}" />
         </Style>
         <Style Selector="Button.primary:pressed /template/ ContentPresenter">
-            <Setter Property="Background" Value="{DynamicResource UmInverseHover}" />
+            <Setter Property="Background" Value="{DynamicResource UmAccentHover}" />
         </Style>
 
         <!-- Ghost: quiet secondary action. Frosted-glass fill (translucent white over the
@@ -201,7 +203,7 @@
             </Setter>
         </Style>
         <Style Selector="Button.tile:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="{DynamicResource UmHover}" />
+            <Setter Property="Background" Value="{DynamicResource UmAccentWash}" />
         </Style>
         <!-- Lift on hover so the quick actions feel like physical keys. -->
         <Style Selector="Button.tile">
