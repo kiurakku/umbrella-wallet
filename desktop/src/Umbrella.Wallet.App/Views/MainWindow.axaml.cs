@@ -35,51 +35,8 @@ public partial class MainWindow : Window
         PointerPressed += OnUserActivity;
         KeyDown += OnUserActivity;
         Opened += (_, _) => ResetAutoLock();
-        // The view owns the window, so it supplies the file dialog the view-model asks for.
-        if (DataContext is MainViewModel backupVm)
-        {
-            backupVm.PickFileAsync = async (suggested, save) =>
-            {
-                var storage = StorageProvider;
-                if (save)
-                {
-                    var file = await storage.SaveFilePickerAsync(new FilePickerSaveOptions
-                    {
-                        Title = "Save Umbrella backup",
-                        SuggestedFileName = suggested,
-                        DefaultExtension = "json",
-                        FileTypeChoices = [new FilePickerFileType("Umbrella backup") { Patterns = ["*.json"] }],
-                    });
-                    return file?.TryGetLocalPath();
-                }
-
-                var opened = await storage.OpenFilePickerAsync(new FilePickerOpenOptions
-                {
-                    Title = "Restore Umbrella backup",
-                    AllowMultiple = false,
-                    FileTypeFilter = [new FilePickerFileType("Umbrella backup") { Patterns = ["*.json"] }],
-                });
-                return opened.Count > 0 ? opened[0].TryGetLocalPath() : null;
-            };
-
-            // Profile images (avatar / banner / sidebar background): the user picks their own file.
-            backupVm.PickImageAsync = async () =>
-            {
-                var opened = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-                {
-                    Title = "Choose an image",
-                    AllowMultiple = false,
-                    FileTypeFilter =
-                    [
-                        new FilePickerFileType("Images")
-                        {
-                            Patterns = ["*.png", "*.jpg", "*.jpeg", "*.webp", "*.bmp", "*.gif"],
-                        },
-                    ],
-                });
-                return opened.Count > 0 ? opened[0].TryGetLocalPath() : null;
-            };
-        }
+        // NOTE: the file dialogs are wired in OnDataContextChanged, NOT here — the window is created
+        // with `new MainWindow { DataContext = vm }`, so DataContext is still null in the constructor.
 
         Closed += (_, _) =>
         {
@@ -127,7 +84,55 @@ public partial class MainWindow : Window
         {
             _observed.PropertyChanged += OnViewModelPropertyChanged;
             UpdateCaptureProtection();
+            WirePickers(_observed);
         }
+    }
+
+    /// <summary>Supplies the view-model with file dialogs (backup + profile images). Wired here, when
+    /// the DataContext is actually set, because the window is built with an object initializer.</summary>
+    private void WirePickers(MainViewModel vm)
+    {
+        vm.PickFileAsync = async (suggested, save) =>
+        {
+            var storage = StorageProvider;
+            if (save)
+            {
+                var file = await storage.SaveFilePickerAsync(new FilePickerSaveOptions
+                {
+                    Title = "Save Umbrella backup",
+                    SuggestedFileName = suggested,
+                    DefaultExtension = "json",
+                    FileTypeChoices = [new FilePickerFileType("Umbrella backup") { Patterns = ["*.json"] }],
+                });
+                return file?.TryGetLocalPath();
+            }
+
+            var opened = await storage.OpenFilePickerAsync(new FilePickerOpenOptions
+            {
+                Title = "Restore Umbrella backup",
+                AllowMultiple = false,
+                FileTypeFilter = [new FilePickerFileType("Umbrella backup") { Patterns = ["*.json"] }],
+            });
+            return opened.Count > 0 ? opened[0].TryGetLocalPath() : null;
+        };
+
+        // Profile images (avatar / banner / sidebar background): the user picks their own file.
+        vm.PickImageAsync = async () =>
+        {
+            var opened = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            {
+                Title = "Choose an image",
+                AllowMultiple = false,
+                FileTypeFilter =
+                [
+                    new FilePickerFileType("Images")
+                    {
+                        Patterns = ["*.png", "*.jpg", "*.jpeg", "*.webp", "*.bmp", "*.gif"],
+                    },
+                ],
+            });
+            return opened.Count > 0 ? opened[0].TryGetLocalPath() : null;
+        };
     }
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
