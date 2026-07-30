@@ -1381,7 +1381,7 @@
                   <StackPanel Spacing="10">
                     <TextBlock Classes="eyebrow" Foreground="#E09A9A" Text="DANGER ZONE"/>
                     <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
-                               Text="Deleting the vault erases the encrypted seed from this PC. Nothing is stored on a server, so your written 24-word phrase is the only way back."/>
+                               Text="This wipes EVERYTHING this wallet keeps on the PC — the encrypted seed, your settings and profile images, the watch-address list, saved exchange keys, every backup left aside, and the Monero wallet. Only the app itself and its bundled Tor/Monero binaries stay. Nothing is on a server, so your written 24-word phrase is the only way back."/>
                     <Border Background="#2A1618" BorderBrush="#7A3034" BorderThickness="1" CornerRadius="8" Padding="14,11">
                       <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="7">
                         <Ellipse Grid.Row="0" Width="7" Height="7" Fill="#E09A9A" VerticalAlignment="Top" Margin="0,5,9,0"/>
@@ -1392,7 +1392,7 @@
                                    Text="Only your written 24-word recovery phrase can restore the funds — in this or any BIP39 wallet. Make sure you have it on paper first."/>
                         <Ellipse Grid.Row="2" Width="7" Height="7" Fill="#E09A9A" VerticalAlignment="Top" Margin="0,5,9,0"/>
                         <TextBlock Grid.Row="2" Grid.Column="1" FontSize="12" Foreground="#E7C4C4" TextWrapping="Wrap"
-                                   Text="The previous vault file is kept beside the new one as a .replaced copy, not shredded — but do not rely on that."/>
+                                   Text="It also removes any encrypted backups left beside the vault by earlier restores. A backup file you exported and saved elsewhere is your only other copy."/>
                       </Grid>
                     </Border>
                     <TextBlock Foreground="{DynamicResource UmTextMuted}" FontSize="12" TextWrapping="Wrap"

@@ -1111,15 +1111,23 @@ public partial class MainViewModel : ViewModelBase
         try
         {
             LockVault();
-            _vault.Delete();
+            ShutdownMonero(); // release the Monero wallet-dir so it can be removed
+            var result = DataWiper.WipeAll();
+
             HasVault = false;
-            DeleteConfirmation = string.Empty;
+            SetupStage = "Welcome";              // a fresh start, not an empty portfolio
             ActiveSection = "Portfolio";
-            StatusMessage = "Local vault deleted · restore from your 24-word phrase";
+            DeleteConfirmation = string.Empty;
+            // The profile images were just deleted — drop them from memory so nothing points at them.
+            AvatarImage = BannerImage = SidebarBgImage = null;
+
+            StatusMessage = result.Failed.Count == 0
+                ? $"Wallet and all data erased — {result.Removed} item(s) removed. Restore from your 24-word phrase."
+                : $"Erased {result.Removed} item(s); {result.Failed.Count} were in use. Close the wallet and delete the data folder to finish.";
         }
         catch (Exception ex)
         {
-            Fail($"Could not delete the vault: {ex.Message}");
+            Fail($"Could not delete the wallet: {ex.Message}");
         }
     }
 
