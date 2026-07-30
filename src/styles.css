@@ -99,11 +99,10 @@
   --muted-foreground: oklch(0.505 0 0);
   --accent: oklch(0.968 0 0);
   --accent-foreground: oklch(0.205 0 0);
-  /* "the fear" hot red-orange — the one chromatic accent, shared with the desktop app.
-     Used sparingly for emphasis: section ticks, active states, the hero glow. */
-  --brand: oklch(0.57 0.19 34);
+  /* Monochrome accent (light theme): near-black, so ticks/active states read on white paper. */
+  --brand: oklch(0.22 0 0);
   --brand-foreground: oklch(0.99 0 0);
-  --brand-dim: oklch(0.57 0.19 34 / 0.16);
+  --brand-dim: oklch(0.22 0 0 / 0.1);
   --destructive: oklch(0.55 0.19 27);
   --destructive-foreground: oklch(0.985 0 0);
   --success: oklch(0.52 0.12 150);
@@ -167,10 +166,10 @@
   --muted-foreground: oklch(0.62 0.005 90);
   --accent: oklch(0.28 0 0);
   --accent-foreground: oklch(0.97 0.003 90);
-  /* Brighter on the noir base so the red-orange reads hot without glowing harshly. */
-  --brand: oklch(0.66 0.2 34);
+  /* Monochrome accent (dark theme): cool near-white, so buttons/ticks read white-on-black. */
+  --brand: oklch(0.95 0.004 250);
   --brand-foreground: oklch(0.13 0 0);
-  --brand-dim: oklch(0.66 0.2 34 / 0.22);
+  --brand-dim: oklch(0.95 0.004 250 / 0.16);
   --destructive: oklch(0.62 0.14 25);
   --destructive-foreground: oklch(0.98 0.003 90);
   --success: oklch(0.78 0.09 145);

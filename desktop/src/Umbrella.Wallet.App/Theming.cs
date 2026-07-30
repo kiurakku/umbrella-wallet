@@ -45,15 +45,16 @@ public static class Theming
     private static readonly Dictionary<string, string[]> Palettes = new()
     {
         // bg       bgAlt    card     input    cardAlt  hover    bd       bd2      bd3      accent   accentBr accentHv accentSel accentDim text    textSoft textDim  textMut  pos
-        // Primary "the fear" look: neutral charcoal-black with a single hot red-orange accent —
-        // the editorial-poster mood (frosted noir, mono type, one hot glint of colour).
+        // Primary "the fear" look: monochrome noir — near-black with cool white accents (the
+        // FROSTFREED / reference mood). The accent is near-white, so accent-filled buttons read
+        // white-on-black like the references. The red editorial look lives on as the Ember theme.
         ["purple"] =
         [
-            "#0A0A0B", "#101012", "#16161A", "#131317", "#202027", "#26262E",
-            "#22222A", "#30303A", "#3C3C46",
-            "#B23A1E", "#FF4A24", "#D63C1F", "#4A2018", "#3A2018",
-            "#F4F4F5", "#C8C8CC", "#8E8E96", "#6E6E76", "#7DCF8F",
-            "#F4F4F5", "#FFFFFF", "#0A0A0B",
+            "#050506", "#0C0D0F", "#131417", "#101114", "#1C1E22", "#24272C",
+            "#1E2024", "#2A2D33", "#373B42",
+            "#AEB6C2", "#EDF1F6", "#FFFFFF", "#2A2E36", "#22262C",
+            "#F4F6F9", "#C4CBD4", "#8A929C", "#6C737C", "#7DCF8F",
+            "#F4F6F9", "#FFFFFF", "#050506",
         ],
         // Electric-cyan glass on near-black — the neon-glass wallet mood.
         ["blue"] =
