@@ -43,6 +43,12 @@
 
     <Grid Grid.Row="1">
 
+      <!-- Lock-screen backdrop (the hands), so the unlock screen isn't a flat black. Behind
+           everything and only while the vault is locked; a scrim keeps the form readable. -->
+      <Image Source="avares://Umbrella.Wallet.App/Assets/lock-bg.jpg" Stretch="UniformToFill"
+             IsVisible="{Binding IsUnlockStage}" Opacity="0.5"/>
+      <Border Background="#BF05050A" IsVisible="{Binding IsUnlockStage}"/>
+
       <!-- News article overlay — floats above everything when a news item is opened. -->
       <Border ZIndex="200" IsVisible="{Binding IsNewsOpen}" Background="#C4000000">
         <Border Classes="card" MaxWidth="640" MaxHeight="600" Margin="28"
@@ -250,10 +256,13 @@
         <Border DockPanel.Dock="{Binding SidebarDock}" IsVisible="{Binding IsSidebarVertical}"
                 Width="248" Background="{DynamicResource UmBgAlt}" BorderBrush="{DynamicResource UmBorder}" BorderThickness="0,0,1,0">
           <Grid RowDefinitions="Auto,*,Auto" ClipToBounds="True">
-            <!-- Optional user background photo behind the whole sidebar, with a scrim for legibility. -->
+            <!-- Bundled default sidebar photo (chains); the user's own pick overrides it. A scrim
+                 always sits on top so the profile text and nav stay readable. -->
+            <Image Grid.RowSpan="3" Source="avares://Umbrella.Wallet.App/Assets/sidebar-bg.jpg"
+                   Stretch="UniformToFill" IsVisible="{Binding !HasSidebarBg}" Opacity="0.26"/>
             <Image Grid.RowSpan="3" Source="{Binding SidebarBgImage}" Stretch="UniformToFill"
                    IsVisible="{Binding HasSidebarBg}" Opacity="0.30"/>
-            <Border Grid.RowSpan="3" Background="#B3000000" IsVisible="{Binding HasSidebarBg}"/>
+            <Border Grid.RowSpan="3" Background="#AB000000"/>
 
             <StackPanel Grid.Row="0">
               <!-- Profile banner (the user's own photo), full width at the top. -->

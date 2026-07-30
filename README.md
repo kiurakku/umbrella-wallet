@@ -20,7 +20,7 @@ No account. No email. No phone number. No KYC. Just a wallet — the way it was 
 
 <br/>
 
-![Version](https://img.shields.io/badge/version-2.1.4-4B3F86)
+![Version](https://img.shields.io/badge/version-2.1.14-4B3F86)
 ![Windows](https://img.shields.io/badge/Windows-ready-4B3F86?logo=windows&logoColor=white)
 ![Linux](https://img.shields.io/badge/Linux-ready-6E5FB8?logo=linux&logoColor=white)
 ![Desktop](https://img.shields.io/badge/desktop-Avalonia%20·%20.NET%208-8A5FD6)
@@ -32,15 +32,15 @@ No account. No email. No phone number. No KYC. Just a wallet — the way it was 
 ![Tor](https://img.shields.io/badge/Tor-built--in-7D4698?logo=torproject&logoColor=white)
 ![Monero](https://img.shields.io/badge/Monero-full%20wallet-F26822?logo=monero&logoColor=white)
 
-![Coins](https://img.shields.io/badge/coins-8%20live-7DCF8F)
+![Coins](https://img.shields.io/badge/send-BTC·ETH·LTC·SOL·TON·TRON·USDT·XMR-7DCF8F)
 ![Exchanges](https://img.shields.io/badge/exchanges-9%20read--only-5AC8B4)
-![Themes](https://img.shields.io/badge/themes-10-E7CA83)
+![Themes](https://img.shields.io/badge/themes-11-E7CA83)
 ![Languages](https://img.shields.io/badge/languages-6-5AC8B4)
-![Tests](https://img.shields.io/badge/tests-77%20passing-7DCF8F)
+![Tests](https://img.shields.io/badge/tests-93%20passing-7DCF8F)
 
 <br/>
 
-**[⬇️ Download Windows build (v2.1.4)](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-2.1.4-win-x64-portable.zip)** · [All releases](https://github.com/kiurakku/umbrella-wallet/releases)
+**[⬇️ Download Windows build (v2.1.14)](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-2.1.14-win-x64-portable.zip)** · [All releases](https://github.com/kiurakku/umbrella-wallet/releases)
 
 <br/>
 
@@ -62,8 +62,9 @@ Umbrella flips that model:
 - 🔑 **You hold the keys.** Your 24-word recovery phrase is created on *your* computer and never leaves it. Not to us, not to anyone. We literally *cannot* touch your funds — that's the point.
 - 🧅 **Tor built in.** Flip one switch and the wallet's traffic goes through the Tor network — no separate install, no configuration. Your IP stays out of your finances.
 - 🥷 **Secrets that can't be screenshotted.** While your recovery phrase is on screen, the window renders black to screen-capture and remote-viewing software.
-- 💸 **Real money movement.** Send and receive Bitcoin, Ethereum, USDT, Monero and more — to any wallet or exchange in the world. Transactions are signed on your machine; only the signed result ever goes out.
-- 🎨 **Yours to look at.** Ten colour themes, six interface languages, movable navigation — and a flock of animated Telegram-style duck stickers 🦆 living in the interface. A private wallet doesn't have to feel like a tax form.
+- 💸 **Real money movement.** Send and receive Bitcoin, Ethereum, Litecoin, Solana, **TON**, TRON, USDT and Monero — to any wallet or exchange in the world. Transactions are signed on your machine; only the signed result ever goes out. TON transfers are pinned byte-for-byte against the reference `@ton` library, so a wrong byte can never strand funds.
+- 📈 **Live market, real candles.** A built-in market with **real OHLC candlestick charts** (Binance klines) and live prices (CoinGecko) — timeframes from 1H to 1Y. No mock data anywhere.
+- 🎨 **Yours to look at.** Eleven colour themes, six interface languages, movable navigation, and full **profile customization** — your own avatar, banner and sidebar/lock-screen backgrounds, plus premium motion (glassy cards, a floating dock, a parallax hero). A private wallet doesn't have to feel like a tax form.
 
 ## ⚔️ Umbrella vs. the usual suspects
 

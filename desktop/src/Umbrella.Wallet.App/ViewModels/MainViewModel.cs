@@ -491,6 +491,10 @@ public partial class MainViewModel : ViewModelBase
     /// Click an item to read the full note. Newest first.</summary>
     public ObservableCollection<NewsItemViewModel> News { get; } =
     [
+        new("UPDATE", "Real candlesticks, backdrops, and a floating dock",
+            "The Market chart is now real OHLC candlesticks (green up, red down) drawn from live Binance data — not a flat single-colour line. Prices and the 24h change were always live (CoinGecko); nothing is faked.\n\n" +
+            "The sidebar and the lock screen now have artwork behind them instead of flat black, and you can set your own via Settings → Appearance → Profile. The bottom bar became a floating dock, cards lift and glow on hover, and the hero drifts gently with the cursor.",
+            "2026-07-31"),
         new("UPDATE", "NFTs and Staking sections, brighter hero",
             "The navigation now includes NFTs and Staking to match the full design — both with honest 'coming soon' pages for now (the features aren't built yet, so nothing is faked). The Portfolio hero backdrop is brighter, with the glowing portal to the right by the brand mark.",
             "2026-07-30"),
