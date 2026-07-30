@@ -371,7 +371,7 @@
                         PointerMoved="OnHeroPointerMoved" PointerExited="OnHeroPointerExited">
                   <Panel>
                     <!-- Oversized so the parallax shift never reveals an edge. -->
-                    <Image x:Name="HeroBg" Source="avares://Umbrella.Wallet.App/Assets/hero-bg.png" Stretch="UniformToFill" Margin="-18">
+                    <Image x:Name="HeroBg" Source="avares://Umbrella.Wallet.App/Assets/sidebar-bg.jpg" Stretch="UniformToFill" Margin="-18">
                       <Image.RenderTransform>
                         <TranslateTransform>
                           <TranslateTransform.Transitions>
@@ -387,9 +387,10 @@
                     <!-- Wash the cinematic backdrop with the theme's accent, so coloured themes get a
                          matching glow instead of the neutral portal alone. -->
                     <Border Background="{DynamicResource UmAccentWash}"/>
-                    <!-- Logo dead-centre, inside the centred portal ring (behind the text). -->
-                    <Image Source="{Binding LogoImage}" Width="104" Height="104" Opacity="0.96"
-                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <!-- Logo to the right, vertically centred — balance sits bottom-left, so the mark
+                         reads as the card's brand without covering the numbers. -->
+                    <Image Source="{Binding LogoImage}" Width="96" Height="96" Opacity="0.96"
+                           HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,48,0"/>
                     <Grid Margin="30,22">
                       <!-- Balance anchored bottom-left so it never collides with the centred logo. -->
                       <StackPanel VerticalAlignment="Bottom" HorizontalAlignment="Left" Spacing="3">
@@ -1202,6 +1203,47 @@
                   </StackPanel>
                 </Border>
 
+                <!-- Local cybersecurity posture — everything that protects the wallet on this machine. -->
+                <Border Classes="card" IsVisible="{Binding IsTabSecurity}">
+                  <StackPanel Spacing="10">
+                    <TextBlock Classes="eyebrow" Text="CYBERSECURITY · ON THIS PC"/>
+                    <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
+                               Text="Everything that keeps this wallet safe locally. No server is involved in any of it — the whole security model lives on your machine."/>
+                    <StackPanel Spacing="8">
+                      <StackPanel Orientation="Horizontal" Spacing="9">
+                        <Ellipse Width="7" Height="7" Fill="{DynamicResource UmPos}" VerticalAlignment="Top" Margin="0,5,0,0"/>
+                        <TextBlock FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource UmTextSoft}"
+                                   Text="Seed generated on-device from the OS cryptographic RNG — it is never transmitted anywhere."/>
+                      </StackPanel>
+                      <StackPanel Orientation="Horizontal" Spacing="9">
+                        <Ellipse Width="7" Height="7" Fill="{DynamicResource UmPos}" VerticalAlignment="Top" Margin="0,5,0,0"/>
+                        <TextBlock FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource UmTextSoft}"
+                                   Text="Vault at rest: Argon2id (memory-hard, m=64 MiB) derives the key, then AES-256-GCM authenticated encryption — tampering is detected, brute-forcing is throttled."/>
+                      </StackPanel>
+                      <StackPanel Orientation="Horizontal" Spacing="9">
+                        <Ellipse Width="7" Height="7" Fill="{DynamicResource UmPos}" VerticalAlignment="Top" Margin="0,5,0,0"/>
+                        <TextBlock FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource UmTextSoft}"
+                                   Text="Private keys are derived only for the moment of signing and then wiped from memory (CryptographicOperations.ZeroMemory); the seed is wiped on lock."/>
+                      </StackPanel>
+                      <StackPanel Orientation="Horizontal" Spacing="9">
+                        <Ellipse Width="7" Height="7" Fill="{DynamicResource UmPos}" VerticalAlignment="Top" Margin="0,5,0,0"/>
+                        <TextBlock FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource UmTextSoft}"
+                                   Text="Screenshot / screen-share guard: while the recovery phrase or Monero keys are on screen, the window renders black to capture software."/>
+                      </StackPanel>
+                      <StackPanel Orientation="Horizontal" Spacing="9">
+                        <Ellipse Width="7" Height="7" Fill="{DynamicResource UmPos}" VerticalAlignment="Top" Margin="0,5,0,0"/>
+                        <TextBlock FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource UmTextSoft}"
+                                   Text="Signing uses the chains' reference crypto (NBitcoin, Nethereum, BouncyCastle ed25519); every derivation and the TON transfer are pinned by unit tests to official vectors."/>
+                      </StackPanel>
+                      <StackPanel Orientation="Horizontal" Spacing="9">
+                        <Ellipse Width="7" Height="7" Fill="{DynamicResource UmPos}" VerticalAlignment="Top" Margin="0,5,0,0"/>
+                        <TextBlock FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource UmTextSoft}"
+                                   Text="No account, no email, no telemetry, no analytics. The app cannot freeze, seize or recover your funds — and neither can anyone else."/>
+                      </StackPanel>
+                    </StackPanel>
+                  </StackPanel>
+                </Border>
+
                 <Border Classes="card" IsVisible="{Binding IsTabPrivacy}">
                   <StackPanel Spacing="10">
                     <TextBlock Classes="eyebrow" Text="PRIVACY &amp; NETWORK"/>
@@ -1349,7 +1391,28 @@
                   <StackPanel Spacing="10">
                     <TextBlock Classes="eyebrow" Foreground="#E09A9A" Text="DANGER ZONE"/>
                     <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
-                               Text="Deleting the vault erases the encrypted seed from this PC. Nothing is stored on a server, so your written 24-word phrase is the only way back. Type DELETE to confirm."/>
+                               Text="Deleting the vault erases the encrypted seed from this PC. Nothing is stored on a server, so your written 24-word phrase is the only way back."/>
+                    <Border Background="#2A1618" BorderBrush="#7A3034" BorderThickness="1" CornerRadius="8" Padding="14,11">
+                      <StackPanel Spacing="7">
+                        <StackPanel Orientation="Horizontal" Spacing="9">
+                          <Ellipse Width="7" Height="7" Fill="#E09A9A" VerticalAlignment="Top" Margin="0,5,0,0"/>
+                          <TextBlock FontSize="12" Foreground="#E7C4C4" TextWrapping="Wrap"
+                                     Text="This is irreversible. There is no support desk and no server backup that can bring the wallet back."/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="9">
+                          <Ellipse Width="7" Height="7" Fill="#E09A9A" VerticalAlignment="Top" Margin="0,5,0,0"/>
+                          <TextBlock FontSize="12" Foreground="#E7C4C4" TextWrapping="Wrap"
+                                     Text="Only your written 24-word recovery phrase can restore the funds — in this or any BIP39 wallet. Make sure you have it on paper first."/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="9">
+                          <Ellipse Width="7" Height="7" Fill="#E09A9A" VerticalAlignment="Top" Margin="0,5,0,0"/>
+                          <TextBlock FontSize="12" Foreground="#E7C4C4" TextWrapping="Wrap"
+                                     Text="The previous vault file is kept beside the new one as a .replaced copy, not shredded — but do not rely on that."/>
+                        </StackPanel>
+                      </StackPanel>
+                    </Border>
+                    <TextBlock Foreground="{DynamicResource UmTextMuted}" FontSize="12" TextWrapping="Wrap"
+                               Text="Type DELETE to confirm. Consider exporting an encrypted backup (Backup tab) or revealing your phrase (Backup tab) before you do this."/>
                     <StackPanel Orientation="Horizontal" Spacing="8">
                       <TextBox Text="{Binding DeleteConfirmation}" Watermark="Type DELETE" Width="150"/>
                       <Button Classes="danger" Content="Delete vault" Command="{Binding DeleteVaultCommand}"/>

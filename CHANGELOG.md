@@ -4,6 +4,27 @@ All notable releases of **Umbrella Wallet**.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versioning follows [SemVer](https://semver.org/).
 
+## [2.2.0] — 2026-07-31
+
+A large desktop pass over 2.1.x, consolidated.
+
+### Desktop
+- **Real TON sending** — wallet v4R2 transfers, pinned byte-for-byte against `@ton/ton`.
+- **Live candlestick market** — real OHLC candles from Binance klines, timeframes 1H–1Y; prices
+  and 24h change from CoinGecko. No mock data.
+- **Editorial monochrome redesign** — cinematic hero, right-hand dashboard rail (overview ring,
+  activity, market), floating price-ticker dock, coin-symbol badges, glassy hover motion + parallax.
+- **Profile customization** — name, avatar, banner, and sidebar / lock-screen backgrounds, all
+  picked from your own image files (fixed: file dialogs were never wired, so uploads and backup were
+  silently dead).
+- **NFTs / Staking** sections (in-development pages); configurable auto-lock; **11 themes** whose
+  accent now drives the buttons; a localized guide (full Ukrainian) and a detailed
+  Cybersecurity / Danger-zone settings pass.
+- **Linux** build from the same codebase.
+
+### Coins
+- Send: BTC, ETH, LTC, SOL, **TON**, TRON, USDT (TRC-20), XMR. Receive + balance: ADA (send next).
+
 ## [2.1.4] — 2026-07-30
 
 ### Desktop
