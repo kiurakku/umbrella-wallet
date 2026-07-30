@@ -306,7 +306,9 @@
             <Setter Property="Foreground" Value="{DynamicResource UmTextSoft}" />
         </Style>
         <Style Selector="Button.chip.active">
-            <Setter Property="Foreground" Value="#FFFFFF" />
+            <!-- Auto-contrast label (dark on a light accent, white on a dark one) so the text on the
+                 highlighted chip is always readable — the monochrome accent is near-white. -->
+            <Setter Property="Foreground" Value="{DynamicResource UmAccentText}" />
             <Setter Property="FontWeight" Value="SemiBold" />
         </Style>
         <Style Selector="Button.chip.active /template/ ContentPresenter">

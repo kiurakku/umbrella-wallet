@@ -378,8 +378,12 @@
                     <!-- Wash the cinematic backdrop with the theme's accent, so coloured themes get a
                          matching glow instead of the neutral portal alone. -->
                     <Border Background="{DynamicResource UmAccentWash}"/>
-                    <Grid Margin="30,24" ColumnDefinitions="*,Auto">
-                      <StackPanel VerticalAlignment="Center" Spacing="3">
+                    <!-- Logo dead-centre, inside the centred portal ring (behind the text). -->
+                    <Image Source="{Binding LogoImage}" Width="104" Height="104" Opacity="0.96"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <Grid Margin="30,22">
+                      <!-- Balance anchored bottom-left so it never collides with the centred logo. -->
+                      <StackPanel VerticalAlignment="Bottom" HorizontalAlignment="Left" Spacing="3">
                         <StackPanel Orientation="Horizontal" Spacing="10">
                           <TextBlock Classes="eyebrow" Text="TOTAL BALANCE · USD" VerticalAlignment="Center"/>
                           <Button Classes="chip" Content="{Binding HideBalanceLabel}" Command="{Binding ToggleBalanceHiddenCommand}"/>
@@ -392,7 +396,6 @@
                         </StackPanel>
                         <TextBlock Text="{Binding Change24hLabel}" Foreground="{DynamicResource UmPos}" FontSize="13"/>
                       </StackPanel>
-                      <Image Grid.Column="1" Source="{Binding LogoImage}" Width="108" Height="108" VerticalAlignment="Center" Opacity="0.96"/>
                     </Grid>
                   </Panel>
                 </Border>
