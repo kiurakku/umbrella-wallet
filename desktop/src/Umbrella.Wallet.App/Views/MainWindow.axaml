@@ -1265,6 +1265,30 @@
       </DockPanel>
     </Grid>
 
+    <!-- ============================ AMBIENT RAIN ============================
+         A faint curtain of streaks drifting down over the whole window — atmosphere for the
+         fear theme. Non-interactive, and gated by the motion toggle so it vanishes with the
+         other animations. Sits above the content but below the modals that follow. -->
+    <Canvas Grid.Row="0" Grid.RowSpan="2" IsHitTestVisible="False" ClipToBounds="True"
+            IsVisible="{Binding AnimationsEnabled}">
+      <Rectangle Classes="raindrop rainA" Height="52" Canvas.Left="70"/>
+      <Rectangle Classes="raindrop rainC" Height="34" Canvas.Left="140"/>
+      <Rectangle Classes="raindrop rainB" Height="60" Canvas.Left="215"/>
+      <Rectangle Classes="raindrop rainA" Height="40" Canvas.Left="300"/>
+      <Rectangle Classes="raindrop rainC" Height="48" Canvas.Left="378"/>
+      <Rectangle Classes="raindrop rainB" Height="30" Canvas.Left="455"/>
+      <Rectangle Classes="raindrop rainA" Height="58" Canvas.Left="540"/>
+      <Rectangle Classes="raindrop rainC" Height="36" Canvas.Left="620"/>
+      <Rectangle Classes="raindrop rainB" Height="50" Canvas.Left="700"/>
+      <Rectangle Classes="raindrop rainA" Height="42" Canvas.Left="775"/>
+      <Rectangle Classes="raindrop rainC" Height="62" Canvas.Left="855"/>
+      <Rectangle Classes="raindrop rainB" Height="34" Canvas.Left="930"/>
+      <Rectangle Classes="raindrop rainA" Height="54" Canvas.Left="1010"/>
+      <Rectangle Classes="raindrop rainC" Height="38" Canvas.Left="1085"/>
+      <Rectangle Classes="raindrop rainB" Height="46" Canvas.Left="1160"/>
+      <Rectangle Classes="raindrop rainA" Height="32" Canvas.Left="1215"/>
+    </Canvas>
+
     <!-- ============================ QR POPUP ============================
          Sits in the last row of the root grid so it covers the whole window,
          including the sidebar. Clicking the dimmed backdrop closes it. -->

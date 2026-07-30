@@ -47,7 +47,7 @@
         <!-- Base button: glassy, rounded, springy hover/press, clear disabled state.
              RenderTransformOrigin keeps the press-scale centred instead of pulling to a corner. -->
         <Style Selector="Button">
-            <Setter Property="CornerRadius" Value="11" />
+            <Setter Property="CornerRadius" Value="14" />
             <Setter Property="Padding" Value="16,11" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Cursor" Value="Hand" />
@@ -112,7 +112,7 @@
             <Setter Property="Padding" Value="22,13" />
             <Setter Property="FontWeight" Value="Bold" />
             <Setter Property="FontSize" Value="14.5" />
-            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="CornerRadius" Value="14" />
         </Style>
         <Style Selector="Button.primary /template/ ContentPresenter">
             <Setter Property="Transitions">
@@ -134,9 +134,10 @@
             <Setter Property="Foreground" Value="{DynamicResource UmText}" />
             <Setter Property="BorderBrush" Value="{DynamicResource UmBorder3}" />
             <Setter Property="BorderThickness" Value="1" />
+            <!-- Frosted glass: brighter at the top edge for a sheen. -->
             <Setter Property="Background">
                 <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                    <GradientStop Offset="0" Color="#1FFFFFFF" />
+                    <GradientStop Offset="0" Color="#2EFFFFFF" />
                     <GradientStop Offset="1" Color="#0AFFFFFF" />
                 </LinearGradientBrush>
             </Setter>
@@ -177,10 +178,11 @@
         <Style Selector="Button.tile">
             <Setter Property="BorderBrush" Value="{DynamicResource UmBorder3}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="16" />
+            <Setter Property="CornerRadius" Value="18" />
+            <!-- Glass key: a bright top-edge sheen so tiles feel raised. -->
             <Setter Property="Background">
                 <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                    <GradientStop Offset="0" Color="#24FFFFFF" />
+                    <GradientStop Offset="0" Color="#33FFFFFF" />
                     <GradientStop Offset="1" Color="#0BFFFFFF" />
                 </LinearGradientBrush>
             </Setter>
@@ -383,9 +385,9 @@
         <Style Selector="Border.card">
             <Setter Property="BorderBrush" Value="{DynamicResource UmBorder}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="16" />
+            <Setter Property="CornerRadius" Value="20" />
             <Setter Property="Padding" Value="22" />
-            <Setter Property="BoxShadow" Value="0 12 34 -10 #5C000000" />
+            <Setter Property="BoxShadow" Value="inset 0 1 0 0 #14FFFFFF, 0 12 34 -10 #5C000000" />
             <Setter Property="Background">
                 <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
                     <GradientStop Offset="0" Color="{DynamicResource UmCardTop}" />
@@ -397,7 +399,7 @@
         <Style Selector="Border.hairline">
             <Setter Property="BorderBrush" Value="{DynamicResource UmBorder}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="CornerRadius" Value="14" />
             <Setter Property="Background" Value="{DynamicResource UmBgAlt}" />
             <!-- Lift the panel off the page so the layout reads as stacked cards, not flat text.
                  Kept soft with a negative spread so it stays subtle on small pill containers too. -->
@@ -447,6 +449,47 @@
         </Style>
         <Style Selector="Button.nav:pointerover">
             <Setter Property="RenderTransform" Value="translateX(3px)"/>
+        </Style>
+
+        <!-- Ambient "rain" for the fear theme: faint translucent streaks drifting down over the UI.
+             The base class carries the look; a speed class carries the fall animation, so each drop
+             runs exactly one animation. The whole layer is gated by the motion toggle in markup. -->
+        <Style Selector="Rectangle.raindrop">
+            <Setter Property="Width" Value="1.4" />
+            <Setter Property="Fill" Value="#14FFFFFF" />
+            <Setter Property="IsHitTestVisible" Value="False" />
+            <Setter Property="RadiusX" Value="1" />
+            <Setter Property="RadiusY" Value="1" />
+        </Style>
+        <Style Selector="Rectangle.rainA">
+            <Style.Animations>
+                <Animation Duration="0:0:1.35" IterationCount="INFINITE" Easing="LinearEasing">
+                    <KeyFrame Cue="0%"><Setter Property="TranslateTransform.Y" Value="-180" /><Setter Property="Opacity" Value="0" /></KeyFrame>
+                    <KeyFrame Cue="14%"><Setter Property="Opacity" Value="0.85" /></KeyFrame>
+                    <KeyFrame Cue="86%"><Setter Property="Opacity" Value="0.85" /></KeyFrame>
+                    <KeyFrame Cue="100%"><Setter Property="TranslateTransform.Y" Value="940" /><Setter Property="Opacity" Value="0" /></KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+        <Style Selector="Rectangle.rainB">
+            <Style.Animations>
+                <Animation Duration="0:0:0.95" IterationCount="INFINITE" Easing="LinearEasing">
+                    <KeyFrame Cue="0%"><Setter Property="TranslateTransform.Y" Value="-160" /><Setter Property="Opacity" Value="0" /></KeyFrame>
+                    <KeyFrame Cue="14%"><Setter Property="Opacity" Value="0.7" /></KeyFrame>
+                    <KeyFrame Cue="86%"><Setter Property="Opacity" Value="0.7" /></KeyFrame>
+                    <KeyFrame Cue="100%"><Setter Property="TranslateTransform.Y" Value="940" /><Setter Property="Opacity" Value="0" /></KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+        <Style Selector="Rectangle.rainC">
+            <Style.Animations>
+                <Animation Duration="0:0:1.85" IterationCount="INFINITE" Easing="LinearEasing">
+                    <KeyFrame Cue="0%"><Setter Property="TranslateTransform.Y" Value="-220" /><Setter Property="Opacity" Value="0" /></KeyFrame>
+                    <KeyFrame Cue="14%"><Setter Property="Opacity" Value="0.9" /></KeyFrame>
+                    <KeyFrame Cue="86%"><Setter Property="Opacity" Value="0.9" /></KeyFrame>
+                    <KeyFrame Cue="100%"><Setter Property="TranslateTransform.Y" Value="980" /><Setter Property="Opacity" Value="0" /></KeyFrame>
+                </Animation>
+            </Style.Animations>
         </Style>
 
         <!-- Thin, unobtrusive overlay scrollbar (Wasabi-like). Track is invisible; only a slim
