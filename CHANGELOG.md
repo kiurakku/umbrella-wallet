@@ -4,6 +4,19 @@ All notable releases of **Umbrella Wallet**.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versioning follows [SemVer](https://semver.org/).
 
+## [2.1.2] — 2026-07-30
+
+### Desktop
+- **Editorial red-orange "the fear" theme** — the primary look is now a neutral-charcoal noir
+  with a single hot red-orange accent, matching the reference posters (was violet).
+- **Coin-symbol badges** — token badges show each coin's own currency mark (₿ Ξ Ł Ð ₳ ₮ ◎ ◈ …)
+  instead of the 3-letter ticker, in a symbol-capable font (no external icon set).
+- **Localized guide** — the in-app documentation now follows the wallet's language; fully
+  translated to Ukrainian, English as the base/fallback.
+
+### Web
+- Coin-symbol badges; brand accent moved from violet to the same red-orange for parity.
+
 ## [2.1.1] — 2026-07-30
 
 ### Desktop
