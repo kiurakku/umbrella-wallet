@@ -490,6 +490,10 @@ public partial class MainViewModel : ViewModelBase
     /// Click an item to read the full note. Newest first.</summary>
     public ObservableCollection<NewsItemViewModel> News { get; } =
     [
+        new("UPDATE", "A cinematic new Portfolio hero",
+            "The balance now sits on a cinematic backdrop — a dark horizon with a glowing portal — with the brand mark beside it, and the quick actions became wide cards (icon, title and a short subtitle: Get crypto, Send crypto, Link wallets, Prices & charts).\n\n" +
+            "This is the first step of a bigger dashboard refresh toward the reference design; the right-hand rail (portfolio breakdown, market overview, recent activity) and the live price ticker are next.",
+            "2026-07-30"),
         new("UPDATE", "Themes now restyle the buttons too — and Linux is here",
             "Themes no longer change only the colours: the primary buttons now take on each theme's accent (orange on The fear, cyan on Blue, mint on Green, violet on Gradient, teal on Slate), with the label colour picked automatically for contrast, and the quick-action tiles glow in the accent on hover.\n\n" +
             "The wallet also ships for Linux now, built from the same code as Windows — identical features, themes and bundled Tor/Monero. The mobile experience is the web app (it's responsive and runs as a Telegram mini-app); there is no separate Android build.",

@@ -330,52 +330,72 @@
 
               <!-- Portfolio -->
               <StackPanel Classes="page" IsVisible="{Binding IsPortfolio}" Spacing="18">
-                <Grid ColumnDefinitions="*,Auto">
-                  <TextBlock Classes="eyebrow" Text="TOTAL BALANCE · USD"/>
-                  <Button Grid.Column="1" Classes="chip" Content="{Binding HideBalanceLabel}"
-                          Command="{Binding ToggleBalanceHiddenCommand}"/>
-                </Grid>
-                <!-- Hero: the big balance, the 24h change, and an ambient mascot on the right that
-                     gives the title area some atmosphere. The sticker loops when animations are on
-                     and settles on its first frame when they're off (Settings → Appearance). -->
-                <Grid ColumnDefinitions="Auto,Auto,*,Auto">
-                  <StackPanel Grid.Column="0" Orientation="Horizontal">
-                    <TextBlock Classes="serif" FontSize="62" Foreground="{DynamicResource UmAccentBright}" Text="$" Margin="0,0,3,6" VerticalAlignment="Bottom"/>
-                    <TextBlock Classes="serif" FontSize="66" FontWeight="Medium" Text="{Binding BalanceDisplayMain}" VerticalAlignment="Bottom"/>
-                    <TextBlock Classes="serif" FontSize="28" Foreground="{DynamicResource UmTextDim}" Text="{Binding BalanceDisplayCents}"
-                               VerticalAlignment="Bottom" Margin="0,0,0,12"/>
-                  </StackPanel>
-                  <TextBlock Grid.Column="1" Text="{Binding Change24hLabel}" Foreground="{DynamicResource UmPos}" FontSize="12"
-                             VerticalAlignment="Bottom" Margin="18,0,0,16"/>
-                  <lottie:Lottie Grid.Column="3" Path="avares://Umbrella.Wallet.App/Assets/stickers/fear-00.json"
-                                 Width="104" Height="104" VerticalAlignment="Center" Opacity="0.92"
-                                 RepeatCount="{Binding #RootWindow.((vm:MainViewModel)DataContext).LottieRepeat}"/>
-                </Grid>
+                <!-- Cinematic balance hero: the generated backdrop, with the balance overlaid on the
+                     left and the brand mark over the 'portal' on the right. -->
+                <Border CornerRadius="20" ClipToBounds="True" Height="212" BorderBrush="{DynamicResource UmBorder}"
+                        BorderThickness="1" BoxShadow="0 16 44 -16 #80000000">
+                  <Panel>
+                    <Image Source="avares://Umbrella.Wallet.App/Assets/hero-bg.png" Stretch="UniformToFill"/>
+                    <Border Background="#4D000000"/>
+                    <Grid Margin="30,24" ColumnDefinitions="*,Auto">
+                      <StackPanel VerticalAlignment="Center" Spacing="3">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                          <TextBlock Classes="eyebrow" Text="TOTAL BALANCE · USD" VerticalAlignment="Center"/>
+                          <Button Classes="chip" Content="{Binding HideBalanceLabel}" Command="{Binding ToggleBalanceHiddenCommand}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                          <TextBlock Classes="serif" FontSize="52" Foreground="{DynamicResource UmAccentBright}" Text="$" Margin="0,0,3,6" VerticalAlignment="Bottom"/>
+                          <TextBlock Classes="serif" FontSize="56" FontWeight="Medium" Text="{Binding BalanceDisplayMain}" VerticalAlignment="Bottom"/>
+                          <TextBlock Classes="serif" FontSize="25" Foreground="{DynamicResource UmTextDim}" Text="{Binding BalanceDisplayCents}"
+                                     VerticalAlignment="Bottom" Margin="0,0,0,9"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding Change24hLabel}" Foreground="{DynamicResource UmPos}" FontSize="13"/>
+                      </StackPanel>
+                      <Image Grid.Column="1" Source="{Binding LogoImage}" Width="108" Height="108" VerticalAlignment="Center" Opacity="0.96"/>
+                    </Grid>
+                  </Panel>
+                </Border>
 
-                <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="12">
-                  <Button Classes="tile" Command="{Binding SelectSectionCommand}" CommandParameter="Receive">
-                    <StackPanel Spacing="7">
-                      <!-- Vector icons: emoji rendered inconsistently across fonts and looked crooked. -->
+                <!-- Quick actions as wide cards (icon · title · subtitle), like the reference. -->
+                <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="14">
+                  <Button Classes="tile" Height="66" HorizontalContentAlignment="Left" Padding="16,0"
+                          Command="{Binding SelectSectionCommand}" CommandParameter="Receive">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
                       <Path Classes="tileIcon" Data="M12 3 V17 M12 17 L6 11 M12 17 L18 11 M4 21 H20"/>
-                      <TextBlock Text="{Binding [nav.receive], Source={x:Static app:Loc.Instance}}" HorizontalAlignment="Center"/>
+                      <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="{Binding [nav.receive], Source={x:Static app:Loc.Instance}}" FontWeight="SemiBold" FontSize="13.5"/>
+                        <TextBlock Text="Get crypto" FontSize="10.5" Foreground="{DynamicResource UmTextDim}"/>
+                      </StackPanel>
                     </StackPanel>
                   </Button>
-                  <Button Grid.Column="1" Classes="tile" Command="{Binding SelectSectionCommand}" CommandParameter="Send">
-                    <StackPanel Spacing="7">
+                  <Button Grid.Column="1" Classes="tile" Height="66" HorizontalContentAlignment="Left" Padding="16,0"
+                          Command="{Binding SelectSectionCommand}" CommandParameter="Send">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
                       <Path Classes="tileIcon" Data="M12 21 V7 M12 7 L6 13 M12 7 L18 13 M4 3 H20"/>
-                      <TextBlock Text="{Binding [nav.send], Source={x:Static app:Loc.Instance}}" HorizontalAlignment="Center"/>
+                      <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="{Binding [nav.send], Source={x:Static app:Loc.Instance}}" FontWeight="SemiBold" FontSize="13.5"/>
+                        <TextBlock Text="Send crypto" FontSize="10.5" Foreground="{DynamicResource UmTextDim}"/>
+                      </StackPanel>
                     </StackPanel>
                   </Button>
-                  <Button Grid.Column="2" Classes="tile" Command="{Binding SelectSectionCommand}" CommandParameter="Connect">
-                    <StackPanel Spacing="7">
+                  <Button Grid.Column="2" Classes="tile" Height="66" HorizontalContentAlignment="Left" Padding="16,0"
+                          Command="{Binding SelectSectionCommand}" CommandParameter="Connect">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
                       <Path Classes="tileIcon" Data="M9.5 14.5 L14.5 9.5 M8 12 L5.5 14.5 A3.5 3.5 0 0 0 10.5 19.5 L13 17 M16 12 L18.5 9.5 A3.5 3.5 0 0 0 13.5 4.5 L11 7"/>
-                      <TextBlock Text="{Binding [nav.connect], Source={x:Static app:Loc.Instance}}" HorizontalAlignment="Center"/>
+                      <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="{Binding [nav.connect], Source={x:Static app:Loc.Instance}}" FontWeight="SemiBold" FontSize="13.5"/>
+                        <TextBlock Text="Link wallets" FontSize="10.5" Foreground="{DynamicResource UmTextDim}"/>
+                      </StackPanel>
                     </StackPanel>
                   </Button>
-                  <Button Grid.Column="3" Classes="tile" Command="{Binding SelectSectionCommand}" CommandParameter="Market">
-                    <StackPanel Spacing="7">
+                  <Button Grid.Column="3" Classes="tile" Height="66" HorizontalContentAlignment="Left" Padding="16,0"
+                          Command="{Binding SelectSectionCommand}" CommandParameter="Market">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
                       <Path Classes="tileIcon" Data="M4 19 H20 M4 19 V5 M7 15 L11 10 L14 13 L19 6"/>
-                      <TextBlock Text="{Binding [nav.market], Source={x:Static app:Loc.Instance}}" HorizontalAlignment="Center"/>
+                      <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="{Binding [nav.market], Source={x:Static app:Loc.Instance}}" FontWeight="SemiBold" FontSize="13.5"/>
+                        <TextBlock Text="Prices &amp; charts" FontSize="10.5" Foreground="{DynamicResource UmTextDim}"/>
+                      </StackPanel>
                     </StackPanel>
                   </Button>
                 </Grid>
