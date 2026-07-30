@@ -276,6 +276,10 @@
                       Command="{Binding SelectSectionCommand}" CommandParameter="Connect"/>
               <Button Classes="nav" Content="{Binding [nav.market], Source={x:Static app:Loc.Instance}}" Classes.active="{Binding IsMarket}"
                       Command="{Binding SelectSectionCommand}" CommandParameter="Market"/>
+              <Button Classes="nav" Content="NFTs" Classes.active="{Binding IsNfts}"
+                      Command="{Binding SelectSectionCommand}" CommandParameter="Nfts"/>
+              <Button Classes="nav" Content="Staking" Classes.active="{Binding IsStaking}"
+                      Command="{Binding SelectSectionCommand}" CommandParameter="Staking"/>
               <Button Classes="nav" Content="{Binding [nav.news], Source={x:Static app:Loc.Instance}}" Classes.active="{Binding IsNews}"
                       Command="{Binding SelectSectionCommand}" CommandParameter="News"/>
               <Button Classes="nav" Content="{Binding [nav.activity], Source={x:Static app:Loc.Instance}}" Classes.active="{Binding IsActivity}"
@@ -703,6 +707,38 @@
                     </DataTemplate>
                   </ItemsControl.ItemTemplate>
                 </ItemsControl>
+              </StackPanel>
+
+              <!-- NFTs — designed section, feature not built yet (honest empty state). -->
+              <StackPanel Classes="page" IsVisible="{Binding IsNfts}" Spacing="16">
+                <StackPanel Orientation="Horizontal" Spacing="11" VerticalAlignment="Center">
+                  <Border Width="4" Height="24" CornerRadius="2" Background="{DynamicResource UmAccentBright}"/>
+                  <TextBlock Classes="serif" FontSize="26" Text="NFTs" VerticalAlignment="Center"/>
+                </StackPanel>
+                <Border Classes="hairline" Padding="40" MinHeight="320">
+                  <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="12">
+                    <Path Classes="tileIcon" Width="46" Height="46" Data="M4 16 L9 11 L13 15 L20 8 M4 5 H20 V19 H4 Z"/>
+                    <TextBlock Classes="serif" FontSize="20" Text="Your NFTs will live here" HorizontalAlignment="Center"/>
+                    <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12.5" MaxWidth="420" TextAlignment="Center" TextWrapping="Wrap"
+                               Text="NFT collections across your chains — viewing and sending — are on the roadmap. Your keys already cover these networks, so nothing new to set up when it lands."/>
+                  </StackPanel>
+                </Border>
+              </StackPanel>
+
+              <!-- Staking — designed section, feature not built yet (honest empty state). -->
+              <StackPanel Classes="page" IsVisible="{Binding IsStaking}" Spacing="16">
+                <StackPanel Orientation="Horizontal" Spacing="11" VerticalAlignment="Center">
+                  <Border Width="4" Height="24" CornerRadius="2" Background="{DynamicResource UmAccentBright}"/>
+                  <TextBlock Classes="serif" FontSize="26" Text="Staking" VerticalAlignment="Center"/>
+                </StackPanel>
+                <Border Classes="hairline" Padding="40" MinHeight="320">
+                  <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="12">
+                    <Path Classes="tileIcon" Width="46" Height="46" Data="M12 3 L20 7 V13 C20 17 16 20 12 21 C8 20 4 17 4 13 V7 Z M9 12 L11 14 L15 10"/>
+                    <TextBlock Classes="serif" FontSize="20" Text="Staking is on the way" HorizontalAlignment="Center"/>
+                    <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12.5" MaxWidth="420" TextAlignment="Center" TextWrapping="Wrap"
+                               Text="Stake ETH, SOL, ADA and TON straight from the wallet and track rewards here. Non-custodial — you keep the keys; we never take your assets. Coming in a future update."/>
+                  </StackPanel>
+                </Border>
               </StackPanel>
 
               <!-- Market -->

@@ -490,6 +490,9 @@ public partial class MainViewModel : ViewModelBase
     /// Click an item to read the full note. Newest first.</summary>
     public ObservableCollection<NewsItemViewModel> News { get; } =
     [
+        new("UPDATE", "NFTs and Staking sections, brighter hero",
+            "The navigation now includes NFTs and Staking to match the full design — both with honest 'coming soon' pages for now (the features aren't built yet, so nothing is faked). The Portfolio hero backdrop is brighter, with the glowing portal to the right by the brand mark.",
+            "2026-07-30"),
         new("UPDATE", "Dashboard rail, price ticker, and a monochrome primary",
             "The Portfolio now has a right-hand rail — a portfolio-overview ring, recent activity, and a live market overview — and a price ticker runs along the bottom, matching the reference dashboard.\n\n" +
             "The primary theme is now monochrome noir (near-black with cool-white accents, so the main buttons read white on black); the red editorial look lives on as the Ember theme. This is a structural pass — spacing and the overview ring will be refined next.",
@@ -596,6 +599,8 @@ public partial class MainViewModel : ViewModelBase
     public bool IsConnect => ActiveSection == "Connect";
     public bool IsMarket => ActiveSection == "Market";
     public bool IsNews => ActiveSection == "News";
+    public bool IsNfts => ActiveSection == "Nfts";
+    public bool IsStaking => ActiveSection == "Staking";
 
     // --- Onboarding state machine: each is a full-screen page, sidebar only in the workspace ---
     public bool IsWelcomeStage => !HasVault && SetupStage == "Welcome";
@@ -714,6 +719,8 @@ public partial class MainViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsConnect));
         OnPropertyChanged(nameof(IsMarket));
         OnPropertyChanged(nameof(IsNews));
+        OnPropertyChanged(nameof(IsNfts));
+        OnPropertyChanged(nameof(IsStaking));
         OnPropertyChanged(nameof(IsWelcomeStage));
         OnPropertyChanged(nameof(IsCreateStage));
         OnPropertyChanged(nameof(IsImportStage));
