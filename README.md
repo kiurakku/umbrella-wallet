@@ -1,9 +1,6 @@
 <div align="center">
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/umbrella-logo-solidwhite.png" width="150"/>
-  <img src="docs/assets/umbrella-black.png" width="150" alt="Umbrella Wallet"/>
-</picture>
+<img src="docs/assets/readme-header.png" width="100%" alt="Umbrella Wallet — your money, your keys, nobody watching"/>
 
 # ☂️ Umbrella Wallet
 
@@ -108,7 +105,8 @@ Umbrella flips that model:
 | 🟣 Solana (SOL) | ✅ | ✅ | |
 | 🔺 TRON (TRX) | ✅ | ✅ | |
 | 🐕 Dogecoin (DOGE) | ✅ | ➖ | receive + balance |
-| 💎 TON | ✅ | ✅ | wallet v4R2, signed on device`n| 🔵 Cardano (ADA) | ✅ | ➖ | receive + balance
+| 💎 **TON** | ✅ | ✅ | wallet v4R2, signed on device · pinned to `@ton` |
+| 🔵 Cardano (ADA) | ✅ | ➖ | receive + balance |
 
 ## 🎨 Make it yours
 
@@ -122,8 +120,7 @@ Umbrella flips that model:
 | Platform | Package | Notes |
 |----------|---------|-------|
 | **Windows** | [`UmbrellaWallet-2.2.0-win-x64-portable.zip`](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-2.2.0-win-x64-portable.zip) | Portable — unzip and run `Umbrella.Wallet.App.exe` |
-| **Linux** | [`UmbrellaWallet-2.1.4-linux-x64.tar.gz`](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-2.1.4-linux-x64.tar.gz) | Unpack, run `./Umbrella.Wallet.App` | No install required |
- `./Umbrella.Wallet.App` |
+| **Linux** | [`UmbrellaWallet-2.1.4-linux-x64.tar.gz`](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-2.1.4-linux-x64.tar.gz) | Unpack, run `./Umbrella.Wallet.App` — no install required |
 
 ## 🚀 Get started
 

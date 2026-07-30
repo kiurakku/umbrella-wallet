@@ -115,6 +115,7 @@ public partial class MainViewModel : ViewModelBase
             _uiSettings.Language = value;
             _uiSettings.Save();
             OnPropertyChanged();
+            OnPropertyChanged(nameof(DeleteKeyword));
             BuildGuide(); // the guide reads in the wallet's language
         }
     }
@@ -1087,12 +1088,23 @@ public partial class MainViewModel : ViewModelBase
     /// Destroys the local vault. Requires typing DELETE, because without the seed backup this
     /// is unrecoverable — there is no server-side copy by design.
     /// </summary>
+    /// <summary>The word the user types to confirm deletion, in their language (also accepts the
+    /// English DELETE), so a Ukrainian/Russian user isn't blocked by an English-only keyword.</summary>
+    public string DeleteKeyword => Loc.Instance.CurrentCode switch
+    {
+        "uk" => "ВИДАЛИТИ",
+        "ru" => "УДАЛИТЬ",
+        _ => "DELETE",
+    };
+
     [RelayCommand]
     private void DeleteVault()
     {
-        if (!string.Equals(DeleteConfirmation.Trim(), "DELETE", StringComparison.Ordinal))
+        var typed = DeleteConfirmation.Trim();
+        if (!typed.Equals(DeleteKeyword, StringComparison.OrdinalIgnoreCase) &&
+            !typed.Equals("DELETE", StringComparison.OrdinalIgnoreCase))
         {
-            Fail("Type DELETE to confirm — the seed is not recoverable without your backup.");
+            Fail($"Type {DeleteKeyword} to confirm — the seed is not recoverable without your backup.");
             return;
         }
 
