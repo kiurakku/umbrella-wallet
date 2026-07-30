@@ -4,6 +4,23 @@ All notable releases of **Umbrella Wallet**.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versioning follows [SemVer](https://semver.org/).
 
+## [2.1.0] — 2026-07-30
+
+### Desktop
+- **Real TON sending** — wallet v4R2 transfers are built, ed25519-signed and broadcast on-device.
+  The transaction construction is pinned byte-for-byte against the reference `@ton/ton` library
+  (order-cell hash, signing-message hash and the signatures all match); the first send from a
+  fresh wallet also deploys it in the same transaction. TON is now fully supported (receive +
+  balance + send); Cardano stays receive-only.
+- **Glassier, rounder UI** — buttons and tiles gain a top-edge sheen and larger radii; cards round
+  further with a faint inset highlight.
+- **Ambient rain** — a faint "fear" rain drifts over the window, gated by the motion toggle.
+
+### Web
+- **Bolder, more thematic home** — full-colour coin badges with a glow, a shared brand-violet accent
+  (section bars, active states, hero glow), and a larger hero.
+- **Glassy, rounder UI with ambient rain** to match the desktop.
+
 ## [2.0.0] — 2026-07-28
 
 ### Desktop
