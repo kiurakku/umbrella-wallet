@@ -44,7 +44,6 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty] private string _totalBalanceMain = "0";
     [ObservableProperty] private string _totalBalanceCents = "00";
     [ObservableProperty] private string _change24hLabel = "· —";
-    [ObservableProperty] private string _autoLockLabel = "Auto-lock · 5 min idle";
     [ObservableProperty] private string _watchChain = "ETH";
     [ObservableProperty] private string _watchAddress = string.Empty;
     [ObservableProperty] private string _watchLabel = string.Empty;
@@ -173,6 +172,57 @@ public partial class MainViewModel : ViewModelBase
             OnPropertyChanged(nameof(IsSidebarHorizontal));
         }
     }
+
+    /// <summary>Idle auto-lock, in minutes; 0 = never. Persisted; the window reads it to arm the
+    /// timer, and re-reads whenever it changes (see MainWindow.OnViewModelPropertyChanged).</summary>
+    public IReadOnlyList<string> AutoLockOptions { get; } =
+        ["Off", "1 minute", "5 minutes", "15 minutes", "30 minutes", "1 hour"];
+
+    private static readonly Dictionary<string, int> AutoLockMap = new()
+    {
+        ["Off"] = 0, ["1 minute"] = 1, ["5 minutes"] = 5, ["15 minutes"] = 15, ["30 minutes"] = 30, ["1 hour"] = 60,
+    };
+
+    public string AutoLockChoice
+    {
+        get => AutoLockMap.FirstOrDefault(kv => kv.Value == _uiSettings.AutoLockMinutes).Key ?? "5 minutes";
+        set
+        {
+            if (!AutoLockMap.TryGetValue(value, out var minutes) || minutes == _uiSettings.AutoLockMinutes) return;
+            _uiSettings.AutoLockMinutes = minutes;
+            _uiSettings.Save();
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(AutoLockMinutes));
+            OnPropertyChanged(nameof(AutoLockLabel));
+        }
+    }
+
+    public int AutoLockMinutes => _uiSettings.AutoLockMinutes;
+
+    public string AutoLockLabel => _uiSettings.AutoLockMinutes == 0
+        ? "Auto-lock · off"
+        : $"Auto-lock · {AutoLockChoice} idle";
+
+    /// <summary>A user-chosen name for this wallet, shown in the top bar. Persisted.</summary>
+    public string WalletName
+    {
+        get => _uiSettings.WalletName;
+        set
+        {
+            if (_uiSettings.WalletName == value) return;
+            _uiSettings.WalletName = value ?? "";
+            _uiSettings.Save();
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(WalletTitle));
+            OnPropertyChanged(nameof(HasWalletName));
+        }
+    }
+
+    /// <summary>The top-bar identity: the chosen wallet name, or the brand when none is set.</summary>
+    public string WalletTitle =>
+        string.IsNullOrWhiteSpace(_uiSettings.WalletName) ? "UMBRELLA WALLET" : _uiSettings.WalletName.ToUpperInvariant();
+
+    public bool HasWalletName => !string.IsNullOrWhiteSpace(_uiSettings.WalletName);
 
     public Dock SidebarDock => SidebarPosition switch
     {
@@ -428,6 +478,19 @@ public partial class MainViewModel : ViewModelBase
     /// Click an item to read the full note. Newest first.</summary>
     public ObservableCollection<NewsItemViewModel> News { get; } =
     [
+        new("UPDATE", "Umbrella 2.1 — TON sending is live",
+            "You can now send TON, not just receive it. The wallet builds and signs the v4R2 transfer on this device and broadcasts only the signed bytes.\n\n" +
+            "The transaction is checked byte-for-byte against the reference @ton library — the order and signing-message hashes and the signatures all match — so the network runs exactly the transfer the reference would produce. The very first send from a fresh wallet also deploys it in the same transaction, automatically.\n\n" +
+            "Cardano (ADA) sending is the next chain to get the same treatment.",
+            "2026-07-30"),
+        new("UPDATE", "A moodier look — glass, rounder edges and ambient rain",
+            "The interface leans into the theme: buttons and tiles get a glassy top-edge sheen and larger radii, cards round further, and a faint 'rain' drifts over the window.\n\n" +
+            "All of it respects the motion toggle in Settings → Appearance — turn animations off and the rain settles with everything else. There's a new Ember (red) theme to match, and the top bar is cleaner.",
+            "2026-07-30"),
+        new("GUIDE", "Make it yours — name your wallet and set auto-lock",
+            "Settings now lets you name this wallet (the name shows in the top bar) and choose exactly when it auto-locks after you step away — 1, 5, 15, 30 or 60 minutes, or off entirely if you prefer.\n\n" +
+            "Auto-lock wipes the decrypted seed from memory on idle; unlocking again needs your vault password.",
+            "2026-07-30"),
         new("UPDATE", "Umbrella 2.0 — TON and Cardano join the wallet",
             "TON and Cardano (ADA) now derive real receive addresses from your existing seed phrase — no separate wallet needed.\n\n" +
             "TON uses the standard wallet v4R2 contract; Cardano uses Icarus / CIP-1852. Both were checked byte-for-byte against the reference libraries (tonweb and Cardano's own serialization library), so the addresses match what a compatible wallet produces — your funds are never sent to an address you can't control.\n\n" +

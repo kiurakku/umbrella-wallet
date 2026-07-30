@@ -26,6 +26,7 @@ public static class Theming
         new("white", "White (light)"),
         new("gradient", "Gradient · violet"),
         new("sunset", "Gradient · sunset"),
+        new("ember", "Ember · red"),
         new("crimson", "Crimson"),
         new("amber", "Amber"),
         new("slate", "Slate"),
@@ -100,6 +101,15 @@ public static class Theming
             "#A6455C", "#E8766A", "#C25A62", "#7E3446", "#6B3140",
             "#FBF2F3", "#E0C6C7", "#A98D93", "#8E757B", "#F0A05A",
             "#FBF2F3", "#FFFFFF", "#1A0E14",
+        ],
+        // Editorial noir with a hot red-orange accent — the mood of the reference posters.
+        ["ember"] =
+        [
+            "#0B0A0A", "#131010", "#1B1514", "#171211", "#2A1E1A", "#33221C",
+            "#2A201D", "#3A2A24", "#47332B",
+            "#8A3320", "#FF4A24", "#C43E20", "#5C2417", "#4A241A",
+            "#F6F1EF", "#D8C7C0", "#9A8A84", "#847670", "#7DCF8F",
+            "#F6F1EF", "#FFFFFF", "#0B0A0A",
         ],
         ["crimson"] =
         [

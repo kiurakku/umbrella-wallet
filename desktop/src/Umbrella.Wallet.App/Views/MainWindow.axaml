@@ -41,17 +41,18 @@
          PointerPressed drags the window (double-click maximises). -->
     <Border Grid.Row="0" Background="{DynamicResource UmBgAlt}" BorderBrush="{DynamicResource UmBorder}" BorderThickness="0,0,0,1" Padding="14,0,150,0"
             PointerPressed="OnTitleBarPressed">
-      <Grid ColumnDefinitions="Auto,*">
+      <Grid ColumnDefinitions="Auto,*,Auto">
         <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
           <Image Source="avares://Umbrella.Wallet.App/Assets/umbrella-mark-white.png"
-                 Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
-          <TextBlock FontSize="12" LetterSpacing="1.5" VerticalAlignment="Center">
-            <Run Text="UMBRELLA WALLET" Foreground="{DynamicResource UmText}" FontWeight="SemiBold"/>
-            <Run Text="  ·  local vault" Foreground="{DynamicResource UmTextDim}"/>
-          </TextBlock>
+                 Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center"/>
+          <TextBlock Classes="mono" FontSize="11" LetterSpacing="2.5" VerticalAlignment="Center"
+                     Foreground="{DynamicResource UmText}" Text="{Binding WalletTitle}"/>
         </StackPanel>
         <TextBlock Grid.Column="1" Margin="24,0" VerticalAlignment="Center" FontSize="11"
                    Foreground="{DynamicResource UmTextDim}" Text="{Binding StatusMessage}" TextTrimming="CharacterEllipsis"/>
+        <!-- Lock status, editorial mono — replaces the old "local vault" label. -->
+        <TextBlock Grid.Column="2" Classes="mono" FontSize="9.5" LetterSpacing="1" VerticalAlignment="Center"
+                   Margin="0,0,8,0" Foreground="{DynamicResource UmTextMuted}" Text="{Binding AutoLockLabel}"/>
       </Grid>
     </Border>
 
@@ -1007,6 +1008,16 @@
                   </StackPanel>
                 </Border>
 
+                <Border Classes="card" IsVisible="{Binding IsTabAppearance}">
+                  <StackPanel Spacing="10">
+                    <TextBlock Classes="eyebrow" Text="WALLET NAME"/>
+                    <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
+                               Text="A label for this wallet, shown in the top bar. Leave it blank to show the Umbrella name. It is stored only on this device."/>
+                    <TextBox Text="{Binding WalletName, Mode=TwoWay}" Watermark="e.g. Cold storage · Daily · the fear"
+                             MaxWidth="320" HorizontalAlignment="Left"/>
+                  </StackPanel>
+                </Border>
+
                 <!-- Updates: manual, Tor-aware. Data is never touched by an update. -->
                 <Border Classes="card" IsVisible="{Binding IsTabAppearance}">
                   <StackPanel Spacing="10">
@@ -1039,6 +1050,17 @@
                     </Grid>
                     <Button Classes="ghost" Content="Open vault folder" HorizontalAlignment="Left"
                             Command="{Binding OpenVaultFolderCommand}"/>
+                  </StackPanel>
+                </Border>
+
+                <Border Classes="card" IsVisible="{Binding IsTabSecurity}">
+                  <StackPanel Spacing="10">
+                    <TextBlock Classes="eyebrow" Text="AUTO-LOCK"/>
+                    <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
+                               Text="Lock the vault automatically after a spell of inactivity: the decrypted seed is wiped from memory and your vault password is needed to unlock again. Pick the idle time, or turn it off entirely."/>
+                    <ComboBox ItemsSource="{Binding AutoLockOptions}" SelectedValue="{Binding AutoLockChoice, Mode=TwoWay}"
+                              MinWidth="220" HorizontalAlignment="Left"/>
+                    <TextBlock Classes="mono" FontSize="11" Foreground="{DynamicResource UmTextMuted}" Text="{Binding AutoLockLabel}"/>
                   </StackPanel>
                 </Border>
 
@@ -1150,7 +1172,11 @@
 
                       <TextBlock Classes="eyebrow" Foreground="{DynamicResource UmTextSoft}" Text="13 · WHAT POWERS THIS (THE STACK)"/>
                       <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
-                                 Text="Under the hood: a .NET 8 / Avalonia desktop app, fully self-contained (no runtime to install). Your seed is a BIP39 phrase; keys derive via BIP32 (Bitcoin-family), SLIP-0010 ed25519 (Solana, TON), Cardano's BIP32-Ed25519, and Monero's own scheme. The vault is Argon2id (memory-hard) → AES-256-GCM. Signing uses the chains' reference crypto (NBitcoin, Nethereum, BouncyCastle ed25519); every derivation is pinned by unit tests to official test vectors. Balances and prices come straight from public explorers/RPCs (Blockstream, Esplora, toncenter, Koios, CoinGecko), routed through the bundled Tor when it's on. Monero runs the real monero-wallet-rpc locally. Nothing is custodial and nothing phones home."/>
+                                 Text="Under the hood: a .NET 8 / Avalonia desktop app, fully self-contained (no runtime to install). Your seed is a BIP39 phrase; keys derive via BIP32 (Bitcoin-family), SLIP-0010 ed25519 (Solana, TON), Cardano's BIP32-Ed25519, and Monero's own scheme. The vault is Argon2id (memory-hard) → AES-256-GCM. Signing uses the chains' reference crypto (NBitcoin, Nethereum, BouncyCastle ed25519); every derivation is pinned by unit tests to official test vectors. TON transfers are pinned to the @ton reference library. Balances and prices come straight from public explorers/RPCs (Blockstream, Esplora, toncenter, Koios, CoinGecko), routed through the bundled Tor when it's on. Monero runs the real monero-wallet-rpc locally. Nothing is custodial and nothing phones home."/>
+
+                      <TextBlock Classes="eyebrow" Foreground="{DynamicResource UmTextSoft}" Text="14 · PERSONALISE AND AUTO-LOCK"/>
+                      <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
+                                 Text="Settings → Appearance lets you name this wallet (the name shows in the top bar), pick from a range of colour themes (including Ember, the red editorial look), move the navigation panel to any edge, and turn ambient motion — the looping stickers and the rain — on or off. Settings → Security sets auto-lock: after the idle time you choose (1–60 minutes, or off) the decrypted seed is wiped from memory and your vault password is needed to unlock again. All of this is stored only on this device, in the data folder — never on a server."/>
                     </StackPanel>
                   </StackPanel>
                 </Border>

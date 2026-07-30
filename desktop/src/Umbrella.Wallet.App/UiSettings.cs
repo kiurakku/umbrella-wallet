@@ -16,6 +16,12 @@ public sealed class UiSettings
     public string SidebarPosition { get; set; } = "Left";
     public bool AnimationsEnabled { get; set; } = true;
 
+    /// <summary>Idle minutes before the vault auto-locks; 0 disables auto-lock entirely.</summary>
+    public int AutoLockMinutes { get; set; } = 5;
+
+    /// <summary>A user-chosen label for this wallet, shown in the top bar; blank uses the brand only.</summary>
+    public string WalletName { get; set; } = "";
+
     private static string Path => System.IO.Path.Combine(AppPaths.DataRoot, "ui-settings.json");
 
     public static UiSettings Load()

@@ -11,8 +11,7 @@ namespace Umbrella.Wallet.App.Views;
 
 public partial class MainWindow : Window
 {
-    private static readonly TimeSpan AutoLockDelay = TimeSpan.FromMinutes(5);
-    private readonly DispatcherTimer _autoLockTimer = new() { Interval = AutoLockDelay };
+    private readonly DispatcherTimer _autoLockTimer = new() { Interval = TimeSpan.FromMinutes(5) };
     private MainViewModel? _observed;
 
     // SetWindowDisplayAffinity: WDA_EXCLUDEFROMCAPTURE (0x11) makes the window render black in
@@ -121,6 +120,12 @@ public partial class MainWindow : Window
         {
             UpdateCaptureProtection();
         }
+
+        // Re-arm the idle timer when the user changes the auto-lock preference.
+        if (e.PropertyName is nameof(MainViewModel.AutoLockMinutes))
+        {
+            ResetAutoLock();
+        }
     }
 
     private void UpdateCaptureProtection()
@@ -160,6 +165,10 @@ public partial class MainWindow : Window
     private void ResetAutoLock()
     {
         _autoLockTimer.Stop();
+        // 0 = the user disabled auto-lock; leave the timer stopped so the vault never locks on idle.
+        var minutes = (DataContext as MainViewModel)?.AutoLockMinutes ?? 5;
+        if (minutes <= 0) return;
+        _autoLockTimer.Interval = TimeSpan.FromMinutes(minutes);
         _autoLockTimer.Start();
     }
 }
