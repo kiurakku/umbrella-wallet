@@ -432,7 +432,8 @@
                               <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
                                 <Border Width="38" Height="38" CornerRadius="19" Background="{Binding BadgeColor}"
                                         BoxShadow="{Binding BadgeShadow}">
-                                  <TextBlock Classes="mono" FontSize="10.5" FontWeight="Bold" Foreground="#FFFFFF" Text="{Binding Symbol}"
+                                  <TextBlock FontFamily="Segoe UI Symbol, Segoe UI Variable, Segoe UI" FontSize="18" FontWeight="Bold"
+                                             Foreground="#FFFFFF" Text="{Binding BadgeGlyph}"
                                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
                                 <StackPanel VerticalAlignment="Center" MinWidth="0">
@@ -1125,59 +1126,18 @@
                       <TextBlock Classes="eyebrow" Text="DOCUMENTATION" VerticalAlignment="Center"/>
                       <Button Grid.Column="1" Classes="ghost" Content="Open guide" Command="{Binding ToggleDocsCommand}"/>
                     </Grid>
-                    <StackPanel Spacing="12" IsVisible="{Binding IsDocsVisible}">
-                      <TextBlock Classes="eyebrow" Foreground="{DynamicResource UmTextSoft}" Text="1 · CREATE OR IMPORT"/>
-                      <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
-                                 Text="Create generates a 24-word BIP39 seed on this PC and encrypts it into a local vault (Argon2id → AES-256-GCM) with your password. Import accepts any 12/15/18/21/24-word BIP39 phrase from another wallet — the derived addresses will match the original wallet exactly."/>
-                      <TextBlock Classes="eyebrow" Foreground="{DynamicResource UmTextSoft}" Text="2 · RECEIVE"/>
-                      <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
-                                 Text="Open Receive, pick a green (Ready) coin, and share the address or QR with the sender — a person, another wallet, or an exchange withdrawal. Addresses are safe to share publicly. Never share the 24 words."/>
-                      <TextBlock Classes="eyebrow" Foreground="{DynamicResource UmTextSoft}" Text="3 · SEND"/>
-                      <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
-                                 Text="Send builds the transaction here, signs it with your key locally, and broadcasts only the signed bytes through a public RPC/explorer. You always get a two-step Review → Confirm with the exact network fee before anything is signed, and the key is wiped from memory straight after. Sending is live for Bitcoin, Ethereum, Litecoin, Solana, TON, TRON, USDT (TRC-20) and Monero. Cardano is receive-only for now — you can receive and see the balance; sending is on the way (meanwhile the same phrase spends it in a compatible wallet)."/>
-                      <TextBlock Classes="eyebrow" Foreground="{DynamicResource UmTextSoft}" Text="4 · BACKUP AND RESTORE"/>
-                      <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
-                                 Text="Your 24 words are the wallet. Write them on paper, keep them offline. The vault file only protects the copy on this PC — if the PC dies, the words restore everything in any BIP39 wallet. While the phrase is on screen, the window is excluded from screenshots and screen sharing."/>
-                      <TextBlock Classes="eyebrow" Foreground="{DynamicResource UmTextSoft}" Text="5 · WHICH COINS, AND ON WHICH NETWORK"/>
-                      <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
-                                 Text="Every row in Receive and Holdings prints the network under the coin name, because sending on the wrong network is the most common way people lose funds. Full support (address + balance + send): Bitcoin (BIP84 native SegWit), Ethereum, Litecoin (BIP84), Solana, TON (wallet v4R2), TRON, and USDT as TRC-20 on TRON (same address as TRX). Receive only (real address + balance, sending coming): Cardano (CIP-1852). Receive only, no public balance: Monero (amounts are hidden on-chain). Nothing is ever shown as a guessed/fake address."/>
-
-                      <TextBlock Classes="eyebrow" Foreground="{DynamicResource UmTextSoft}" Text="6 · USDT (TRC-20)"/>
-                      <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
-                                 Text="USDT here means Tether on the TRON network (TRC-20). It uses the same address as your TRX, its balance is read from that address, and you can both receive and send it. Only ever send USDT to it over TRON — the identical-looking address on Ethereum (ERC-20) is a different network and those coins would be lost. Sending USDT is a contract call, so the fee is paid in TRX: keep a small amount of TRX on the address or the transfer will fail for lack of energy."/>
-
-                      <TextBlock Classes="eyebrow" Foreground="{DynamicResource UmTextSoft}" Text="7 · MONERO"/>
-                      <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
-                                 Text="Umbrella derives a genuine Monero mainnet account and you can receive to it. It is marked &quot;Receive only&quot; for an honest reason: Monero hides amounts on-chain, so no public explorer can report your balance, and this build does not construct Monero transactions. To see the balance or spend, open Settings → Monero → Reveal keys and put the address, secret spend key and secret view key into Feather or monero-wallet-cli via &quot;Restore from keys&quot;. The spend key is as sensitive as your seed phrase."/>
-
-                      <TextBlock Classes="eyebrow" Foreground="{DynamicResource UmTextSoft}" Text="8 · TOR (BUILT IN)"/>
-                      <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
-                                 Text="Tor ships inside the wallet — nothing to install. Switching it on starts a private Tor client on port 9250 (so a Tor Browser you already run is untouched) and routes every balance lookup, price fetch and transaction broadcast through it, so explorers and RPC nodes see a Tor exit instead of your IP. It takes ~20 seconds to bootstrap and shuts down with the wallet. Turn it on BEFORE unlocking if you don't want your addresses queried over clearnet even once."/>
-
-                      <TextBlock Classes="eyebrow" Foreground="{DynamicResource UmTextSoft}" Text="9 · WHAT LEAKS, AND WHAT DOESN'T"/>
-                      <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
-                                 Text="Never leaves this PC: your seed phrase, every private key, your vault password. Leaves this PC: the addresses you look up and transactions you broadcast (to public explorers/RPCs — hidden behind Tor when it's on) and coin prices. There is no account, no email, no telemetry and no analytics of any kind. Umbrella cannot freeze, seize or recover your funds, and neither can anyone else holding this software."/>
-
-                      <TextBlock Classes="eyebrow" Foreground="{DynamicResource UmTextSoft}" Text="10 · SECURITY HABITS THAT ACTUALLY MATTER"/>
-                      <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
-                                 Text="Write the 24 words on paper, never in a photo, cloud note or password manager you don't control. While the phrase or Monero keys are on screen the window is excluded from screenshots and screen sharing — but a camera pointed at the screen still works, so reveal them alone. The vault auto-locks after 5 minutes idle; Ctrl+L locks instantly. Always send a small test amount first to a new address. A blockchain transfer is final: there is no support desk that can reverse it."/>
-
-                      <TextBlock Classes="eyebrow" Foreground="{DynamicResource UmTextSoft}" Text="11 · TON AND CARDANO"/>
-                      <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
-                                 Text="Both derive a real receive address from your existing 24-word seed. TON uses the standard wallet v4R2 contract (coin type 607); Cardano uses Icarus / CIP-1852. Neither is a guess: the address maths was checked byte-for-byte against the reference libraries (tonweb for TON, Cardano's own serialization library for ADA), so it matches what a compatible wallet produces — funds are never sent somewhere you can't spend. TON now sends too: the v4R2 transfer message is pinned byte-for-byte against @ton/ton, and the first send from a fresh wallet also deploys it. Cardano is receive-only for now (address + live balance); its sending is next. Because the key comes from your seed, you can also spend either by restoring the phrase in Trust Wallet (TON) or Eternl (ADA)."/>
-
-                      <TextBlock Classes="eyebrow" Foreground="{DynamicResource UmTextSoft}" Text="12 · THE PLATFORM FEE"/>
-                      <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
-                                 Text="There is a small platform fee (0.5%) added on some sends and shown to you in the Review step before you confirm — never hidden. It rides along in the same transaction (one network fee) on the chains that support that, and it is always disclosed. You pay only the network's own miner/validator fee plus, where it applies, this clearly-labelled 0.5%. There is no subscription, no withdrawal fee, and no account fee."/>
-
-                      <TextBlock Classes="eyebrow" Foreground="{DynamicResource UmTextSoft}" Text="13 · WHAT POWERS THIS (THE STACK)"/>
-                      <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
-                                 Text="Under the hood: a .NET 8 / Avalonia desktop app, fully self-contained (no runtime to install). Your seed is a BIP39 phrase; keys derive via BIP32 (Bitcoin-family), SLIP-0010 ed25519 (Solana, TON), Cardano's BIP32-Ed25519, and Monero's own scheme. The vault is Argon2id (memory-hard) → AES-256-GCM. Signing uses the chains' reference crypto (NBitcoin, Nethereum, BouncyCastle ed25519); every derivation is pinned by unit tests to official test vectors. TON transfers are pinned to the @ton reference library. Balances and prices come straight from public explorers/RPCs (Blockstream, Esplora, toncenter, Koios, CoinGecko), routed through the bundled Tor when it's on. Monero runs the real monero-wallet-rpc locally. Nothing is custodial and nothing phones home."/>
-
-                      <TextBlock Classes="eyebrow" Foreground="{DynamicResource UmTextSoft}" Text="14 · PERSONALISE AND AUTO-LOCK"/>
-                      <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
-                                 Text="Settings → Appearance lets you name this wallet (the name shows in the top bar), pick from a range of colour themes (including Ember, the red editorial look), move the navigation panel to any edge, and turn ambient motion — the looping stickers and the rain — on or off. Settings → Security sets auto-lock: after the idle time you choose (1–60 minutes, or off) the decrypted seed is wiped from memory and your vault password is needed to unlock again. All of this is stored only on this device, in the data folder — never on a server."/>
-                    </StackPanel>
+                    <!-- Localised guide: driven by the VM's GuideSections, which follow the wallet's
+                         language (Ukrainian translated in full; English base/fallback otherwise). -->
+                    <ItemsControl ItemsSource="{Binding GuideSections}" IsVisible="{Binding IsDocsVisible}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="app:GuideSection">
+                          <StackPanel Spacing="6" Margin="0,0,0,14">
+                            <TextBlock Classes="eyebrow" Foreground="{DynamicResource UmTextSoft}" Text="{Binding Title}"/>
+                            <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap" Text="{Binding Body}"/>
+                          </StackPanel>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                   </StackPanel>
                 </Border>
 

@@ -19,7 +19,7 @@ public static class Theming
 
     public static IReadOnlyList<ThemeOption> Themes { get; } =
     [
-        new("purple", "Purple · the fear"),
+        new("purple", "The fear · noir"),
         new("blue", "Blue"),
         new("green", "Green"),
         new("black", "Black (OLED)"),
@@ -45,13 +45,15 @@ public static class Theming
     private static readonly Dictionary<string, string[]> Palettes = new()
     {
         // bg       bgAlt    card     input    cardAlt  hover    bd       bd2      bd3      accent   accentBr accentHv accentSel accentDim text    textSoft textDim  textMut  pos
+        // Primary "the fear" look: neutral charcoal-black with a single hot red-orange accent —
+        // the editorial-poster mood (frosted noir, mono type, one hot glint of colour).
         ["purple"] =
         [
-            "#0C0D10", "#12111C", "#1A1730", "#181425", "#241F45", "#2A2350",
-            "#282442", "#332C5C", "#3A3168",
-            "#4B3F86", "#6E5FB8", "#5B4CA8", "#3B2F73", "#3B3468",
-            "#F4F5F7", "#C9CDD4", "#8B909A", "#7E8590", "#7DCF8F",
-            "#F4F5F7", "#FFFFFF", "#0C0D10",
+            "#0A0A0B", "#101012", "#16161A", "#131317", "#202027", "#26262E",
+            "#22222A", "#30303A", "#3C3C46",
+            "#B23A1E", "#FF4A24", "#D63C1F", "#4A2018", "#3A2018",
+            "#F4F4F5", "#C8C8CC", "#8E8E96", "#6E6E76", "#7DCF8F",
+            "#F4F4F5", "#FFFFFF", "#0A0A0B",
         ],
         ["blue"] =
         [

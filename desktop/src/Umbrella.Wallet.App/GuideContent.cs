@@ -1,0 +1,78 @@
+namespace Umbrella.Wallet.App;
+
+/// <summary>One numbered section of the in-app guide.</summary>
+public sealed record GuideSection(string Title, string Body);
+
+/// <summary>
+/// The in-app documentation, per language. English is the base; Ukrainian is a full translation.
+/// Any other language falls back to English (as the rest of the UI does via <see cref="Loc"/>), so
+/// the guide always reads in the wallet's language where a translation exists.
+/// </summary>
+public static class GuideContent
+{
+    public static IReadOnlyList<GuideSection> For(string code) => code == "uk" ? Uk : En;
+
+    public static readonly IReadOnlyList<GuideSection> En =
+    [
+        new("1 · CREATE OR IMPORT",
+            "Create generates a 24-word BIP39 seed on this PC and encrypts it into a local vault (Argon2id → AES-256-GCM) with your password. Import accepts any 12/15/18/21/24-word BIP39 phrase from another wallet — the derived addresses will match the original wallet exactly."),
+        new("2 · RECEIVE",
+            "Open Receive, pick a green (Ready) coin, and share the address or QR with the sender — a person, another wallet, or an exchange withdrawal. Addresses are safe to share publicly. Never share the 24 words."),
+        new("3 · SEND",
+            "Send builds the transaction here, signs it with your key locally, and broadcasts only the signed bytes through a public RPC/explorer. You always get a two-step Review → Confirm with the exact network fee before anything is signed, and the key is wiped from memory straight after. Sending is live for Bitcoin, Ethereum, Litecoin, Solana, TON, TRON, USDT (TRC-20) and Monero. Cardano is receive-only for now — you can receive and see the balance; sending is on the way (meanwhile the same phrase spends it in a compatible wallet)."),
+        new("4 · BACKUP AND RESTORE",
+            "Your 24 words are the wallet. Write them on paper, keep them offline. The vault file only protects the copy on this PC — if the PC dies, the words restore everything in any BIP39 wallet. While the phrase is on screen, the window is excluded from screenshots and screen sharing."),
+        new("5 · WHICH COINS, AND ON WHICH NETWORK",
+            "Every row in Receive and Holdings prints the network under the coin name, because sending on the wrong network is the most common way people lose funds. Full support (address + balance + send): Bitcoin (BIP84 native SegWit), Ethereum, Litecoin (BIP84), Solana, TON (wallet v4R2), TRON, and USDT as TRC-20 on TRON (same address as TRX). Receive only (real address + balance, sending coming): Cardano (CIP-1852). Receive only, no public balance: Monero (amounts are hidden on-chain). Nothing is ever shown as a guessed/fake address."),
+        new("6 · USDT (TRC-20)",
+            "USDT here means Tether on the TRON network (TRC-20). It uses the same address as your TRX, its balance is read from that address, and you can both receive and send it. Only ever send USDT to it over TRON — the identical-looking address on Ethereum (ERC-20) is a different network and those coins would be lost. Sending USDT is a contract call, so the fee is paid in TRX: keep a small amount of TRX on the address or the transfer will fail for lack of energy."),
+        new("7 · MONERO",
+            "Umbrella derives a genuine Monero mainnet account and you can receive to it. It is marked \"Receive only\" for an honest reason: Monero hides amounts on-chain, so no public explorer can report your balance, and this build does not construct Monero transactions. To see the balance or spend, open Settings → Monero → Reveal keys and put the address, secret spend key and secret view key into Feather or monero-wallet-cli via \"Restore from keys\". The spend key is as sensitive as your seed phrase."),
+        new("8 · TOR (BUILT IN)",
+            "Tor ships inside the wallet — nothing to install. Switching it on starts a private Tor client on port 9250 (so a Tor Browser you already run is untouched) and routes every balance lookup, price fetch and transaction broadcast through it, so explorers and RPC nodes see a Tor exit instead of your IP. It takes ~20 seconds to bootstrap and shuts down with the wallet. Turn it on BEFORE unlocking if you don't want your addresses queried over clearnet even once."),
+        new("9 · WHAT LEAKS, AND WHAT DOESN'T",
+            "Never leaves this PC: your seed phrase, every private key, your vault password. Leaves this PC: the addresses you look up and transactions you broadcast (to public explorers/RPCs — hidden behind Tor when it's on) and coin prices. There is no account, no email, no telemetry and no analytics of any kind. Umbrella cannot freeze, seize or recover your funds, and neither can anyone else holding this software."),
+        new("10 · SECURITY HABITS THAT ACTUALLY MATTER",
+            "Write the 24 words on paper, never in a photo, cloud note or password manager you don't control. While the phrase or Monero keys are on screen the window is excluded from screenshots and screen sharing — but a camera pointed at the screen still works, so reveal them alone. The vault auto-locks after your chosen idle time (Settings → Security); Ctrl+L locks instantly. Always send a small test amount first to a new address. A blockchain transfer is final: there is no support desk that can reverse it."),
+        new("11 · TON AND CARDANO",
+            "Both derive a real receive address from your existing 24-word seed. TON uses the standard wallet v4R2 contract (coin type 607); Cardano uses Icarus / CIP-1852. Neither is a guess: the address maths was checked byte-for-byte against the reference libraries (tonweb for TON, Cardano's own serialization library for ADA), so it matches what a compatible wallet produces — funds are never sent somewhere you can't spend. TON now sends too: the v4R2 transfer message is pinned byte-for-byte against @ton/ton, and the first send from a fresh wallet also deploys it. Cardano is receive-only for now (address + live balance); its sending is next. Because the key comes from your seed, you can also spend either by restoring the phrase in Trust Wallet (TON) or Eternl (ADA)."),
+        new("12 · THE PLATFORM FEE",
+            "There is a small platform fee (0.5%) added on some sends and shown to you in the Review step before you confirm — never hidden. It rides along in the same transaction (one network fee) on the chains that support that, and it is always disclosed. You pay only the network's own miner/validator fee plus, where it applies, this clearly-labelled 0.5%. There is no subscription, no withdrawal fee, and no account fee."),
+        new("13 · WHAT POWERS THIS (THE STACK)",
+            "Under the hood: a .NET 8 / Avalonia desktop app, fully self-contained (no runtime to install). Your seed is a BIP39 phrase; keys derive via BIP32 (Bitcoin-family), SLIP-0010 ed25519 (Solana, TON), Cardano's BIP32-Ed25519, and Monero's own scheme. The vault is Argon2id (memory-hard) → AES-256-GCM. Signing uses the chains' reference crypto (NBitcoin, Nethereum, BouncyCastle ed25519); every derivation is pinned by unit tests to official test vectors. TON transfers are pinned to the @ton reference library. Balances and prices come straight from public explorers/RPCs (Blockstream, Esplora, toncenter, Koios, CoinGecko), routed through the bundled Tor when it's on. Monero runs the real monero-wallet-rpc locally. Nothing is custodial and nothing phones home."),
+        new("14 · PERSONALISE AND AUTO-LOCK",
+            "Settings → Appearance lets you name this wallet (the name shows in the top bar), pick from a range of colour themes (including Ember, the red editorial look), move the navigation panel to any edge, and turn ambient motion — the looping stickers and the rain — on or off. Settings → Security sets auto-lock: after the idle time you choose (1–60 minutes, or off) the decrypted seed is wiped from memory and your vault password is needed to unlock again. All of this is stored only on this device, in the data folder — never on a server."),
+    ];
+
+    public static readonly IReadOnlyList<GuideSection> Uk =
+    [
+        new("1 · СТВОРИТИ АБО ІМПОРТУВАТИ",
+            "«Створити» генерує 24-слівну BIP39-фразу на цьому ПК і шифрує її в локальне сховище (Argon2id → AES-256-GCM) вашим паролем. «Імпорт» приймає будь-яку BIP39-фразу з 12/15/18/21/24 слів з іншого гаманця — похідні адреси точно збігатимуться з оригінальним гаманцем."),
+        new("2 · ОТРИМАННЯ",
+            "Відкрийте «Отримати», виберіть зелену (готову) монету й поділіться адресою або QR із відправником — людиною, іншим гаманцем чи виводом з біржі. Адресами можна ділитися публічно. Ніколи не діліться 24 словами."),
+        new("3 · НАДСИЛАННЯ",
+            "«Надіслати» будує транзакцію тут, підписує її вашим ключем локально й транслює лише підписані байти через публічний RPC/оглядач. Ви завжди отримуєте двокроковий «Перегляд → Підтвердження» з точною комісією мережі перед підписанням, а ключ одразу стирається з пам'яті. Надсилання працює для Bitcoin, Ethereum, Litecoin, Solana, TON, TRON, USDT (TRC-20) та Monero. Cardano поки лише для отримання — можна отримувати й бачити баланс; надсилання на підході (тим часом та сама фраза витрачає його в сумісному гаманці)."),
+        new("4 · РЕЗЕРВНА КОПІЯ ТА ВІДНОВЛЕННЯ",
+            "Ваші 24 слова — це і є гаманець. Запишіть їх на папері, зберігайте офлайн. Файл сховища захищає лише копію на цьому ПК — якщо ПК зламається, слова відновлять усе в будь-якому BIP39-гаманці. Поки фраза на екрані, вікно виключено зі знімків екрана й демонстрації екрана."),
+        new("5 · ЯКІ МОНЕТИ Й У ЯКІЙ МЕРЕЖІ",
+            "Кожен рядок в «Отримати» й «Активи» друкує мережу під назвою монети, бо надсилання в неправильній мережі — найчастіший спосіб втратити кошти. Повна підтримка (адреса + баланс + надсилання): Bitcoin (BIP84 native SegWit), Ethereum, Litecoin (BIP84), Solana, TON (гаманець v4R2), TRON і USDT як TRC-20 на TRON (та сама адреса, що й TRX). Лише отримання (справжня адреса + баланс, надсилання на підході): Cardano (CIP-1852). Лише отримання, без публічного балансу: Monero (суми приховані в мережі). Нічого й ніколи не показується як вигадана/фейкова адреса."),
+        new("6 · USDT (TRC-20)",
+            "USDT тут означає Tether у мережі TRON (TRC-20). Він використовує ту саму адресу, що й ваш TRX, його баланс читається з тієї адреси, і ви можете і отримувати, і надсилати його. Надсилайте USDT на неї лише через TRON — однаково виглядаюча адреса в Ethereum (ERC-20) — це інша мережа, і ті монети буде втрачено. Надсилання USDT — це виклик контракту, тож комісія платиться в TRX: тримайте трохи TRX на адресі, інакше переказ не пройде через брак енергії."),
+        new("7 · MONERO",
+            "Umbrella виводить справжній обліковий запис Monero в основній мережі, і ви можете отримувати на нього. Він позначений «лише отримання» з чесної причини: Monero приховує суми в мережі, тож жоден публічний оглядач не покаже ваш баланс, і ця збірка не будує транзакції Monero. Щоб побачити баланс чи витратити, відкрийте Налаштування → Monero → Показати ключі й введіть адресу, секретний ключ витрат і секретний ключ перегляду в Feather або monero-wallet-cli через «Відновити з ключів». Ключ витрат такий самий чутливий, як і ваша фраза."),
+        new("8 · TOR (ВБУДОВАНИЙ)",
+            "Tor вбудований у гаманець — нічого встановлювати. Увімкнення запускає приватний клієнт Tor на порту 9250 (тож ваш уже запущений Tor Browser не чіпається) і скеровує кожен запит балансу, отримання цін і трансляцію транзакцій через нього, тож оглядачі й RPC-вузли бачать вихід Tor замість вашого IP. Запуск займає ~20 секунд, і він вимикається разом із гаманцем. Вмикайте його ПЕРЕД розблокуванням, якщо не хочете, щоб ваші адреси запитувалися через звичайну мережу навіть раз."),
+        new("9 · ЩО ВИТІКАЄ, А ЩО НІ",
+            "Ніколи не залишає цей ПК: ваша фраза, кожен приватний ключ, ваш пароль сховища. Залишає цей ПК: адреси, які ви переглядаєте, і транзакції, які транслюєте (до публічних оглядачів/RPC — сховані за Tor, коли він увімкнений), і ціни монет. Немає облікового запису, email, телеметрії чи будь-якої аналітики. Umbrella не може заморозити, вилучити чи повернути ваші кошти — як і будь-хто інший, у кого є ця програма."),
+        new("10 · ЗВИЧКИ БЕЗПЕКИ, ЩО СПРАВДІ ВАЖЛИВІ",
+            "Запишіть 24 слова на папері, ніколи — на фото, у хмарну нотатку чи менеджер паролів, який ви не контролюєте. Поки фраза чи ключі Monero на екрані, вікно виключено зі знімків і демонстрації екрана — але камера, наведена на екран, усе одно працює, тож показуйте їх наодинці. Сховище автоматично блокується після обраного часу простою (Налаштування → Security); Ctrl+L блокує миттєво. Завжди спершу надсилайте невелику тестову суму на нову адресу. Переказ у блокчейні остаточний: немає служби підтримки, яка його скасує."),
+        new("11 · TON І CARDANO",
+            "Обидва виводять справжню адресу отримання з вашої наявної 24-слівної фрази. TON використовує стандартний контракт гаманця v4R2 (тип монети 607); Cardano — Icarus / CIP-1852. Це не здогад: математику адрес перевірено байт-у-байт проти еталонних бібліотек (tonweb для TON, власна бібліотека серіалізації Cardano для ADA), тож вона збігається з тим, що робить сумісний гаманець — кошти ніколи не надсилаються туди, де ви не можете їх витратити. TON тепер і надсилає: повідомлення переказу v4R2 звірено байт-у-байт проти @ton/ton, і перше надсилання з нового гаманця також розгортає його. Cardano поки лише для отримання (адреса + живий баланс); його надсилання наступне. Оскільки ключ походить з вашої фрази, ви також можете витрачати обидва, відновивши фразу в Trust Wallet (TON) або Eternl (ADA)."),
+        new("12 · КОМІСІЯ ПЛАТФОРМИ",
+            "Є невелика комісія платформи (0.5%), що додається до деяких надсилань і показується вам на кроці «Перегляд» перед підтвердженням — ніколи не прихована. Вона їде в тій самій транзакції (одна комісія мережі) на мережах, що це підтримують, і завжди розкривається. Ви платите лише власну комісію мережі майнерам/валідаторам плюс, де це застосовується, ці чітко позначені 0.5%. Немає підписки, комісії за вивід чи комісії за обліковий запис."),
+        new("13 · НА ЧОМУ ЦЕ ПРАЦЮЄ (СТЕК)",
+            "Під капотом: настільний застосунок .NET 8 / Avalonia, повністю самодостатній (нічого встановлювати). Ваша фраза — це BIP39; ключі виводяться через BIP32 (родина Bitcoin), SLIP-0010 ed25519 (Solana, TON), BIP32-Ed25519 від Cardano та власну схему Monero. Сховище — Argon2id (стійкий до пам'яті) → AES-256-GCM. Підписання використовує еталонну криптографію мереж (NBitcoin, Nethereum, BouncyCastle ed25519); кожен вивід прив'язаний юніт-тестами до офіційних тестових векторів. Перекази TON прив'язані до еталонної бібліотеки @ton. Баланси й ціни надходять напряму з публічних оглядачів/RPC (Blockstream, Esplora, toncenter, Koios, CoinGecko), скеровані через вбудований Tor, коли він увімкнений. Monero запускає справжній monero-wallet-rpc локально. Нічого кастодіального, і нічого не «дзвонить додому»."),
+        new("14 · ПЕРСОНАЛІЗАЦІЯ ТА АВТОБЛОКУВАННЯ",
+            "Налаштування → Appearance дозволяє назвати цей гаманець (назва показується вгорі), вибрати з набору кольорових тем (зокрема Ember — червоний редакторський вигляд), перемістити панель навігації до будь-якого краю й увімкнути чи вимкнути фонову анімацію — циклічні стікери й дощ. Налаштування → Security задає автоблокування: після обраного часу простою (1–60 хвилин або вимкнено) розшифрована фраза стирається з пам'яті, і для розблокування знову потрібен пароль сховища. Усе це зберігається лише на цьому пристрої, у теці даних — ніколи на сервері."),
+    ];
+}

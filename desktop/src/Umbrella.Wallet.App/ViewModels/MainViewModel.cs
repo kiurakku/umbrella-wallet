@@ -115,7 +115,18 @@ public partial class MainViewModel : ViewModelBase
             _uiSettings.Language = value;
             _uiSettings.Save();
             OnPropertyChanged();
+            BuildGuide(); // the guide reads in the wallet's language
         }
+    }
+
+    /// <summary>The in-app guide, in the wallet's current language (English fallback). Rebuilt when
+    /// the language changes so the documentation always matches the chosen interface language.</summary>
+    public ObservableCollection<GuideSection> GuideSections { get; } = [];
+
+    private void BuildGuide()
+    {
+        GuideSections.Clear();
+        foreach (var section in GuideContent.For(Loc.Instance.CurrentCode)) GuideSections.Add(section);
     }
 
     public IReadOnlyList<Loc.Language> Languages => Loc.Languages;
@@ -426,6 +437,7 @@ public partial class MainViewModel : ViewModelBase
 
         SelectedSendAsset = SendableAssets[0];
         SelectedWatchNetwork = WatchableNetworks[0];
+        BuildGuide();
 
         _ = LoadWatchAddressesAsync();
         _ = RefreshMarketAsync();
@@ -2611,6 +2623,36 @@ public sealed record HoldingRowViewModel(
     /// a raw string would not runtime-convert to the BoxShadow property the way a colour string does.</summary>
     public Avalonia.Media.BoxShadows BadgeShadow =>
         Avalonia.Media.BoxShadows.Parse($"0 0 15 0 #59{BadgeColor[1..]}");
+
+    /// <summary>A single recognizable mark for each coin, replacing the 3-letter ticker on the badge.
+    /// Uses each coin's own currency/symbol glyph where one exists (rendered in a symbol-capable
+    /// font); anything unmapped falls back to its initial.</summary>
+    public string BadgeGlyph => CoinGlyphs.For(Symbol);
+}
+
+/// <summary>Coin badge marks — the coins' own currency symbols, so the token badges read as logos
+/// rather than tickers, without shipping any external icon set.</summary>
+public static class CoinGlyphs
+{
+    private static readonly Dictionary<string, string> Map = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["BTC"] = "₿",   // ₿
+        ["ETH"] = "Ξ",   // Ξ
+        ["LTC"] = "Ł",   // Ł
+        ["DOGE"] = "Ð",  // Ð
+        ["ADA"] = "₳",   // ₳
+        ["USDT"] = "₮",  // ₮
+        ["XMR"] = "ɱ",   // ɱ
+        ["SOL"] = "◎",   // ◎
+        ["TON"] = "◈",   // ◈
+        ["TRX"] = "▲",   // ▲
+        ["BNB"] = "◆",   // ◆
+        ["MATIC"] = "⬡", // ⬡
+    };
+
+    public static string For(string symbol) =>
+        Map.TryGetValue(symbol ?? "", out var g) ? g
+        : string.IsNullOrEmpty(symbol) ? "?" : symbol[..1].ToUpperInvariant();
 }
 
 /// <summary>One entry in an asset / network picker.</summary>

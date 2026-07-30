@@ -42,6 +42,14 @@ function formatMoney(n: number) {
   return { main, cents: cents ?? "00" };
 }
 
+// Each coin's own currency/symbol mark, so token badges read as logos rather than tickers —
+// with no external icon set. Falls back to the first letter for anything unmapped.
+const COIN_GLYPHS: Record<string, string> = {
+  BTC: "₿", ETH: "Ξ", LTC: "Ł", DOGE: "Ð", ADA: "₳", USDT: "₮",
+  XMR: "ɱ", SOL: "◎", TON: "◈", TRX: "▲", BNB: "◆", MATIC: "⬡",
+};
+const coinGlyph = (symbol: string) => COIN_GLYPHS[symbol?.toUpperCase()] ?? (symbol?.[0]?.toUpperCase() ?? "?");
+
 function Index() {
   const {
     assets,
@@ -348,10 +356,10 @@ function Index() {
                     >
                       <div className="flex items-center gap-3">
                         <div
-                          className="w-9 h-9 rounded-full grid place-items-center font-mono text-[10px] font-bold text-white shrink-0"
+                          className="w-9 h-9 rounded-full grid place-items-center text-[17px] font-bold text-white shrink-0 leading-none"
                           style={{ background: a.color, boxShadow: `0 0 16px -3px ${a.color}` }}
                         >
-                          {a.symbol.slice(0, 3)}
+                          {coinGlyph(a.symbol)}
                         </div>
                         <div>
                           <div className="text-[13.5px] font-medium">{a.name}</div>
@@ -402,10 +410,10 @@ function Index() {
                     className="flex items-center gap-3 hairline rounded-md bg-card p-3.5"
                   >
                     <div
-                      className="h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0"
+                      className="h-10 w-10 rounded-full flex items-center justify-center text-lg font-bold text-white shrink-0 leading-none"
                       style={{ background: a.color, boxShadow: `0 0 18px -4px ${a.color}` }}
                     >
-                      {a.symbol[0]}
+                      {coinGlyph(a.symbol)}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="font-semibold text-sm">{a.symbol}</div>
