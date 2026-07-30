@@ -4,6 +4,18 @@ All notable releases of **Umbrella Wallet**.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versioning follows [SemVer](https://semver.org/).
 
+## [2.1.1] — 2026-07-30
+
+### Desktop
+- **Configurable auto-lock** — Settings → Security lets you set the idle time (1/5/15/30/60 min)
+  or turn auto-lock off entirely, instead of a fixed 5-minute delay.
+- **Wallet name** — name this wallet in Settings → Appearance; it shows in the top bar (a light
+  wallet "profile"), stored only on-device.
+- **Tidier top bar** — dropped the "local vault" label; editorial mono wallet name + live lock
+  status.
+- **Ember theme** — a red editorial look matching the reference posters.
+- **News** — 2.1 notes added; **Guide** — new "Personalise and auto-lock" section.
+
 ## [2.1.0] — 2026-07-30
 
 ### Desktop
