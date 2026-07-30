@@ -4,6 +4,16 @@ All notable releases of **Umbrella Wallet**.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versioning follows [SemVer](https://semver.org/).
 
+## [2.1.3] — 2026-07-30
+
+### Desktop
+- **Chrome removed** — the top title-bar panel and the bottom status bar are gone; the window is
+  all content. It still drags, and the native min/max/close remain. Status/errors show on the
+  unlock form and the send review step.
+- **Themes re-skinned** — every non-primary palette now matches the app's mood (Blue → electric-cyan
+  glass, Green → neon mint, Gradient → vivid violet, Slate → teal cyber), keeping the red editorial
+  primary and the animations untouched.
+
 ## [2.1.2] — 2026-07-30
 
 ### Desktop
