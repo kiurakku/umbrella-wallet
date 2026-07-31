@@ -37,7 +37,7 @@ No account. No email. No phone number. No KYC. Just a wallet — the way it was 
 
 <br/>
 
-**[⬇️ Installer (v2.2.2)](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-Setup-2.2.2.exe)** · **[Portable zip](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-2.2.2-win-x64-portable.zip)** · [All releases](https://github.com/kiurakku/umbrella-wallet/releases)
+**[⬇️ Installer (v2.3.0)](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-Setup-2.3.0.exe)** · **[Portable zip](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-2.3.0-win-x64-portable.zip)** · [All releases](https://github.com/kiurakku/umbrella-wallet/releases)
 
 <br/>
 
@@ -119,9 +119,9 @@ Umbrella flips that model:
 
 | Platform | Package | Notes |
 |----------|---------|-------|
-| **Windows** | [`UmbrellaWallet-2.2.2-win-x64-portable.zip`](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-2.2.2-win-x64-portable.zip) |
-| **Windows** | [UmbrellaWallet-Setup-2.2.2.exe](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-Setup-2.2.2.exe) | Installer — choose install folder | Portable — unzip and run `Umbrella.Wallet.App.exe` |
-| **Linux** | [`UmbrellaWallet-2.1.4-linux-x64.tar.gz`](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-2.1.4-linux-x64.tar.gz) | Unpack, run `./Umbrella.Wallet.App` — no install required |
+| **Windows** | [UmbrellaWallet-Setup-2.3.0.exe](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-Setup-2.3.0.exe) | Installer — choose install folder |
+| **Windows** | [`UmbrellaWallet-2.3.0-win-x64-portable.zip`](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-2.3.0-win-x64-portable.zip) | Portable — unzip and run `Umbrella.Wallet.App.exe` |
+| **Linux** | [`UmbrellaWallet-2.3.0-linux-x64.tar.gz`](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-2.3.0-linux-x64.tar.gz) | Unpack, run `./Umbrella.Wallet.App` — no install required |
 
 ## 🚀 Get started
 
