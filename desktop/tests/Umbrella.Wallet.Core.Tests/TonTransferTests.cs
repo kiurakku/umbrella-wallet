@@ -47,6 +47,26 @@ public sealed class TonTransferTests
         Assert.Equal(Hex(addrHash), TonTransfer.StateInit(TonTransfer.PublicKey(Seed)).HashHex());
     }
 
+    [Fact]
+    public void ParseFriendlyAddress_rejects_a_mistyped_address_via_the_checksum()
+    {
+        // Decode a real address, corrupt one hash byte but keep the original CRC-16 trailer:
+        // this is exactly what a typo produces — a 36-byte blob with a valid tag but a stale checksum.
+        // Without checksum verification the wallet would happily send funds to this wrong hash.
+        var s = DestAddress.Replace('-', '+').Replace('_', '/');
+        switch (s.Length % 4) { case 2: s += "=="; break; case 3: s += "="; break; }
+        var raw = Convert.FromBase64String(s);
+        raw[10] ^= 0x01; // flip a bit inside the 32-byte hash; leave bytes 34-35 (the CRC) intact
+        var corrupted = Convert.ToBase64String(raw).Replace('+', '-').Replace('/', '_');
+
+        var ex = Assert.Throws<ArgumentException>(() => TonTransfer.ParseFriendlyAddress(corrupted));
+        Assert.Contains("checksum", ex.Message, StringComparison.OrdinalIgnoreCase);
+
+        // The untouched address still parses — the guard rejects corruption, not valid addresses.
+        var (wc, _, _) = TonTransfer.ParseFriendlyAddress(DestAddress);
+        Assert.Equal(0, wc);
+    }
+
     private static TonCell Order(string? comment)
     {
         var (wc, hash, _) = TonTransfer.ParseFriendlyAddress(DestAddress);

@@ -180,9 +180,32 @@ public static class TonTransfer
         if (raw.Length != 36) throw new ArgumentException("A TON address decodes to 36 bytes.");
         var tag = (byte)(raw[0] & 0x7F);            // strip the test-only flag
         if (tag != 0x11 && tag != 0x51) throw new ArgumentException("Unknown TON address tag.");
+
+        // Verify the trailing CRC-16/XMODEM (bytes 34-35) over the first 34 bytes. This checksum is
+        // the whole reason TON addresses are typo-resistant; skipping it means a single mistyped
+        // character can decode to a *different valid-looking* address and send funds into the void.
+        var crc = Crc16(raw.AsSpan(0, 34));
+        var expected = (ushort)((raw[34] << 8) | raw[35]);
+        if (crc != expected)
+            throw new ArgumentException("TON address checksum is invalid (mistyped or corrupted address).");
+
         var workchain = (sbyte)raw[1];
         var hash = new byte[32];
         Buffer.BlockCopy(raw, 2, hash, 0, 32);
         return (workchain, hash, tag == 0x11);
+    }
+
+    /// <summary>CRC-16/XMODEM (CCITT), polynomial 0x1021, initial value 0 — TON's address checksum.</summary>
+    private static ushort Crc16(ReadOnlySpan<byte> data)
+    {
+        ushort crc = 0;
+        foreach (var b in data)
+        {
+            crc ^= (ushort)(b << 8);
+            for (var i = 0; i < 8; i++)
+                crc = (crc & 0x8000) != 0 ? (ushort)((crc << 1) ^ 0x1021) : (ushort)(crc << 1);
+        }
+
+        return crc;
     }
 }

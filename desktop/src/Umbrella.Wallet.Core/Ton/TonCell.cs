@@ -152,47 +152,90 @@ public sealed class TonCell
     /// load the wallet v4R2 code and data cells from their known BoC constants for the deploy message.</summary>
     public static TonCell FromBoc(byte[] boc)
     {
+        // Defensive parser: every read is bounds-checked and every count/index is validated, so malformed
+        // or truncated input fails with a clean ArgumentException — never an IndexOutOfRange / Overflow /
+        // OutOfMemory crash. Today this only loads pinned, hash-guarded constants, but a byte-oriented
+        // parser must never trust its input's structure.
+        const int maxCells = 1 << 16; // a wallet cell tree is a few dozen cells; 65 536 is already absurd.
+
         var p = 0;
         if (boc.Length < 5 || boc[0] != 0xB5 || boc[1] != 0xEE || boc[2] != 0x9C || boc[3] != 0x72)
             throw new ArgumentException("Not a standard BoC (bad magic).");
+
+        byte Next()
+        {
+            if (p >= boc.Length) throw new ArgumentException("Truncated BoC.");
+            return boc[p++];
+        }
+
+        int ReadBeChecked(int bytes)
+        {
+            if (bytes < 0 || p + bytes > boc.Length) throw new ArgumentException("Truncated BoC.");
+            var v = 0;
+            for (var i = 0; i < bytes; i++) v = (v << 8) | boc[p++];
+            return v;
+        }
+
         p = 4;
-        var flags = boc[p++];
+        var flags = Next();
         var hasCrc = (flags & 0x40) != 0;
         var refSize = flags & 0x07;
-        var offBytes = boc[p++];
-        var cells = ReadBe(boc, ref p, refSize);
-        var roots = ReadBe(boc, ref p, refSize);
-        ReadBe(boc, ref p, refSize);              // absent
-        ReadBe(boc, ref p, offBytes);             // total size
+        if (refSize is < 1 or > 4) throw new ArgumentException("BoC ref size out of range.");
+        var offBytes = Next();
+        if (offBytes is < 1 or > 8) throw new ArgumentException("BoC offset size out of range.");
+
+        var cells = ReadBeChecked(refSize);
+        var roots = ReadBeChecked(refSize);
+        if (cells is < 1 or > maxCells) throw new ArgumentException("BoC cell count out of range.");
+        if (roots is < 0 or > maxCells) throw new ArgumentException("BoC root count out of range.");
+        ReadBeChecked(refSize);                   // absent
+        ReadBeChecked(offBytes);                  // total size
         var rootIndex = 0;
-        for (var i = 0; i < roots; i++) rootIndex = ReadBe(boc, ref p, refSize);
+        for (var i = 0; i < roots; i++)
+        {
+            rootIndex = ReadBeChecked(refSize);
+            if (rootIndex < 0 || rootIndex >= cells) throw new ArgumentException("BoC root index out of range.");
+        }
 
         // First pass: read raw descriptors (bits + ref indices).
         var rawBits = new bool[cells][];
         var rawRefs = new int[cells][];
         for (var i = 0; i < cells; i++)
         {
-            var d1 = boc[p++];
-            var d2 = boc[p++];
+            var d1 = Next();
+            var d2 = Next();
             var refCount = d1 & 7;
             var dataLen = (d2 >> 1) + (d2 & 1);
+            if (p + dataLen > boc.Length) throw new ArgumentException("Truncated BoC (cell data).");
             var data = new byte[dataLen];
             Array.Copy(boc, p, data, 0, dataLen);
             p += dataLen;
             rawBits[i] = UnpackBits(data, (d2 & 1) == 1);
             var refs = new int[refCount];
-            for (var r = 0; r < refCount; r++) refs[r] = ReadBe(boc, ref p, refSize);
+            for (var r = 0; r < refCount; r++)
+            {
+                var idx = ReadBeChecked(refSize);
+                if (idx < 0 || idx >= cells) throw new ArgumentException("BoC ref index out of range.");
+                refs[r] = idx;
+            }
             rawRefs[i] = refs;
         }
 
         if (hasCrc) p += 4; // trailer not re-validated on load
 
-        // Second pass: build cells from the highest index down (refs always point to a later index).
+        // Second pass: build cells from the highest index down. Standard BoC is topologically ordered so
+        // a cell's refs always point to a *later* index; a ref that doesn't is malformed (would read an
+        // unbuilt cell), so reject it rather than dereference null.
         var built = new TonCell[cells];
         for (var i = cells - 1; i >= 0; i--)
         {
             var refs = new TonCell[rawRefs[i].Length];
-            for (var r = 0; r < refs.Length; r++) refs[r] = built[rawRefs[i][r]];
+            for (var r = 0; r < refs.Length; r++)
+            {
+                var idx = rawRefs[i][r];
+                if (idx <= i) throw new ArgumentException("BoC ref does not point forward.");
+                refs[r] = built[idx];
+            }
             built[i] = new TonCell(rawBits[i], refs);
         }
 
