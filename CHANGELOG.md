@@ -4,6 +4,16 @@ All notable releases of **Umbrella Wallet**.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versioning follows [SemVer](https://semver.org/).
 
+## [2.3.0] — 2026-07-31
+
+### Desktop
+- **In-wallet swaps (THORChain).** New Swap section for decentralised, non-custodial cross-chain
+  swaps — no account, no API key, no KYC. The source coin is sent to a THORChain inbound vault with a
+  signed OP_RETURN memo, and the network delivers the target coin to the wallet's own receive address;
+  funds are never held by a third party. Pay from BTC/LTC, receive BTC/ETH/LTC/DOGE. Live quote (rate,
+  fee, slippage, ETA, expiry) reviewed before sending, with a fresh re-quote and a rate-moved guard at
+  confirm time. Quote parser pinned to real THORChain responses; the OP_RETURN memo path is tested.
+
 ## [2.2.3] — 2026-07-31
 
 ### Security (desktop — fund-critical)

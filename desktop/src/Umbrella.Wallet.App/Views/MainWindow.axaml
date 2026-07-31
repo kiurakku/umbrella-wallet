@@ -301,6 +301,8 @@
                       Command="{Binding SelectSectionCommand}" CommandParameter="Receive"/>
               <Button Classes="nav" Content="{Binding [nav.send], Source={x:Static app:Loc.Instance}}" Classes.active="{Binding IsSend}"
                       Command="{Binding SelectSectionCommand}" CommandParameter="Send"/>
+              <Button Classes="nav" Content="Swap" Classes.active="{Binding IsSwap}"
+                      Command="{Binding SelectSectionCommand}" CommandParameter="Swap"/>
               <Button Classes="nav" Content="{Binding [nav.connect], Source={x:Static app:Loc.Instance}}" Classes.active="{Binding IsConnect}"
                       Command="{Binding SelectSectionCommand}" CommandParameter="Connect"/>
               <Button Classes="nav" Content="{Binding [nav.market], Source={x:Static app:Loc.Instance}}" Classes.active="{Binding IsMarket}"
@@ -340,6 +342,7 @@
             <Button Classes="chip" Content="{Binding [nav.portfolio], Source={x:Static app:Loc.Instance}}" Command="{Binding SelectSectionCommand}" CommandParameter="Portfolio" Classes.active="{Binding IsPortfolio}"/>
             <Button Classes="chip" Content="{Binding [nav.receive], Source={x:Static app:Loc.Instance}}" Command="{Binding SelectSectionCommand}" CommandParameter="Receive" Classes.active="{Binding IsReceive}"/>
             <Button Classes="chip" Content="{Binding [nav.send], Source={x:Static app:Loc.Instance}}" Command="{Binding SelectSectionCommand}" CommandParameter="Send" Classes.active="{Binding IsSend}"/>
+            <Button Classes="chip" Content="Swap" Command="{Binding SelectSectionCommand}" CommandParameter="Swap" Classes.active="{Binding IsSwap}"/>
             <Button Classes="chip" Content="{Binding [nav.connect], Source={x:Static app:Loc.Instance}}" Command="{Binding SelectSectionCommand}" CommandParameter="Connect" Classes.active="{Binding IsConnect}"/>
             <Button Classes="chip" Content="{Binding [nav.market], Source={x:Static app:Loc.Instance}}" Command="{Binding SelectSectionCommand}" CommandParameter="Market" Classes.active="{Binding IsMarket}"/>
             <Button Classes="chip" Content="{Binding [nav.news], Source={x:Static app:Loc.Instance}}" Command="{Binding SelectSectionCommand}" CommandParameter="News" Classes.active="{Binding IsNews}"/>
@@ -637,6 +640,94 @@
                                    Width="56" Height="56" RepeatCount="{Binding #RootWindow.((vm:MainViewModel)DataContext).LottieRepeat}" VerticalAlignment="Top"/>
                     <TextBlock Classes="mono" FontSize="12" Foreground="{DynamicResource UmPos}" TextWrapping="Wrap"
                                Text="{Binding SendSuccess}" VerticalAlignment="Center"/>
+                  </StackPanel>
+                </Border>
+              </StackPanel>
+
+              <!-- Swap (THORChain · non-custodial cross-chain) -->
+              <StackPanel Classes="page" IsVisible="{Binding IsSwap}" Spacing="14" MaxWidth="620" HorizontalAlignment="Left">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                  <TextBlock Classes="serif" FontSize="26" VerticalAlignment="Center" Text="Swap"/>
+                  <lottie:Lottie Path="avares://Umbrella.Wallet.App/Assets/stickers/fear-08.json" Width="42" Height="42" RepeatCount="{Binding #RootWindow.((vm:MainViewModel)DataContext).LottieRepeat}" VerticalAlignment="Center"/>
+                </StackPanel>
+                <TextBlock Foreground="{DynamicResource UmTextDim}" TextWrapping="Wrap" FontSize="12.5"
+                           Text="Cross-chain swaps over THORChain — decentralised and non-custodial. No account, no API key, no KYC: your coin is sent to a THORChain vault and the network delivers the swapped coin straight to your own address in this wallet. Nobody ever holds your funds. Pay from BTC or LTC; receive BTC, ETH, LTC or DOGE."/>
+
+                <!-- Step 1 · pair & amount -->
+                <Border Classes="card">
+                  <StackPanel Spacing="12">
+                    <TextBlock Classes="eyebrow" Text="STEP 1 · PAIR AND AMOUNT"/>
+                    <Grid ColumnDefinitions="*,Auto,*" ColumnSpacing="10">
+                      <StackPanel Spacing="6">
+                        <TextBlock Classes="eyebrow" Text="FROM (you pay)"/>
+                        <ComboBox ItemsSource="{Binding SwapFromOptions}" SelectedItem="{Binding SwapFromSymbol}" HorizontalAlignment="Stretch"/>
+                      </StackPanel>
+                      <TextBlock Grid.Column="1" Text="→" FontSize="20" VerticalAlignment="Bottom" Margin="0,0,0,6"
+                                 Foreground="{DynamicResource UmTextDim}"/>
+                      <StackPanel Grid.Column="2" Spacing="6">
+                        <TextBlock Classes="eyebrow" Text="TO (you receive)"/>
+                        <ComboBox ItemsSource="{Binding SwapToOptions}" SelectedItem="{Binding SwapToSymbol}" HorizontalAlignment="Stretch"/>
+                      </StackPanel>
+                    </Grid>
+                    <TextBlock Classes="eyebrow" Text="AMOUNT TO SWAP"/>
+                    <TextBox Text="{Binding SwapAmount}" Watermark="0.0"/>
+                    <Border IsVisible="{Binding SwapError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                            Background="#2A1618" BorderBrush="#7A3034" BorderThickness="1" CornerRadius="6" Padding="12,9">
+                      <TextBlock Text="{Binding SwapError}" Foreground="#E09A9A" TextWrapping="Wrap" FontSize="12"/>
+                    </Border>
+                    <Button Classes="primary" Content="Get quote" HorizontalAlignment="Left"
+                            IsEnabled="{Binding !SwapBusy}" Command="{Binding GetSwapQuoteCommand}"/>
+                  </StackPanel>
+                </Border>
+
+                <!-- Step 2 · review & confirm -->
+                <Border Classes="card" BorderBrush="#7A6230" IsVisible="{Binding HasSwapQuote}">
+                  <StackPanel Spacing="10">
+                    <TextBlock Classes="eyebrow" Foreground="#E7CA83" Text="STEP 2 · REVIEW — THIS SENDS FUNDS"/>
+                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnSpacing="14" RowSpacing="6">
+                      <TextBlock Grid.Row="0" Grid.Column="0" Classes="eyebrow" Text="YOU GET" VerticalAlignment="Center"/>
+                      <TextBlock Grid.Row="0" Grid.Column="1" Classes="mono" FontSize="15" Foreground="{DynamicResource UmPos}" Text="{Binding SwapExpectedOut}"/>
+                      <TextBlock Grid.Row="1" Grid.Column="0" Classes="eyebrow" Text="RATE"/>
+                      <TextBlock Grid.Row="1" Grid.Column="1" Classes="mono" FontSize="12" Foreground="{DynamicResource UmTextDim}" Text="{Binding SwapRateText}"/>
+                      <TextBlock Grid.Row="2" Grid.Column="0" Classes="eyebrow" Text="FEE"/>
+                      <TextBlock Grid.Row="2" Grid.Column="1" Classes="mono" FontSize="12" Foreground="{DynamicResource UmTextDim}" Text="{Binding SwapFeeText}"/>
+                      <TextBlock Grid.Row="3" Grid.Column="0" Classes="eyebrow" Text="ETA"/>
+                      <TextBlock Grid.Row="3" Grid.Column="1" Classes="mono" FontSize="12" Foreground="{DynamicResource UmTextDim}" Text="{Binding SwapEtaText}"/>
+                      <TextBlock Grid.Row="4" Grid.Column="0" Classes="eyebrow" Text="TO YOUR"/>
+                      <TextBlock Grid.Row="4" Grid.Column="1" Classes="mono" FontSize="12" Foreground="{DynamicResource UmTextDim}" TextWrapping="Wrap" Text="{Binding SwapDestination}"/>
+                    </Grid>
+                    <TextBlock FontSize="11.5" Foreground="{DynamicResource UmTextMuted}" Text="{Binding SwapExpiryText}"/>
+                    <Border IsVisible="{Binding SwapWarning, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                            Background="#2A2418" BorderBrush="#7A6230" BorderThickness="1" CornerRadius="6" Padding="12,9">
+                      <TextBlock Text="{Binding SwapWarning}" Foreground="#E7CA83" TextWrapping="Wrap" FontSize="11.5"/>
+                    </Border>
+                    <TextBlock Foreground="#BBAF91" FontSize="12" TextWrapping="Wrap"
+                               Text="On confirm, the wallet re-checks the live rate, then signs and broadcasts the deposit on this PC. The swap is final once sent — THORChain delivers to the address above automatically."/>
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                      <Button Classes="danger" Content="Confirm &amp; swap" IsEnabled="{Binding !IsBusy}" Command="{Binding ConfirmSwapCommand}"/>
+                      <Button Classes="ghost" Content="Cancel" Command="{Binding CancelSwapCommand}"/>
+                    </StackPanel>
+                  </StackPanel>
+                </Border>
+
+                <!-- Broadcasting -->
+                <Border Classes="card" IsVisible="{Binding IsBusy}">
+                  <StackPanel Orientation="Horizontal" Spacing="14" HorizontalAlignment="Center">
+                    <lottie:Lottie Path="avares://Umbrella.Wallet.App/Assets/stickers/sending.json"
+                                   Width="64" Height="64" RepeatCount="{Binding #RootWindow.((vm:MainViewModel)DataContext).LottieRepeat}"/>
+                    <TextBlock Text="{Binding StatusMessage}" Foreground="{DynamicResource UmTextDim}" FontSize="12.5"
+                               VerticalAlignment="Center" TextWrapping="Wrap"/>
+                  </StackPanel>
+                </Border>
+
+                <!-- Result -->
+                <Border Background="#14231A" BorderBrush="#2F5A3C" BorderThickness="1" CornerRadius="10" Padding="14"
+                        IsVisible="{Binding SwapSuccess, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                  <StackPanel Orientation="Horizontal" Spacing="14">
+                    <lottie:Lottie Path="avares://Umbrella.Wallet.App/Assets/stickers/money.json"
+                                   Width="56" Height="56" RepeatCount="{Binding #RootWindow.((vm:MainViewModel)DataContext).LottieRepeat}" VerticalAlignment="Top"/>
+                    <TextBlock Classes="mono" FontSize="12" Foreground="{DynamicResource UmPos}" TextWrapping="Wrap"
+                               Text="{Binding SwapSuccess}" VerticalAlignment="Center"/>
                   </StackPanel>
                 </Border>
               </StackPanel>

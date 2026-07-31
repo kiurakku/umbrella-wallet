@@ -492,6 +492,10 @@ public partial class MainViewModel : ViewModelBase
     /// Click an item to read the full note. Newest first.</summary>
     public ObservableCollection<NewsItemViewModel> News { get; } =
     [
+        new("NEW", "In-wallet swaps + a security hardening pass",
+            "You can now swap coins inside the wallet — cross-chain, over THORChain. It's decentralised and non-custodial: no account, no API key, no KYC. Your coin is sent to a THORChain vault with a signed memo, and the network delivers the swapped coin straight to your own address here. Nobody ever holds your funds. Pay from BTC or LTC; receive BTC, ETH, LTC or DOGE — with a live quote (rate, fee, ETA) you review before anything is sent, and a fresh re-quote at the moment you confirm.\n\n" +
+            "Under the hood, a security pass fixed two fund-safety bugs: TON recipient addresses now have their checksum verified (a mistyped address is rejected instead of silently sending to the wrong account), and the TON cell parser was hardened against malformed data. Added a fuzz harness over the address/parser code, CodeQL + secret-scanning in CI, and fixed a web dependency advisory.",
+            "2026-07-31"),
         new("UPDATE", "Real candlesticks, backdrops, and a floating dock",
             "The Market chart is now real OHLC candlesticks (green up, red down) drawn from live Binance data — not a flat single-colour line. Prices and the 24h change were always live (CoinGecko); nothing is faked.\n\n" +
             "The sidebar and the lock screen now have artwork behind them instead of flat black, and you can set your own via Settings → Appearance → Profile. The bottom bar became a floating dock, cards lift and glow on hover, and the hero drifts gently with the cursor.",
@@ -2323,6 +2327,169 @@ public partial class MainViewModel : ViewModelBase
         ClearSendQuotes();
         SendError = string.Empty;
         StatusMessage = "Transfer cancelled — nothing was signed";
+    }
+
+    // ===== Swap (THORChain — decentralised, non-custodial cross-chain) =============================
+    // The wallet never holds the funds: it sends the source coin to a THORChain inbound vault with a
+    // memo (OP_RETURN), and the network delivers the target coin to the user's own receive address.
+
+    private readonly ThorchainSwapClient _thorchain = new();
+    private SwapQuote? _swapQuote;
+
+    public ObservableCollection<string> SwapFromOptions { get; } = new(ThorchainSwapClient.SendableFrom);
+    public ObservableCollection<string> SwapToOptions { get; } = new(ThorchainSwapClient.ReceivableTo);
+
+    [ObservableProperty] private string _swapFromSymbol = "BTC";
+    [ObservableProperty] private string _swapToSymbol = "ETH";
+    [ObservableProperty] private string _swapAmount = string.Empty;
+    [ObservableProperty] private bool _hasSwapQuote;
+    [ObservableProperty] private bool _swapBusy;
+    [ObservableProperty] private string _swapError = string.Empty;
+    [ObservableProperty] private string _swapSuccess = string.Empty;
+    [ObservableProperty] private string _swapExpectedOut = string.Empty;
+    [ObservableProperty] private string _swapRateText = string.Empty;
+    [ObservableProperty] private string _swapFeeText = string.Empty;
+    [ObservableProperty] private string _swapEtaText = string.Empty;
+    [ObservableProperty] private string _swapDestination = string.Empty;
+    [ObservableProperty] private string _swapExpiryText = string.Empty;
+    [ObservableProperty] private string _swapWarning = string.Empty;
+
+    partial void OnSwapFromSymbolChanged(string value) => InvalidateSwap();
+    partial void OnSwapToSymbolChanged(string value) => InvalidateSwap();
+    partial void OnSwapAmountChanged(string value) => InvalidateSwap();
+
+    private void InvalidateSwap()
+    {
+        HasSwapQuote = false;
+        _swapQuote = null;
+        SwapSuccess = string.Empty;
+    }
+
+    private static ChainId? SwapChainId(string symbol) => symbol.ToUpperInvariant() switch
+    {
+        "BTC" => ChainId.Btc,
+        "LTC" => ChainId.Ltc,
+        "ETH" => ChainId.Eth,
+        "DOGE" => ChainId.Doge,
+        _ => null,
+    };
+
+    /// <summary>Step 1: fetch a live, non-binding THORChain quote for the chosen pair and amount.</summary>
+    [RelayCommand]
+    private async Task GetSwapQuoteAsync()
+    {
+        SwapError = string.Empty;
+        SwapSuccess = string.Empty;
+        SwapWarning = string.Empty;
+        InvalidateSwap();
+
+        if (_unlockedMnemonic is null) { SwapError = "Unlock the wallet first."; return; }
+        var from = (SwapFromSymbol ?? "").ToUpperInvariant();
+        var to = (SwapToSymbol ?? "").ToUpperInvariant();
+        if (from == to) { SwapError = "Choose two different assets."; return; }
+        if (!decimal.TryParse(SwapAmount, NumberStyles.Number, CultureInfo.InvariantCulture, out var amount) || amount <= 0)
+        {
+            SwapError = "Enter a valid amount.";
+            return;
+        }
+
+        var toChain = SwapChainId(to);
+        if (toChain is null) { SwapError = $"Cannot receive {to}."; return; }
+        var destination = _deriver.DeriveReceiveAddress(_unlockedMnemonic!, toChain.Value).Address;
+
+        SwapBusy = true;
+        try
+        {
+            var (quote, error) = await _thorchain.GetQuoteAsync(from, to, amount, destination);
+            if (quote is null) { SwapError = error ?? "Could not get a quote."; return; }
+
+            _swapQuote = quote;
+            SwapExpectedOut = $"{Fmt(quote.ExpectedOut)} {to}";
+            SwapRateText = $"1 {from} ≈ {Fmt(quote.ExpectedOut / amount)} {to}";
+            SwapFeeText = $"{Fmt(quote.TotalFee)} {to} · {quote.TotalBps / 100.0:0.##}%";
+            SwapEtaText = quote.EtaSeconds >= 60 ? $"~{quote.EtaSeconds / 60} min" : $"~{quote.EtaSeconds} s";
+            SwapDestination = Shorten(destination);
+            var mins = Math.Max(0, (int)(quote.Expiry - DateTimeOffset.UtcNow).TotalMinutes);
+            SwapExpiryText = $"quote valid ~{mins} min";
+            SwapWarning = quote.BelowMinimum
+                ? $"Below the recommended minimum (~{Fmt(quote.RecommendedMinIn)} {from}) — the rate will be poor and the swap may refund."
+                : string.Empty;
+            HasSwapQuote = true;
+        }
+        finally
+        {
+            SwapBusy = false;
+        }
+    }
+
+    /// <summary>Step 2: re-quote for safety, then sign and broadcast the deposit to THORChain's vault.</summary>
+    [RelayCommand]
+    private async Task ConfirmSwapAsync()
+    {
+        if (_unlockedMnemonic is null || _swapQuote is null) { SwapError = "Get a quote first."; return; }
+        var shown = _swapQuote;
+        var from = shown.FromSymbol;
+        var to = shown.ToSymbol;
+
+        if (!ThorchainSwapClient.SendableFrom.Contains(from)) { SwapError = $"Swapping from {from} isn't supported yet."; return; }
+        var fromChain = SwapChainId(from);
+        var toChain = SwapChainId(to);
+        if (fromChain is null || toChain is null) { SwapError = "Unsupported asset."; return; }
+
+        await RunBusyAsync(async () =>
+        {
+            SwapError = string.Empty;
+            StatusMessage = "Refreshing the swap quote…";
+
+            // A fresh quote immediately before sending: THORChain vaults rotate and quotes expire, so a
+            // stale inbound address or memo would send the deposit into the void.
+            var destination = _deriver.DeriveReceiveAddress(_unlockedMnemonic!, toChain.Value).Address;
+            var (fresh, error) = await _thorchain.GetQuoteAsync(from, to, shown.AmountIn, destination);
+            if (fresh is null) { SwapError = error ?? "Could not refresh the quote."; return; }
+            if (fresh.IsExpired) { SwapError = "The quote expired — get a new one."; return; }
+
+            // Refuse if the rate moved materially against the user since they saw it (>3%).
+            if (fresh.ExpectedOut < shown.ExpectedOut * 0.97m)
+            {
+                _swapQuote = fresh;
+                SwapExpectedOut = $"{Fmt(fresh.ExpectedOut)} {to}";
+                SwapError = "The rate moved against you — review the updated quote and confirm again.";
+                StatusMessage = "Swap not sent — the rate changed";
+                return;
+            }
+
+            StatusMessage = "Signing locally and broadcasting the swap deposit…";
+            var fromAddr = _deriver.DeriveReceiveAddress(_unlockedMnemonic!, fromChain.Value).Address;
+            var (quote, prepErr) = await _btcSender.PrepareAsync(from, fromAddr, fresh.InboundAddress, shown.AmountIn, memo: fresh.Memo);
+            if (quote is null) { SwapError = prepErr ?? "Could not build the swap deposit."; return; }
+
+            var key = _deriver.DeriveBitcoinLikeKey(_unlockedMnemonic!, fromChain.Value);
+            var (ok, txid, sendErr) = await _btcSender.SignAndBroadcastAsync(quote, key);
+            if (ok && txid is not null)
+            {
+                var track = ThorchainSwapClient.TrackUrl(txid);
+                SwapSuccess = $"Swap sent ✓  {txid}\nTHORChain will deliver ~{Fmt(fresh.ExpectedOut)} {to} to your wallet.\nTrack: {track}";
+                StatusMessage = "Swap deposit broadcast · THORChain is processing it";
+                InvalidateSwap();
+                SwapAmount = string.Empty;
+                PushActivity("Swap", $"{from}→{to}", $"-{Fmt(shown.AmountIn)}", Shorten(fresh.InboundAddress), "now", track);
+                await RefreshLiveDataAsync();
+            }
+            else
+            {
+                SwapError = sendErr ?? "Broadcast failed.";
+                StatusMessage = "Swap failed — nothing was sent";
+            }
+        });
+    }
+
+    [RelayCommand]
+    private void CancelSwap()
+    {
+        InvalidateSwap();
+        SwapError = string.Empty;
+        SwapWarning = string.Empty;
+        StatusMessage = "Swap cancelled — nothing was signed";
     }
 
     private void SetUnlocked(string mnemonic)
