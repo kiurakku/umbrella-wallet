@@ -13,16 +13,16 @@ public class ChainCatalogTests
     public void Catalog_marks_supported_and_planned_chains_explicitly()
     {
         Assert.Equal(
-            [ChainId.Btc, ChainId.Eth, ChainId.Ltc, ChainId.Doge, ChainId.Tron, ChainId.Sol, ChainId.Ton],
+            [ChainId.Btc, ChainId.Eth, ChainId.Ltc, ChainId.Doge, ChainId.Tron, ChainId.Sol, ChainId.Ton, ChainId.Ada],
             ChainCatalog.Supported.Select(c => c.Id).ToArray());
 
         // Every chain now derives a real address; nothing is left "planned".
         Assert.Empty(ChainCatalog.Planned);
 
-        // TON (v4R2) now sends too (transfer pinned against @ton/ton), so it is fully supported.
-        // Cardano (CIP-1852) and Monero remain receive-only: real address now, send later.
+        // TON (v4R2) and now Cardano (CIP-1852 / BIP32-Ed25519) both send too — each transfer is pinned
+        // byte-for-byte against its reference library. Monero alone stays receive-only here.
         Assert.Equal(
-            [ChainId.Ada, ChainId.Xmr],
+            [ChainId.Xmr],
             ChainCatalog.ReceiveOnly.Select(c => c.Id).ToArray());
 
         Assert.All(ChainCatalog.Supported, c =>
@@ -201,16 +201,15 @@ public class HdAddressDeriverTests
         Assert.Equal("m/84'/0'/0'/0/1", one.DerivationPath);
     }
 
-    [Theory]
-    [InlineData(ChainId.Ada, "addr1", 103)] // Shelley base address (bech32)
-    public void ReceiveOnly_chains_derive_a_real_address(ChainId chain, string prefix, int length)
+    [Fact]
+    public void Ada_derives_a_supported_shelley_address()
     {
-        var derived = _sut.DeriveReceiveAddress(Mnemonic, chain);
+        var derived = _sut.DeriveReceiveAddress(Mnemonic, ChainId.Ada);
 
-        Assert.StartsWith(prefix, derived.Address, StringComparison.Ordinal);
-        Assert.Equal(length, derived.Address.Length);
-        Assert.False(ChainCatalog.IsSupported(chain));       // receive-only, not "supported"
-        Assert.True(ChainCatalog.HasRealAddress(chain));     // but a genuine, non-stub address
+        Assert.StartsWith("addr1", derived.Address, StringComparison.Ordinal); // Shelley base address (bech32)
+        Assert.Equal(103, derived.Address.Length);
+        Assert.True(ChainCatalog.IsSupported(ChainId.Ada));  // now fully supported: receive, balance and send
+        Assert.True(ChainCatalog.HasRealAddress(ChainId.Ada));
     }
 
     [Fact]

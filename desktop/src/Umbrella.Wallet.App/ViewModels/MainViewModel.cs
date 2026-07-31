@@ -367,6 +367,7 @@ public partial class MainViewModel : ViewModelBase
     private SolSendQuote? _solQuote;
     private TronSendQuote? _tronQuote;
     private TonSendQuote? _tonQuote;
+    private AdaSendQuote? _adaQuote;
     private string _sendSymbol = "ETH";
     private decimal _moneroAmount;
     private string _moneroTo = string.Empty;
@@ -417,6 +418,7 @@ public partial class MainViewModel : ViewModelBase
     private readonly SolanaTransactionSender _solSender = new();
     private readonly TronTransactionSender _tronSender = new();
     private readonly TonTransactionSender _tonSender = new();
+    private readonly CardanoTransactionSender _adaSender = new();
     private readonly EmbeddedTorService _tor = new();
     private readonly MoneroRpcService _monero = new();
     private CancellationTokenSource? _refreshCts;
@@ -492,6 +494,10 @@ public partial class MainViewModel : ViewModelBase
     /// Click an item to read the full note. Newest first.</summary>
     public ObservableCollection<NewsItemViewModel> News { get; } =
     [
+        new("NEW", "Cardano (ADA) sending is live",
+            "You can now send ADA, not just receive it. The Cardano transaction is built, signed and broadcast entirely on this device.\n\n" +
+            "Cardano uses its own extended-key signature scheme (BIP32-Ed25519), so it was implemented from the elliptic-curve operations and then checked byte-for-byte against Emurgo's cardano-serialization-lib — the transaction body, its hash, the signature and the final signed transaction all match the reference exactly, so the network runs precisely the transfer the reference would build. UTXOs, the validity window and submission go through Koios, and change returns to you. ADA is now a full coin (receive, balance and send); Monero stays receive-only.",
+            "2026-08-01"),
         new("NEW", "In-wallet swaps + a security hardening pass",
             "You can now swap coins inside the wallet — cross-chain, over THORChain. It's decentralised and non-custodial: no account, no API key, no KYC. Your coin is sent to a THORChain vault with a signed memo, and the network delivers the swapped coin straight to your own address here. Nobody ever holds your funds. Pay from BTC or LTC; receive BTC, ETH, LTC or DOGE — with a live quote (rate, fee, ETA) you review before anything is sent, and a fresh re-quote at the moment you confirm.\n\n" +
             "Under the hood, a security pass fixed two fund-safety bugs: TON recipient addresses now have their checksum verified (a mistyped address is rejected instead of silently sending to the wrong account), and the TON cell parser was hardened against malformed data. Added a fuzz harness over the address/parser code, CodeQL + secret-scanning in CI, and fixed a web dependency advisory.",
@@ -586,6 +592,7 @@ public partial class MainViewModel : ViewModelBase
         new("XMR", "Monero", "Monero network · needs the Monero service on"),
         new("TRX", "TRON", "TRON network"),
         new("USDT", "Tether (TRC-20)", "TRON network · fee paid in TRX"),
+        new("ADA", "Cardano", "Cardano network"),
     ];
 
     /// <summary>Networks a watch-only address can be added for.</summary>
@@ -2157,6 +2164,16 @@ public partial class MainViewModel : ViewModelBase
                         : $"Network fee ≈ {Fmt(quote.FeeTon)} TON · seqno {quote.Seqno}";
                     break;
                 }
+
+                case "ADA":
+                {
+                    var (quote, error) = await _adaSender.PrepareAsync(from.Address, SendTo.Trim(), amount);
+                    if (quote is null) { SendError = error ?? "Could not prepare the transaction."; return; }
+                    _adaQuote = quote;
+                    SendQuoteSummary = $"Send {Fmt(quote.Amount)} ADA  →  {quote.To}";
+                    SendQuoteFee = $"Network fee ≈ {Fmt(quote.Fee / 1_000_000m)} ADA · {quote.Inputs.Count} input(s) · change returns to you";
+                    break;
+                }
             }
 
             HasSendQuote = true;
@@ -2174,7 +2191,8 @@ public partial class MainViewModel : ViewModelBase
     private async Task ConfirmSendAsync()
     {
         var haveQuote = _sendQuote is not null || _btcQuote is not null || _solQuote is not null
-                        || _tonQuote is not null || (_sendSymbol == "XMR" && _moneroAmount > 0);
+                        || _tonQuote is not null || _tronQuote is not null || _adaQuote is not null
+                        || (_sendSymbol == "XMR" && _moneroAmount > 0);
         if (_unlockedMnemonic is null || !haveQuote)
         {
             SendError = "Prepare the transfer first.";
@@ -2263,6 +2281,24 @@ public partial class MainViewModel : ViewModelBase
                     break;
                 }
 
+                case "ADA" when _adaQuote is not null:
+                {
+                    var quote = _adaQuote;
+                    var extendedKey = AdaKeys.PaymentKey(_unlockedMnemonic!);
+                    try
+                    {
+                        var (ok, txId, error) = await _adaSender.SignAndBroadcastAsync(quote, extendedKey);
+                        await FinishSendAsync(ok, txId, error, "ADA", quote.Amount, quote.To,
+                            txId is null ? "" : $"cardanoscan.io/transaction/{txId}");
+                    }
+                    finally
+                    {
+                        System.Security.Cryptography.CryptographicOperations.ZeroMemory(extendedKey);
+                    }
+
+                    break;
+                }
+
                 case "XMR":
                 {
                     // monero-wallet-rpc builds, signs and relays the RingCT transaction itself.
@@ -2319,6 +2355,8 @@ public partial class MainViewModel : ViewModelBase
         _btcQuote = null;
         _solQuote = null;
         _tronQuote = null;
+        _tonQuote = null;
+        _adaQuote = null;
     }
 
     [RelayCommand]

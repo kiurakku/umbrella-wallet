@@ -67,7 +67,7 @@ public static class ChainCatalog
                 ChainId.Ada,
                 "ADA",
                 "Cardano",
-                ChainSupportLevel.ReceiveOnly,
+                ChainSupportLevel.Supported,
                 "Icarus CIP-1852 · BIP32-Ed25519",
                 "m/1852'/1815'/0'/0/0"),
             new ChainInfo(

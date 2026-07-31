@@ -4,6 +4,18 @@ All notable releases of **Umbrella Wallet**.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versioning follows [SemVer](https://semver.org/).
 
+## [2.4.0] — 2026-08-01
+
+### Coins — Cardano (ADA) sending
+- **Real ADA sending.** Cardano payment transactions are now built, signed and broadcast on-device:
+  the CBOR transaction body, the BIP32-Ed25519 signature (extended-key ed25519, implemented from the
+  group operations) and the assembled signed transaction are all pinned **byte-for-byte** against
+  Emurgo's cardano-serialization-lib for a fixed key and transaction, so a single wrong byte fails the
+  tests before any ADA can move. UTXOs, the chain tip (TTL) and submission go through Koios; fee and
+  change are computed from the real signed-tx size, change returns to the sender. ADA is now fully
+  supported (receive + balance + send) — Monero alone remains receive-only.
+- Fixed a latent guard that blocked confirming TRON / USDT (TRC-20) sends.
+
 ## [2.3.0] — 2026-07-31
 
 ### Desktop

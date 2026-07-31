@@ -47,6 +47,14 @@ public static class AdaKeys
         return Bech32Encode("addr", addr);
     }
 
+    /// <summary>The extended payment private key (m/1852'/1815'/0'/0/0, 96 bytes) for signing.</summary>
+    public static byte[] PaymentKey(string mnemonic)
+    {
+        var master = MasterKey(EntropyFromMnemonic(mnemonic));
+        var account = Derive(Derive(Derive(master, 1852 | Hardened), 1815 | Hardened), 0 | Hardened);
+        return Derive(Derive(account, 0), 0);
+    }
+
     /// <summary>Icarus master key from BIP39 entropy: PBKDF2-HMAC-SHA512, then the ed25519 clamp.</summary>
     public static byte[] MasterKey(byte[] entropy)
     {
@@ -90,10 +98,14 @@ public static class AdaKeys
     }
 
     /// <summary>The ed25519 public key of an extended private key: [kL]·B, 32 bytes.</summary>
-    public static byte[] PublicKey(byte[] xprv)
+    public static byte[] PublicKey(byte[] xprv) => ScalarMultBase(xprv[..32]);
+
+    /// <summary>[scalar]·B on ed25519, encoded to 32 bytes. <paramref name="scalar32"/> is little-endian.
+    /// Used both for public keys ([kL]·B) and the signature nonce point ([r]·B).</summary>
+    public static byte[] ScalarMultBase(byte[] scalar32)
     {
         var result = new byte[32];
-        ScalarMultBaseEncoded.Invoke(null, [xprv[..32], result, 0]);
+        ScalarMultBaseEncoded.Invoke(null, [scalar32, result, 0]);
         return result;
     }
 

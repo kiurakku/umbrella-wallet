@@ -3,7 +3,7 @@
 ; create a desktop / Start-menu shortcut, and uninstall cleanly.
 
 #define AppName "Umbrella Wallet"
-#define AppVersion "2.3.0"
+#define AppVersion "2.4.0"
 #define AppPublisher "the fear"
 #define AppExe "Umbrella.Wallet.App.exe"
 
