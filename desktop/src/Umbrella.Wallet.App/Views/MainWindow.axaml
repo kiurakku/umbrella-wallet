@@ -1194,15 +1194,15 @@
                       </ComboBox.ItemTemplate>
                     </ComboBox>
                     <TextBlock Foreground="{DynamicResource UmTextMuted}" FontSize="11" TextWrapping="Wrap"
-                               Text="The QR plate in Receive always stays white — a tinted QR code will not scan."/>
+                               Text="{Binding [settings.qrNote], Source={x:Static app:Loc.Instance}}"/>
                   </StackPanel>
                 </Border>
 
                 <Border Classes="card" IsVisible="{Binding IsTabAppearance}">
                   <StackPanel Spacing="10">
-                    <TextBlock Classes="eyebrow" Text="NAVIGATION PANEL"/>
+                    <TextBlock Classes="eyebrow" Text="{Binding [settings.nav], Source={x:Static app:Loc.Instance}}"/>
                     <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
-                               Text="Where the menu sits. Left and right keep the tall panel; top and bottom switch to a compact bar so it does not eat the window height."/>
+                               Text="{Binding [settings.navHint], Source={x:Static app:Loc.Instance}}"/>
                     <!-- SelectedValue, not SelectedItem: a TwoWay SelectedItem pushed the first entry back
                          during initialisation and overwrote the saved choice. -->
                     <ComboBox ItemsSource="{Binding SidebarPositions}"
@@ -1214,20 +1214,21 @@
                 <!-- Motion: turn the looping stickers / subtle animation on or off. -->
                 <Border Classes="card" IsVisible="{Binding IsTabAppearance}">
                   <StackPanel Spacing="10">
-                    <TextBlock Classes="eyebrow" Text="MOTION"/>
+                    <TextBlock Classes="eyebrow" Text="{Binding [settings.motion], Source={x:Static app:Loc.Instance}}"/>
                     <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
-                               Text="Looping stickers and subtle motion give the wallet a bit of atmosphere. Turn it off for a calmer, fully static interface."/>
+                               Text="{Binding [settings.motionHint], Source={x:Static app:Loc.Instance}}"/>
                     <ToggleSwitch IsChecked="{Binding AnimationsEnabled, Mode=TwoWay}"
-                                  OnContent="Animations on" OffContent="Animations off"/>
+                                  OnContent="{Binding [settings.animOn], Source={x:Static app:Loc.Instance}}"
+                                  OffContent="{Binding [settings.animOff], Source={x:Static app:Loc.Instance}}"/>
                   </StackPanel>
                 </Border>
 
                 <Border Classes="card" IsVisible="{Binding IsTabAppearance}">
                   <StackPanel Spacing="12">
-                    <TextBlock Classes="eyebrow" Text="PROFILE"/>
+                    <TextBlock Classes="eyebrow" Text="{Binding [settings.profile], Source={x:Static app:Loc.Instance}}"/>
                     <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
-                               Text="Make this wallet yours — a name, an avatar, a banner and a sidebar background. Pick your own image files; they're copied into the data folder and stay on this device."/>
-                    <TextBox Text="{Binding WalletName, Mode=TwoWay}" Watermark="Wallet name — e.g. Cold storage · Daily"
+                               Text="{Binding [settings.profileHint], Source={x:Static app:Loc.Instance}}"/>
+                    <TextBox Text="{Binding WalletName, Mode=TwoWay}" Watermark="{Binding [settings.walletNameHint], Source={x:Static app:Loc.Instance}}"
                              MaxWidth="360" HorizontalAlignment="Left"/>
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
                       <Border Width="58" Height="58" CornerRadius="29" ClipToBounds="True" Background="{DynamicResource UmCard}"
@@ -1239,10 +1240,10 @@
                         </Panel>
                       </Border>
                       <WrapPanel Grid.Column="1" VerticalAlignment="Center">
-                        <Button Classes="ghost" Content="Choose avatar…" Margin="0,0,8,8" Command="{Binding PickAvatarCommand}"/>
-                        <Button Classes="ghost" Content="Choose banner…" Margin="0,0,8,8" Command="{Binding PickBannerCommand}"/>
-                        <Button Classes="ghost" Content="Sidebar background…" Margin="0,0,8,8" Command="{Binding PickSidebarBgCommand}"/>
-                        <Button Classes="ghost" Content="Reset" Margin="0,0,8,8" Command="{Binding ClearProfileImagesCommand}"/>
+                        <Button Classes="ghost" Content="{Binding [settings.chooseAvatar], Source={x:Static app:Loc.Instance}}" Margin="0,0,8,8" Command="{Binding PickAvatarCommand}"/>
+                        <Button Classes="ghost" Content="{Binding [settings.chooseBanner], Source={x:Static app:Loc.Instance}}" Margin="0,0,8,8" Command="{Binding PickBannerCommand}"/>
+                        <Button Classes="ghost" Content="{Binding [settings.sidebarBg], Source={x:Static app:Loc.Instance}}" Margin="0,0,8,8" Command="{Binding PickSidebarBgCommand}"/>
+                        <Button Classes="ghost" Content="{Binding [settings.reset], Source={x:Static app:Loc.Instance}}" Margin="0,0,8,8" Command="{Binding ClearProfileImagesCommand}"/>
                       </WrapPanel>
                     </Grid>
                   </StackPanel>
@@ -1251,12 +1252,12 @@
                 <!-- Updates: manual, Tor-aware. Data is never touched by an update. -->
                 <Border Classes="card" IsVisible="{Binding IsTabAppearance}">
                   <StackPanel Spacing="10">
-                    <TextBlock Classes="eyebrow" Text="UPDATES"/>
+                    <TextBlock Classes="eyebrow" Text="{Binding [settings.updates], Source={x:Static app:Loc.Instance}}"/>
                     <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
-                               Text="Check GitHub for a newer version. The check is manual and goes through Tor when it's on — nothing is sent automatically. Your vault, keys and settings live in a separate data folder, so updating only replaces the app and never loses them."/>
+                               Text="{Binding [settings.updatesHint], Source={x:Static app:Loc.Instance}}"/>
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                      <Button Classes="primary" Content="Check for updates" Command="{Binding CheckForUpdatesCommand}"/>
-                      <Button Classes="ghost" Content="Copy download link" Command="{Binding CopyReleasesLinkCommand}"
+                      <Button Classes="primary" Content="{Binding [settings.checkUpdates], Source={x:Static app:Loc.Instance}}" Command="{Binding CheckForUpdatesCommand}"/>
+                      <Button Classes="ghost" Content="{Binding [settings.copyDownload], Source={x:Static app:Loc.Instance}}" Command="{Binding CopyReleasesLinkCommand}"
                               IsVisible="{Binding UpdateAvailable}"/>
                     </StackPanel>
                     <TextBlock Foreground="{DynamicResource UmAccent}" FontSize="12" TextWrapping="Wrap"
@@ -1266,28 +1267,28 @@
 
                 <Border Classes="card" IsVisible="{Binding IsTabSecurity}">
                   <StackPanel Spacing="10">
-                    <TextBlock Classes="eyebrow" Text="ENCRYPTION"/>
+                    <TextBlock Classes="eyebrow" Text="{Binding [settings.encryption], Source={x:Static app:Loc.Instance}}"/>
                     <Grid ColumnDefinitions="150,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="8">
-                      <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" Text="Vault"/>
+                      <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" Text="{Binding [settings.vault], Source={x:Static app:Loc.Instance}}"/>
                       <TextBlock Grid.Column="1" Classes="mono" FontSize="11.5" TextWrapping="Wrap"
                                  Text="{Binding VaultCryptoLabel}"/>
-                      <TextBlock Grid.Row="1" Foreground="{DynamicResource UmTextDim}" FontSize="12" Text="Seed"/>
+                      <TextBlock Grid.Row="1" Foreground="{DynamicResource UmTextDim}" FontSize="12" Text="{Binding [settings.seed], Source={x:Static app:Loc.Instance}}"/>
                       <TextBlock Grid.Row="1" Grid.Column="1" Classes="mono" FontSize="11.5" TextWrapping="Wrap"
                                  Text="{Binding SeedSchemeLabel}"/>
-                      <TextBlock Grid.Row="2" Foreground="{DynamicResource UmTextDim}" FontSize="12" Text="Vault file"/>
+                      <TextBlock Grid.Row="2" Foreground="{DynamicResource UmTextDim}" FontSize="12" Text="{Binding [settings.vaultFile], Source={x:Static app:Loc.Instance}}"/>
                       <TextBlock Grid.Row="2" Grid.Column="1" Classes="mono" FontSize="11.5" TextWrapping="Wrap"
                                  Foreground="{DynamicResource UmTextDim}" Text="{Binding VaultLocation}"/>
                     </Grid>
-                    <Button Classes="ghost" Content="Open vault folder" HorizontalAlignment="Left"
+                    <Button Classes="ghost" Content="{Binding [settings.openVaultFolder], Source={x:Static app:Loc.Instance}}" HorizontalAlignment="Left"
                             Command="{Binding OpenVaultFolderCommand}"/>
                   </StackPanel>
                 </Border>
 
                 <Border Classes="card" IsVisible="{Binding IsTabSecurity}">
                   <StackPanel Spacing="10">
-                    <TextBlock Classes="eyebrow" Text="AUTO-LOCK"/>
+                    <TextBlock Classes="eyebrow" Text="{Binding [settings.autolock], Source={x:Static app:Loc.Instance}}"/>
                     <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
-                               Text="Lock the vault automatically after a spell of inactivity: the decrypted seed is wiped from memory and your vault password is needed to unlock again. Pick the idle time, or turn it off entirely."/>
+                               Text="{Binding [settings.autolockHint], Source={x:Static app:Loc.Instance}}"/>
                     <ComboBox ItemsSource="{Binding AutoLockOptions}" SelectedValue="{Binding AutoLockChoice, Mode=TwoWay}"
                               MinWidth="220" HorizontalAlignment="Left"/>
                     <TextBlock Classes="mono" FontSize="11" Foreground="{DynamicResource UmTextMuted}" Text="{Binding AutoLockLabel}"/>
@@ -1297,56 +1298,56 @@
                 <!-- Local cybersecurity posture — everything that protects the wallet on this machine. -->
                 <Border Classes="card" IsVisible="{Binding IsTabSecurity}">
                   <StackPanel Spacing="10">
-                    <TextBlock Classes="eyebrow" Text="CYBERSECURITY · ON THIS PC"/>
+                    <TextBlock Classes="eyebrow" Text="{Binding [settings.cyber], Source={x:Static app:Loc.Instance}}"/>
                     <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
-                               Text="Everything that keeps this wallet safe locally. No server is involved in any of it — the whole security model lives on your machine."/>
+                               Text="{Binding [settings.cyberHint], Source={x:Static app:Loc.Instance}}"/>
                     <!-- Bounded grid (Auto dot, * text) so long lines wrap inside the card instead
                          of overflowing off the right edge. -->
                     <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8">
                       <Ellipse Grid.Row="0" Width="7" Height="7" Fill="{DynamicResource UmPos}" VerticalAlignment="Top" Margin="0,5,9,0"/>
                       <TextBlock Grid.Row="0" Grid.Column="1" FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource UmTextSoft}"
-                                 Text="Seed generated on-device from the OS cryptographic RNG — it is never transmitted anywhere."/>
+                                 Text="{Binding [settings.cyber1], Source={x:Static app:Loc.Instance}}"/>
                       <Ellipse Grid.Row="1" Width="7" Height="7" Fill="{DynamicResource UmPos}" VerticalAlignment="Top" Margin="0,5,9,0"/>
                       <TextBlock Grid.Row="1" Grid.Column="1" FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource UmTextSoft}"
-                                 Text="Vault at rest: Argon2id (memory-hard, m=64 MiB) derives the key, then AES-256-GCM authenticated encryption — tampering is detected, brute-forcing is throttled."/>
+                                 Text="{Binding [settings.cyber2], Source={x:Static app:Loc.Instance}}"/>
                       <Ellipse Grid.Row="2" Width="7" Height="7" Fill="{DynamicResource UmPos}" VerticalAlignment="Top" Margin="0,5,9,0"/>
                       <TextBlock Grid.Row="2" Grid.Column="1" FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource UmTextSoft}"
-                                 Text="Private keys are derived only for the moment of signing and then wiped from memory (CryptographicOperations.ZeroMemory); the seed is wiped on lock."/>
+                                 Text="{Binding [settings.cyber3], Source={x:Static app:Loc.Instance}}"/>
                       <Ellipse Grid.Row="3" Width="7" Height="7" Fill="{DynamicResource UmPos}" VerticalAlignment="Top" Margin="0,5,9,0"/>
                       <TextBlock Grid.Row="3" Grid.Column="1" FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource UmTextSoft}"
-                                 Text="Screenshot / screen-share guard: while the recovery phrase or Monero keys are on screen, the window renders black to capture software."/>
+                                 Text="{Binding [settings.cyber4], Source={x:Static app:Loc.Instance}}"/>
                       <Ellipse Grid.Row="4" Width="7" Height="7" Fill="{DynamicResource UmPos}" VerticalAlignment="Top" Margin="0,5,9,0"/>
                       <TextBlock Grid.Row="4" Grid.Column="1" FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource UmTextSoft}"
-                                 Text="Signing uses the chains' reference crypto (NBitcoin, Nethereum, BouncyCastle ed25519); every derivation and the TON transfer are pinned by unit tests to official vectors."/>
+                                 Text="{Binding [settings.cyber5], Source={x:Static app:Loc.Instance}}"/>
                       <Ellipse Grid.Row="5" Width="7" Height="7" Fill="{DynamicResource UmPos}" VerticalAlignment="Top" Margin="0,5,9,0"/>
                       <TextBlock Grid.Row="5" Grid.Column="1" FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource UmTextSoft}"
-                                 Text="No account, no email, no telemetry, no analytics. The app cannot freeze, seize or recover your funds — and neither can anyone else."/>
+                                 Text="{Binding [settings.cyber6], Source={x:Static app:Loc.Instance}}"/>
                     </Grid>
                   </StackPanel>
                 </Border>
 
                 <Border Classes="card" IsVisible="{Binding IsTabPrivacy}">
                   <StackPanel Spacing="10">
-                    <TextBlock Classes="eyebrow" Text="PRIVACY &amp; NETWORK"/>
+                    <TextBlock Classes="eyebrow" Text="{Binding [settings.privacyNet], Source={x:Static app:Loc.Instance}}"/>
                     <StackPanel Orientation="Horizontal" Spacing="8">
                       <Ellipse Width="7" Height="7" Fill="{DynamicResource UmPos}" VerticalAlignment="Center"/>
                       <TextBlock FontSize="12" Foreground="{DynamicResource UmTextSoft}"
-                                 Text="No account, no email, no telemetry, no analytics SDK."/>
+                                 Text="{Binding [settings.priv1], Source={x:Static app:Loc.Instance}}"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Spacing="8">
                       <Ellipse Width="7" Height="7" Fill="{DynamicResource UmPos}" VerticalAlignment="Center"/>
                       <TextBlock FontSize="12" Foreground="{DynamicResource UmTextSoft}"
-                                 Text="Seed and private keys never leave this PC — there is no server-side copy."/>
+                                 Text="{Binding [settings.priv2], Source={x:Static app:Loc.Instance}}"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Spacing="8">
                       <Ellipse Width="7" Height="7" Fill="#E7CA83" VerticalAlignment="Center"/>
                       <TextBlock FontSize="12" Foreground="{DynamicResource UmTextSoft}" TextWrapping="Wrap" MaxWidth="600"
-                                 Text="Balance and price lookups use public explorers. By default they see your IP; turn on Tor below to route that traffic through your local Tor so they see a Tor exit instead."/>
+                                 Text="{Binding [settings.priv3], Source={x:Static app:Loc.Instance}}"/>
                     </StackPanel>
-                    <TextBlock Classes="eyebrow" Text="ENDPOINTS" Margin="0,4,0,0"/>
+                    <TextBlock Classes="eyebrow" Text="{Binding [settings.endpoints], Source={x:Static app:Loc.Instance}}" Margin="0,4,0,0"/>
                     <TextBlock Classes="mono" FontSize="11" Foreground="{DynamicResource UmTextDim}" TextWrapping="Wrap"
                                Text="{Binding NetworkLabel}"/>
-                    <TextBlock Classes="eyebrow" Text="CHAINS" Margin="0,4,0,0"/>
+                    <TextBlock Classes="eyebrow" Text="{Binding [settings.chains], Source={x:Static app:Loc.Instance}}" Margin="0,4,0,0"/>
                     <TextBlock FontSize="11.5" Foreground="{DynamicResource UmPos}"
                                Text="{Binding SupportedChainsLabel, StringFormat='Address + balance: {0}'}"/>
                     <TextBlock FontSize="11.5" Foreground="{DynamicResource UmTextDim}"
@@ -1357,22 +1358,26 @@
                 <!-- Tor -->
                 <Border Classes="card" IsVisible="{Binding IsTabPrivacy}">
                   <StackPanel Spacing="10">
-                    <TextBlock Classes="eyebrow" Text="TOR · ANONYMOUS TRAFFIC (BUILT IN)"/>
+                    <TextBlock Classes="eyebrow" Text="{Binding [settings.tor], Source={x:Static app:Loc.Instance}}"/>
                     <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
-                               Text="Tor ships inside Umbrella — nothing to install. Switch it on and the wallet starts its own Tor client, then routes every balance, price and broadcast request through it, so explorers and RPC nodes see a Tor exit instead of your IP. It runs on a private port (9250) so a Tor Browser you already use is untouched, and it shuts down with the wallet."/>
+                               Text="{Binding [settings.torHint], Source={x:Static app:Loc.Instance}}"/>
                     <StackPanel Orientation="Horizontal" Spacing="12">
-                      <ToggleSwitch IsChecked="{Binding TorEnabled}" OnContent="Tor on" OffContent="Tor off"
+                      <ToggleSwitch IsChecked="{Binding TorEnabled}"
+                                    OnContent="{Binding [settings.torOn], Source={x:Static app:Loc.Instance}}"
+                                    OffContent="{Binding [settings.torOff], Source={x:Static app:Loc.Instance}}"
                                     Command="{Binding ApplyTorCommand}"/>
                     </StackPanel>
                     <TextBlock FontSize="12" Text="{Binding TorStatus}" Foreground="{Binding TorStatusColor}" TextWrapping="Wrap"/>
 
                     <Border Background="#22FFFFFF" Height="1" Margin="0,10,0,4"/>
 
-                    <TextBlock Classes="eyebrow" Text="MONERO WALLET SERVICE (BUILT IN)"/>
+                    <TextBlock Classes="eyebrow" Text="{Binding [settings.moneroSvc], Source={x:Static app:Loc.Instance}}"/>
                     <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
-                               Text="Monero's own wallet daemon ships inside Umbrella. Switch it on and XMR becomes a full coin — real balance and real sending — because Monero amounts are hidden on-chain and can only be read by scanning with your view key. Your keys stay on this PC; only the daemon sees them, and it goes through Tor when Tor is on. The first scan takes a few minutes."/>
+                               Text="{Binding [settings.moneroSvcHint], Source={x:Static app:Loc.Instance}}"/>
                     <StackPanel Orientation="Horizontal" Spacing="12">
-                      <ToggleSwitch IsChecked="{Binding MoneroEnabled}" OnContent="Monero on" OffContent="Monero off"
+                      <ToggleSwitch IsChecked="{Binding MoneroEnabled}"
+                                    OnContent="{Binding [settings.moneroOn], Source={x:Static app:Loc.Instance}}"
+                                    OffContent="{Binding [settings.moneroOff], Source={x:Static app:Loc.Instance}}"
                                     Command="{Binding EnableMoneroCommand}"/>
                     </StackPanel>
                     <TextBlock FontSize="12" Text="{Binding MoneroStatus}" Foreground="{Binding MoneroStatusColor}" TextWrapping="Wrap"/>
@@ -1383,8 +1388,8 @@
                 <Border Classes="card" IsVisible="{Binding IsTabGuide}">
                   <StackPanel Spacing="10">
                     <Grid ColumnDefinitions="*,Auto">
-                      <TextBlock Classes="eyebrow" Text="DOCUMENTATION" VerticalAlignment="Center"/>
-                      <Button Grid.Column="1" Classes="ghost" Content="Open guide" Command="{Binding ToggleDocsCommand}"/>
+                      <TextBlock Classes="eyebrow" Text="{Binding [settings.documentation], Source={x:Static app:Loc.Instance}}" VerticalAlignment="Center"/>
+                      <Button Grid.Column="1" Classes="ghost" Content="{Binding [settings.openGuide], Source={x:Static app:Loc.Instance}}" Command="{Binding ToggleDocsCommand}"/>
                     </Grid>
                     <!-- Localised guide: driven by the VM's GuideSections, which follow the wallet's
                          language (Ukrainian translated in full; English base/fallback otherwise). -->
@@ -1404,12 +1409,12 @@
                 <!-- Backup file: a copy of the still-encrypted vault, never the plain seed. -->
                 <Border Classes="card" IsVisible="{Binding IsTabBackup}" BorderBrush="{DynamicResource UmAccent}">
                   <StackPanel Spacing="10">
-                    <TextBlock Classes="eyebrow" Text="BACKUP FILE"/>
+                    <TextBlock Classes="eyebrow" Text="{Binding [settings.backupFile], Source={x:Static app:Loc.Instance}}"/>
                     <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
-                               Text="Saves your vault, linked addresses and exchange keys to one file. It is exported exactly as encrypted — the file is worthless without your vault password, and for the same reason it can only be restored with that password. There is no recovery if you lose it."/>
+                               Text="{Binding [settings.backupHint], Source={x:Static app:Loc.Instance}}"/>
                     <StackPanel Orientation="Horizontal" Spacing="10">
-                      <Button Classes="primary" Content="Save backup…" Command="{Binding ExportBackupCommand}"/>
-                      <Button Classes="ghost" Content="Restore from backup…" Command="{Binding RestoreBackupCommand}"/>
+                      <Button Classes="primary" Content="{Binding [settings.saveBackup], Source={x:Static app:Loc.Instance}}" Command="{Binding ExportBackupCommand}"/>
+                      <Button Classes="ghost" Content="{Binding [settings.restoreBackup], Source={x:Static app:Loc.Instance}}" Command="{Binding RestoreBackupCommand}"/>
                     </StackPanel>
                     <TextBlock IsVisible="{Binding BackupStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                                Text="{Binding BackupStatus}" Foreground="{DynamicResource UmPos}" FontSize="12" TextWrapping="Wrap"/>
@@ -1418,17 +1423,17 @@
                       <TextBlock Text="{Binding BackupError}" Foreground="#E09A9A" TextWrapping="Wrap" FontSize="12"/>
                     </Border>
                     <TextBlock Foreground="{DynamicResource UmTextMuted}" FontSize="11" TextWrapping="Wrap"
-                               Text="Restoring replaces the wallet on this PC. The previous vault is kept beside it as a .replaced file rather than deleted, so a mistaken restore can be undone."/>
+                               Text="{Binding [settings.restoreNote], Source={x:Static app:Loc.Instance}}"/>
                   </StackPanel>
                 </Border>
 
                 <Border Classes="card" IsVisible="{Binding IsTabBackup}">
                   <StackPanel Spacing="10">
-                    <TextBlock Classes="eyebrow" Text="RECOVERY PHRASE"/>
+                    <TextBlock Classes="eyebrow" Text="{Binding [settings.recovery], Source={x:Static app:Loc.Instance}}"/>
                     <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
-                               Text="Enter your vault password to decrypt and show the recovery phrase. It stays hidden until the password is correct."/>
-                    <TextBox Text="{Binding SettingsPassword}" PasswordChar="●" Watermark="Vault password" MaxWidth="320" HorizontalAlignment="Left"/>
-                    <Button Classes="ghost" Content="Reveal recovery phrase" HorizontalAlignment="Left"
+                               Text="{Binding [settings.recoveryHint], Source={x:Static app:Loc.Instance}}"/>
+                    <TextBox Text="{Binding SettingsPassword}" PasswordChar="●" Watermark="{Binding [settings.vaultPassword], Source={x:Static app:Loc.Instance}}" MaxWidth="320" HorizontalAlignment="Left"/>
+                    <Button Classes="ghost" Content="{Binding [settings.revealPhrase], Source={x:Static app:Loc.Instance}}" HorizontalAlignment="Left"
                             IsEnabled="{Binding !IsBusy}" Command="{Binding RevealPhraseCommand}"/>
 
                     <Border IsVisible="{Binding IsSettingsPhraseVisible}" Background="{DynamicResource UmBg}"
@@ -1436,7 +1441,7 @@
                       <StackPanel Spacing="10">
                         <TextBlock Classes="mono" FontSize="14" LineHeight="26" TextWrapping="Wrap"
                                    Text="{Binding SettingsRevealedPhrase}"/>
-                        <Button Classes="ghost" Content="Hide phrase" HorizontalAlignment="Left"
+                        <Button Classes="ghost" Content="{Binding [settings.hidePhrase], Source={x:Static app:Loc.Instance}}" HorizontalAlignment="Left"
                                 Command="{Binding HideSettingsPhraseCommand}"/>
                       </StackPanel>
                     </Border>
@@ -1446,22 +1451,22 @@
                 <!-- Monero keys export -->
                 <Border Classes="card" IsVisible="{Binding IsTabBackup}">
                   <StackPanel Spacing="10">
-                    <TextBlock Classes="eyebrow" Text="MONERO · EXPORT KEYS"/>
+                    <TextBlock Classes="eyebrow" Text="{Binding [settings.moneroExport], Source={x:Static app:Loc.Instance}}"/>
                     <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
-                               Text="Umbrella derives a real Monero account and can receive to it, but Monero balances are hidden on-chain and cannot be read from a public explorer — and Umbrella does not build XMR transactions. To see the balance or spend, put these three values into Feather (or monero-wallet-cli) via &quot;Restore from keys&quot;. Enter your vault password above first."/>
-                    <Button Classes="ghost" Content="Reveal Monero keys" HorizontalAlignment="Left"
+                               Text="{Binding [settings.moneroExportHint], Source={x:Static app:Loc.Instance}}"/>
+                    <Button Classes="ghost" Content="{Binding [settings.revealMoneroKeys], Source={x:Static app:Loc.Instance}}" HorizontalAlignment="Left"
                             IsEnabled="{Binding !IsBusy}" Command="{Binding RevealMoneroKeysCommand}"/>
 
                     <Border IsVisible="{Binding IsMoneroKeysVisible}" Background="{DynamicResource UmBg}"
                             BorderBrush="#7A6230" BorderThickness="1" CornerRadius="10" Padding="16">
                       <StackPanel Spacing="10">
-                        <TextBlock Classes="eyebrow" Foreground="#E7CA83" Text="PRIMARY ADDRESS"/>
+                        <TextBlock Classes="eyebrow" Foreground="#E7CA83" Text="{Binding [settings.primaryAddress], Source={x:Static app:Loc.Instance}}"/>
                         <TextBlock Classes="mono" FontSize="11.5" TextWrapping="Wrap" Text="{Binding MoneroAddress}"/>
-                        <TextBlock Classes="eyebrow" Foreground="#E7CA83" Text="SECRET SPEND KEY  ·  treat like your seed"/>
+                        <TextBlock Classes="eyebrow" Foreground="#E7CA83" Text="{Binding [settings.spendKey], Source={x:Static app:Loc.Instance}}"/>
                         <TextBlock Classes="mono" FontSize="11.5" TextWrapping="Wrap" Text="{Binding MoneroSpendKey}"/>
-                        <TextBlock Classes="eyebrow" Foreground="#E7CA83" Text="SECRET VIEW KEY"/>
+                        <TextBlock Classes="eyebrow" Foreground="#E7CA83" Text="{Binding [settings.viewKey], Source={x:Static app:Loc.Instance}}"/>
                         <TextBlock Classes="mono" FontSize="11.5" TextWrapping="Wrap" Text="{Binding MoneroViewKey}"/>
-                        <Button Classes="ghost" Content="Hide keys" HorizontalAlignment="Left"
+                        <Button Classes="ghost" Content="{Binding [settings.hideKeys], Source={x:Static app:Loc.Instance}}" HorizontalAlignment="Left"
                                 Command="{Binding HideMoneroKeysCommand}"/>
                       </StackPanel>
                     </Border>
@@ -1470,28 +1475,28 @@
 
                 <Border Classes="card" BorderBrush="#7A3034" IsVisible="{Binding IsTabDanger}">
                   <StackPanel Spacing="10">
-                    <TextBlock Classes="eyebrow" Foreground="#E09A9A" Text="DANGER ZONE"/>
+                    <TextBlock Classes="eyebrow" Foreground="#E09A9A" Text="{Binding [settings.dangerZone], Source={x:Static app:Loc.Instance}}"/>
                     <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap"
-                               Text="This wipes EVERYTHING this wallet keeps on the PC — the encrypted seed, your settings and profile images, the watch-address list, saved exchange keys, every backup left aside, and the Monero wallet. Only the app itself and its bundled Tor/Monero binaries stay. Nothing is on a server, so your written 24-word phrase is the only way back."/>
+                               Text="{Binding [settings.dangerHint], Source={x:Static app:Loc.Instance}}"/>
                     <Border Background="#2A1618" BorderBrush="#7A3034" BorderThickness="1" CornerRadius="8" Padding="14,11">
                       <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="7">
                         <Ellipse Grid.Row="0" Width="7" Height="7" Fill="#E09A9A" VerticalAlignment="Top" Margin="0,5,9,0"/>
                         <TextBlock Grid.Row="0" Grid.Column="1" FontSize="12" Foreground="#E7C4C4" TextWrapping="Wrap"
-                                   Text="This is irreversible. There is no support desk and no server backup that can bring the wallet back."/>
+                                   Text="{Binding [settings.danger1], Source={x:Static app:Loc.Instance}}"/>
                         <Ellipse Grid.Row="1" Width="7" Height="7" Fill="#E09A9A" VerticalAlignment="Top" Margin="0,5,9,0"/>
                         <TextBlock Grid.Row="1" Grid.Column="1" FontSize="12" Foreground="#E7C4C4" TextWrapping="Wrap"
-                                   Text="Only your written 24-word recovery phrase can restore the funds — in this or any BIP39 wallet. Make sure you have it on paper first."/>
+                                   Text="{Binding [settings.danger2], Source={x:Static app:Loc.Instance}}"/>
                         <Ellipse Grid.Row="2" Width="7" Height="7" Fill="#E09A9A" VerticalAlignment="Top" Margin="0,5,9,0"/>
                         <TextBlock Grid.Row="2" Grid.Column="1" FontSize="12" Foreground="#E7C4C4" TextWrapping="Wrap"
-                                   Text="It also removes any encrypted backups left beside the vault by earlier restores. A backup file you exported and saved elsewhere is your only other copy."/>
+                                   Text="{Binding [settings.danger3], Source={x:Static app:Loc.Instance}}"/>
                       </Grid>
                     </Border>
                     <TextBlock Foreground="{DynamicResource UmTextMuted}" FontSize="12" TextWrapping="Wrap"
-                               Text="Type DELETE to confirm. Consider exporting an encrypted backup (Backup tab) or revealing your phrase (Backup tab) before you do this."/>
+                               Text="{Binding [settings.dangerConfirmHint], Source={x:Static app:Loc.Instance}}"/>
                     <StackPanel Orientation="Horizontal" Spacing="8">
                       <TextBox Text="{Binding DeleteConfirmation}" Watermark="{Binding DeleteKeyword}" Width="160"/>
-                      <Button Classes="danger" Content="Delete vault" Command="{Binding DeleteVaultCommand}"/>
-                      <Button Classes="ghost" Content="Lock now" Command="{Binding LockCommand}"/>
+                      <Button Classes="danger" Content="{Binding [settings.deleteVault], Source={x:Static app:Loc.Instance}}" Command="{Binding DeleteVaultCommand}"/>
+                      <Button Classes="ghost" Content="{Binding [settings.lockNow], Source={x:Static app:Loc.Instance}}" Command="{Binding LockCommand}"/>
                     </StackPanel>
                     <Border IsVisible="{Binding HasFormError}" Background="#2A1618" BorderBrush="#7A3034"
                             BorderThickness="1" CornerRadius="6" Padding="12,9">
