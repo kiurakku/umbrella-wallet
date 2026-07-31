@@ -1,0 +1,80 @@
+name: Security
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  schedule:
+    - cron: "27 4 * * 1" # Mondays 04:27 UTC
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # Catch committed secrets (seed phrases, API keys, private keys) across the whole history.
+  gitleaks:
+    name: gitleaks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history so a secret buried in an old commit is still caught
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Block PRs that would introduce a dependency with a known vulnerability or a bad licence.
+  dependency-review:
+    name: dependency-review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+
+  # Enforced gate on the fund-critical desktop wallet: fail the build if any NuGet
+  # package (direct or transitive) has a known advisory. `dotnet list` always exits 0,
+  # so we fail explicitly when an advisory line is present.
+  dotnet-vulnerable:
+    name: dotnet-vulnerable
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - run: dotnet restore desktop/Umbrella.Wallet.sln
+      - name: Fail on any vulnerable package
+        run: |
+          set -euo pipefail
+          report="$(dotnet list desktop/Umbrella.Wallet.sln package --vulnerable --include-transitive)"
+          echo "$report"
+          if echo "$report" | grep -qE 'https://github.com/advisories/'; then
+            echo "::error::Vulnerable NuGet package(s) detected — see the advisory links above."
+            exit 1
+          fi
+          echo "No vulnerable NuGet packages."
+
+  # Enforced gate on the web + backend: fail on any high/critical npm advisory.
+  npm-audit:
+    name: npm-audit
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        dir: [".", "backend"]
+    defaults:
+      run:
+        working-directory: ${{ matrix.dir }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm audit --audit-level=high

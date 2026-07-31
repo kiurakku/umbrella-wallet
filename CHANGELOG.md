@@ -4,6 +4,24 @@ All notable releases of **Umbrella Wallet**.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versioning follows [SemVer](https://semver.org/).
 
+## [2.2.3] — 2026-07-31
+
+### Security (desktop — fund-critical)
+- **TON address checksum now verified.** `ParseFriendlyAddress` decoded the 36-byte address but
+  ignored its trailing CRC-16 — a mistyped recipient that still decoded with a valid tag would have
+  been accepted and funds sent to the wrong account. The checksum is now enforced (mistyped/corrupted
+  addresses are rejected before a send). Regression-tested.
+- **BoC parser hardened.** `TonCell.FromBoc` now bounds-checks every read and validates all counts and
+  ref/root indices, so malformed or truncated cell bytes fail with a clean error instead of an
+  IndexOutOfRange / overflow / out-of-memory crash. Covered by a new deterministic fuzz harness
+  (120k random + mutated inputs across the address, BoC and base58 parsers).
+
+### Security (tooling — whole repo)
+- Fixed a high-severity web dependency advisory (postcss path-traversal, GHSA-r28c-9q8g-f849) and
+  pinned patched versions of two vulnerable test-only .NET transitives.
+- Added CI security gates: CodeQL SAST (C# + JS/TS), Dependabot (npm + NuGet + Actions), secret
+  scanning (gitleaks), PR dependency review, and enforced npm-audit / NuGet-vulnerable gates.
+
 ## [2.2.2] — 2026-07-31
 
 ### Desktop
