@@ -1,8 +1,11 @@
 {
   "name": "umbrella-wallet-backend",
-  "version": "2.2.2",
+  "version": "2.3.0",
     "license": "SEE LICENSE IN LICENSE",
   "private": true,
+  "overrides": {
+    "brace-expansion": "^5.0.9"
+  },
   "scripts": {
     "build": "nest build",
     "start": "nest start",
