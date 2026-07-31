@@ -17,7 +17,7 @@ No account. No email. No phone number. No KYC. Just a wallet — the way it was 
 
 <br/>
 
-![Version](https://img.shields.io/badge/version-2.2.2-4B3F86)
+![Version](https://img.shields.io/badge/version-2.4.0-4B3F86)
 ![Windows](https://img.shields.io/badge/Windows-ready-4B3F86?logo=windows&logoColor=white)
 ![Linux](https://img.shields.io/badge/Linux-ready-6E5FB8?logo=linux&logoColor=white)
 ![Desktop](https://img.shields.io/badge/desktop-Avalonia%20·%20.NET%208-8A5FD6)
@@ -37,7 +37,7 @@ No account. No email. No phone number. No KYC. Just a wallet — the way it was 
 
 <br/>
 
-**[⬇️ Installer (v2.3.0)](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-Setup-2.3.0.exe)** · **[Portable zip](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-2.3.0-win-x64-portable.zip)** · [All releases](https://github.com/kiurakku/umbrella-wallet/releases)
+**[⬇️ Installer (v2.4.0)](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-Setup-2.4.0.exe)** · **[Portable zip](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-2.4.0-win-x64-portable.zip)** · [All releases](https://github.com/kiurakku/umbrella-wallet/releases)
 
 <br/>
 
@@ -106,7 +106,7 @@ Umbrella flips that model:
 | 🔺 TRON (TRX) | ✅ | ✅ | |
 | 🐕 Dogecoin (DOGE) | ✅ | ➖ | receive + balance |
 | 💎 **TON** | ✅ | ✅ | wallet v4R2, signed on device · pinned to `@ton` |
-| 🔵 Cardano (ADA) | ✅ | ➖ | receive + balance |
+| 🔵 Cardano (ADA) | ✅ | ✅ | on-device signing, Koios broadcast |
 
 ## 🎨 Make it yours
 
@@ -119,9 +119,9 @@ Umbrella flips that model:
 
 | Platform | Package | Notes |
 |----------|---------|-------|
-| **Windows** | [UmbrellaWallet-Setup-2.3.0.exe](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-Setup-2.3.0.exe) | Installer — choose install folder |
-| **Windows** | [`UmbrellaWallet-2.3.0-win-x64-portable.zip`](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-2.3.0-win-x64-portable.zip) | Portable — unzip and run `Umbrella.Wallet.App.exe` |
-| **Linux** | [`UmbrellaWallet-2.3.0-linux-x64.tar.gz`](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-2.3.0-linux-x64.tar.gz) | Unpack, run `./Umbrella.Wallet.App` — no install required |
+| **Windows** | [UmbrellaWallet-Setup-2.4.0.exe](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-Setup-2.4.0.exe) | Installer — choose install folder |
+| **Windows** | [`UmbrellaWallet-2.4.0-win-x64-portable.zip`](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-2.4.0-win-x64-portable.zip) | Portable — unzip and run `Umbrella.Wallet.App.exe` |
+| **Linux** | [`UmbrellaWallet-2.4.0-linux-x64.tar.gz`](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-2.4.0-linux-x64.tar.gz) | Unpack, run `./Umbrella.Wallet.App` — no install required |
 
 ## 🚀 Get started
 
@@ -160,7 +160,6 @@ No — it's inside the app. One switch in <i>Settings → Privacy & Tor</i>, and
 
 ## 🗺️ Roadmap
 
-- 🔵 **Cardano sending** — next chain after TON
 - 🐕 Dogecoin sending
 - 📱 More platforms
 - 🔔 Price alerts
@@ -233,6 +232,7 @@ Questions and bug reports are welcome as GitHub issues — best-effort support, 
 **Free to use. Not free to take.** See [LICENSE](LICENSE) for full terms.
 
 ---
+
 
 
 
