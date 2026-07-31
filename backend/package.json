@@ -58,7 +58,7 @@
     "@types/express": "^5.0.0",
     "@types/node": "^22.16.5",
     "@types/passport-jwt": "^4.0.1",
-    "prisma": "^6.5.0",
+    "prisma": "^7.9.1",
     "tsx": "^4.19.3",
     "typescript": "^5.8.3"
   }
