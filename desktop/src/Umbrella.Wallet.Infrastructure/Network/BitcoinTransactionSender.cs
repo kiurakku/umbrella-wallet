@@ -18,7 +18,10 @@ public sealed record BtcSendQuote(
     int InputCount,
     string Explorer,
     string? DevFeeAddress = null,
-    long DevFeeSat = 0);
+    long DevFeeSat = 0,
+    // Optional OP_RETURN data (<=80 bytes) — carries a THORChain swap memo, without which a swap
+    // deposit would be seen as a plain transfer and the funds lost.
+    string? Memo = null);
 
 /// <summary>
 /// Real BTC / LTC sending over Esplora-style public explorers. UTXOs and fee rates are read
@@ -57,8 +60,14 @@ public sealed class BitcoinTransactionSender
         decimal amount,
         string? devFeeAddress = null,
         decimal devFeeAmount = 0m,
+        string? memo = null,
         CancellationToken ct = default)
     {
+        // OP_RETURN carries at most 80 bytes on the relay network; refuse rather than build a
+        // transaction that nodes will drop (which would look "sent" but never confirm).
+        if (!string.IsNullOrEmpty(memo) && System.Text.Encoding.ASCII.GetByteCount(memo) > 80)
+            return (null, "Swap memo is too long for an OP_RETURN (max 80 bytes).");
+
         NBitcoin.Network network;
         string explorer;
         try
@@ -107,6 +116,8 @@ public sealed class BitcoinTransactionSender
 
         var feeRate = await FetchFeeRateAsync(explorer, ct);
         var outputs = devFeeSat > 0 ? 3 : 2; // recipient, (dev fee), change
+        // An OP_RETURN adds one more (zero-value) output: ~11 vB overhead plus the memo bytes.
+        var opReturnVsize = string.IsNullOrEmpty(memo) ? 0 : System.Text.Encoding.ASCII.GetByteCount(memo) + 11;
 
         // Select inputs largest-first until the amount plus dev fee plus the (input-count
         // dependent) network fee is met.
@@ -119,7 +130,7 @@ public sealed class BitcoinTransactionSender
             selected.Add(utxo);
             total += utxo.ValueSat;
             // P2WPKH: ~68 vB per input, 31 vB per output, ~11 vB overhead.
-            var vsize = selected.Count * 68 + outputs * 31 + 11;
+            var vsize = selected.Count * 68 + outputs * 31 + 11 + opReturnVsize;
             fee = (long)Math.Ceiling(vsize * feeRate);
             if (total >= amountSat + devFeeSat + fee) break;
         }
@@ -133,7 +144,8 @@ public sealed class BitcoinTransactionSender
 
         return (new BtcSendQuote(
             symbol.ToUpperInvariant(), fromAddress, toAddress, amount, amountSat,
-            fee, fee / 100_000_000m, selected.Count, explorer, devFee, devFeeSat), null);
+            fee, fee / 100_000_000m, selected.Count, explorer, devFee, devFeeSat,
+            string.IsNullOrEmpty(memo) ? null : memo), null);
     }
 
     /// <summary>Builds, signs and broadcasts. The key is supplied by the caller and zeroed there.</summary>
@@ -183,6 +195,15 @@ public sealed class BitcoinTransactionSender
             if (quote.DevFeeSat > 0 && !string.IsNullOrWhiteSpace(quote.DevFeeAddress))
             {
                 builder.Send(BitcoinAddress.Create(quote.DevFeeAddress, network), Money.Satoshis(quote.DevFeeSat));
+            }
+
+            // OP_RETURN swap memo: a zero-value output that tells THORChain what to do with the deposit.
+            // Guarded to <=80 bytes at quote time; re-checked here so a hand-built quote can't overflow it.
+            if (!string.IsNullOrWhiteSpace(quote.Memo))
+            {
+                var memoBytes = Encoding.ASCII.GetBytes(quote.Memo);
+                if (memoBytes.Length > 80) return (false, null, "Swap memo exceeds the 80-byte OP_RETURN limit.");
+                builder.Send(TxNullDataTemplate.Instance.GenerateScriptPubKey(memoBytes), Money.Zero);
             }
 
             builder.SendFees(Money.Satoshis(quote.FeeSat));
