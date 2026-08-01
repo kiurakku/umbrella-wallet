@@ -11,9 +11,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versioning follo
   Ethereum (via Koios-style public APIs / Blockscout, no keys) appears in Holdings — reward tokens,
   other stablecoins, any token — which is what most "my balance is missing" reports actually were.
   Unpriced tokens show their real amount at $0 rather than an invented price.
+- **More coins.** Native BNB (BSC), MATIC (Polygon) and AVAX (Avalanche C-chain) at the same 0x
+  address as Ethereum, so a MetaMask-imported wallet shows those too.
 - **Portfolio-overview ring breakdown.** The right-rail ring now shows what the balance is made of:
   a proportional bar plus a per-asset legend (symbol · share · value), top assets with the rest
   folded into "Other".
+- **Hide-balance now hides everything.** Masking the balance blanks every money figure — the overview
+  ring, the breakdown values and each Holdings row's amount + value — not just the top total (the
+  public market price stays visible).
+- **NFTs** — ERC-721 / ERC-1155 collections at your Ethereum address are listed (names + counts;
+  no images are fetched, so it never leaks your IP).
+- **Staking** — the stakeable coins you hold keys for, with each network's typical (approximate)
+  reward and how staking is done.
 - The Windows app now ships as **`Umbrella.exe`**.
 
 ### Coins — Cardano (ADA) sending

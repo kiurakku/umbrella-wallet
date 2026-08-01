@@ -486,6 +486,22 @@ public partial class MainViewModel : ViewModelBase
     public ObservableCollection<PortfolioSlice> PortfolioBreakdown { get; } = [];
     public bool HasBreakdown => PortfolioBreakdown.Count > 0;
 
+    /// <summary>NFT collections held at the wallet's Ethereum address (names + counts, no images).</summary>
+    public ObservableCollection<NftHolding> Nfts { get; } = [];
+    public bool HasNfts => Nfts.Count > 0;
+
+    /// <summary>Stakeable coins the wallet holds keys for, with the network's typical (approximate)
+    /// reward and how staking is done. Informational — not live positions.</summary>
+    public IReadOnlyList<StakingOption> StakingOptions { get; } =
+    [
+        new("ETH", "Ethereum", "~3–4%", "Beacon-chain staking (32 ETH solo) or a liquid-staking pool"),
+        new("SOL", "Solana", "~6–7%", "Delegate to a validator — native, unbonds in a few days"),
+        new("ADA", "Cardano", "~3%", "Delegate to a stake pool — native, no lock-up, keys stay yours"),
+        new("TON", "Toncoin", "~3–4%", "Stake through a nominator pool"),
+        new("TRX", "TRON", "~4–5%", "Freeze TRX for resources and vote for a Super Representative"),
+        new("MATIC", "Polygon", "~4%", "Delegate to a validator on the Polygon staking contract"),
+    ];
+
     /// <summary>Drives the Activity empty-state; raised whenever the log changes.</summary>
     public bool HasActivity => Activity.Count > 0;
 
@@ -1590,6 +1606,7 @@ public partial class MainViewModel : ViewModelBase
             {
                 await AddEthTokenRowsAsync(ethAccount.Address, "Ready", prices, ct);
                 await AddEvmSideRowsAsync(ethAccount.Address, prices, ct);
+                await RefreshNftsAsync(ethAccount.Address, ct);
             }
 
             // Watch-only
@@ -1668,6 +1685,15 @@ public partial class MainViewModel : ViewModelBase
         IReadOnlyDictionary<string, (decimal Usd, decimal Change24h)> prices, CancellationToken ct) =>
         AddTokenRows(await _balances.GetEthTokensAsync(address, ct),
             address, status, prices, marker: "ERC20 on Ethereum", chain: "Ethereum", suffix: "ERC20");
+
+    /// <summary>Refreshes the NFT list from the wallet's Ethereum address (names + counts only).</summary>
+    private async Task RefreshNftsAsync(string address, CancellationToken ct)
+    {
+        var nfts = await _balances.GetEthNftsAsync(address, ct);
+        Nfts.Clear();
+        foreach (var n in nfts) Nfts.Add(n);
+        OnPropertyChanged(nameof(HasNfts));
+    }
 
     /// <summary>Adds Holdings rows for BNB / MATIC / AVAX held at our Ethereum (0x) address.</summary>
     private async Task AddEvmSideRowsAsync(
@@ -2984,6 +3010,9 @@ public sealed record PortfolioSlice(string Symbol, double Percent, double Value,
     /// <summary>Segment width for a fixed 232 px stacked bar (min 3 px so a tiny slice stays visible).</summary>
     public double BarWidth => System.Math.Max(3, Percent / 100.0 * 232.0);
 }
+
+/// <summary>A stakeable coin: symbol, name, typical (approximate) reward and how staking is done.</summary>
+public sealed record StakingOption(string Symbol, string Name, string Apr, string Method);
 
 public sealed record WalletAccountViewModel(
     string Symbol,

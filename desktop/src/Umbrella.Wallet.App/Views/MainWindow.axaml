@@ -862,42 +862,84 @@
                 </ItemsControl>
               </StackPanel>
 
-              <!-- NFTs — designed section, feature not built yet (honest empty state). -->
+              <!-- NFTs — real: ERC-721/1155 collections at the Ethereum address (names + counts, no images). -->
               <StackPanel Classes="page" IsVisible="{Binding IsNfts}" Spacing="16">
                 <StackPanel Orientation="Horizontal" Spacing="11" VerticalAlignment="Center">
                   <Border Width="4" Height="24" CornerRadius="2" Background="{DynamicResource UmAccentBright}"/>
                   <TextBlock Classes="serif" FontSize="26" Text="NFTs" VerticalAlignment="Center"/>
                 </StackPanel>
-                <Border Classes="hairline" Padding="40" MinHeight="320">
+                <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12.5" MaxWidth="560" TextWrapping="Wrap"
+                           Text="NFT collections (ERC-721 / ERC-1155) held at your Ethereum address. Only names and counts are read — no images are fetched, so viewing your NFTs never reveals your IP."/>
+
+                <ItemsControl ItemsSource="{Binding Nfts}" IsVisible="{Binding HasNfts}" x:CompileBindings="False">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Border Classes="card" Margin="0,0,0,10" Padding="16,12">
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                          <Border Grid.Column="0" Width="42" Height="42" CornerRadius="11" Background="{DynamicResource UmAccentWash}" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Symbol}" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource UmAccentBright}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="36"/>
+                          </Border>
+                          <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2" MinWidth="0">
+                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                            <TextBlock FontSize="11" Foreground="{DynamicResource UmTextDim}">
+                              <Run Text="{Binding Standard}"/><Run Text=" · "/><Run Text="{Binding Network}"/>
+                            </TextBlock>
+                          </StackPanel>
+                          <TextBlock Grid.Column="2" VerticalAlignment="Center" FontWeight="SemiBold" FontSize="15"
+                                     Foreground="{DynamicResource UmAccentBright}">
+                            <Run Text="×"/><Run Text="{Binding Count}"/>
+                          </TextBlock>
+                        </Grid>
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Border Classes="hairline" Padding="40" MinHeight="220" IsVisible="{Binding !HasNfts}">
                   <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="12">
                     <Path Classes="tileIcon" Width="46" Height="46" Data="M4 16 L9 11 L13 15 L20 8 M4 5 H20 V19 H4 Z"/>
-                    <Border Background="{DynamicResource UmAccentWash}" CornerRadius="20" Padding="12,4" HorizontalAlignment="Center">
-                      <TextBlock Classes="eyebrow" Foreground="{DynamicResource UmAccentBright}" Text="IN DEVELOPMENT"/>
-                    </Border>
-                    <TextBlock Classes="serif" FontSize="20" Text="Your NFTs will live here" HorizontalAlignment="Center"/>
+                    <TextBlock Classes="serif" FontSize="20" Text="No NFTs found" HorizontalAlignment="Center"/>
                     <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12.5" MaxWidth="420" TextAlignment="Center" TextWrapping="Wrap"
-                               Text="NFT collections across your chains — viewing and sending — are in development. Your keys already cover these networks, so there'll be nothing new to set up when it lands."/>
+                               Text="No ERC-721 or ERC-1155 tokens at your Ethereum address yet. Unlock and let balances sync — anything you hold shows up here automatically."/>
                   </StackPanel>
                 </Border>
               </StackPanel>
 
-              <!-- Staking — designed section, feature not built yet (honest empty state). -->
+              <!-- Staking — stakeable coins the wallet holds keys for, with typical (approximate) rewards. -->
               <StackPanel Classes="page" IsVisible="{Binding IsStaking}" Spacing="16">
                 <StackPanel Orientation="Horizontal" Spacing="11" VerticalAlignment="Center">
                   <Border Width="4" Height="24" CornerRadius="2" Background="{DynamicResource UmAccentBright}"/>
                   <TextBlock Classes="serif" FontSize="26" Text="Staking" VerticalAlignment="Center"/>
                 </StackPanel>
-                <Border Classes="hairline" Padding="40" MinHeight="320">
-                  <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="12">
-                    <Path Classes="tileIcon" Width="46" Height="46" Data="M12 3 L20 7 V13 C20 17 16 20 12 21 C8 20 4 17 4 13 V7 Z M9 12 L11 14 L15 10"/>
-                    <Border Background="{DynamicResource UmAccentWash}" CornerRadius="20" Padding="12,4" HorizontalAlignment="Center">
-                      <TextBlock Classes="eyebrow" Foreground="{DynamicResource UmAccentBright}" Text="IN DEVELOPMENT"/>
-                    </Border>
-                    <TextBlock Classes="serif" FontSize="20" Text="Staking is on the way" HorizontalAlignment="Center"/>
-                    <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12.5" MaxWidth="420" TextAlignment="Center" TextWrapping="Wrap"
-                               Text="Stake ETH, SOL, ADA and TON straight from the wallet and track rewards here. Non-custodial — you keep the keys; we never take your assets. In development."/>
-                  </StackPanel>
-                </Border>
+                <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12.5" MaxWidth="600" TextWrapping="Wrap"
+                           Text="Coins you can stake with the keys already in this wallet. The rates are typical network rewards (approximate, not live positions) — staking is non-custodial and happens on each coin's own network; you always keep your keys."/>
+
+                <ItemsControl ItemsSource="{Binding StakingOptions}" x:CompileBindings="False">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Border Classes="card" Margin="0,0,0,10" Padding="16,14">
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                          <Border Grid.Column="0" Width="42" Height="42" CornerRadius="21" Background="{DynamicResource UmAccentWash}" VerticalAlignment="Top">
+                            <TextBlock Text="{Binding Symbol}" FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource UmAccentBright}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                          </Border>
+                          <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="3" MinWidth="0">
+                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding Method}" FontSize="11.5" Foreground="{DynamicResource UmTextDim}" TextWrapping="Wrap"/>
+                          </StackPanel>
+                          <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Apr}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource UmPos}" HorizontalAlignment="Right"/>
+                            <TextBlock Text="est. / year" FontSize="10" Foreground="{DynamicResource UmTextMuted}" HorizontalAlignment="Right"/>
+                          </StackPanel>
+                        </Grid>
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <TextBlock Foreground="{DynamicResource UmTextMuted}" FontSize="11" TextWrapping="Wrap" MaxWidth="600"
+                           Text="One-tap staking directly from the wallet is next; for now these are the networks, methods and rates to expect."/>
               </StackPanel>
 
               <!-- Market -->

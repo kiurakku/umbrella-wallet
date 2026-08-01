@@ -465,10 +465,59 @@ public sealed class PublicChainBalanceClient
 
         return result;
     }
+
+    /// <summary>
+    /// The NFT collections (ERC-721 / ERC-1155) held at an Ethereum address, via Blockscout. Returns
+    /// names and counts only — no image URLs are fetched, so viewing NFTs never leaks the user's IP.
+    /// </summary>
+    public async Task<IReadOnlyList<NftHolding>> GetEthNftsAsync(
+        string address, CancellationToken cancellationToken = default)
+    {
+        var result = new List<NftHolding>();
+        if (string.IsNullOrWhiteSpace(address) || !address.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+            return result;
+
+        try
+        {
+            using var res = await Http.GetAsync(
+                $"https://eth.blockscout.com/api/v2/addresses/{Uri.EscapeDataString(address)}/nft/collections?type=ERC-721%2CERC-1155",
+                cancellationToken);
+            if (!res.IsSuccessStatusCode) return result;
+            using var doc = await JsonDocument.ParseAsync(
+                await res.Content.ReadAsStreamAsync(cancellationToken), cancellationToken: cancellationToken);
+            if (!doc.RootElement.TryGetProperty("items", out var items) || items.ValueKind != JsonValueKind.Array)
+                return result;
+
+            foreach (var item in items.EnumerateArray())
+            {
+                if (result.Count >= 60) break;
+                if (!item.TryGetProperty("token", out var token)) continue;
+                var name = token.TryGetProperty("name", out var n) ? n.GetString() : null;
+                var symbol = token.TryGetProperty("symbol", out var s) ? s.GetString() : null;
+                var type = token.TryGetProperty("type", out var ty) ? ty.GetString() : "NFT";
+
+                var count = item.TryGetProperty("amount", out var am) && int.TryParse(am.GetString(), out var c) ? c
+                    : item.TryGetProperty("token_instances", out var ti) && ti.ValueKind == JsonValueKind.Array ? ti.GetArrayLength()
+                    : 1;
+                if (count <= 0) count = 1;
+
+                result.Add(new NftHolding(name ?? symbol ?? "Unnamed collection", symbol ?? "", count, type ?? "NFT", "Ethereum"));
+            }
+        }
+        catch
+        {
+            // treated as "no NFTs"
+        }
+
+        return result;
+    }
 }
 
 /// <summary>A fungible token balance (TRC-20 / ERC-20) held at an address.</summary>
 public sealed record TokenBalance(string Symbol, string Name, decimal Amount, string Contract, int Decimals);
+
+/// <summary>An NFT collection held at an address (name + count only — no image fetch, for privacy).</summary>
+public sealed record NftHolding(string Name, string Symbol, int Count, string Standard, string Network);
 
 /// <summary>
 /// USD prices from public endpoints, no API key. CoinGecko first, Binance as a fallback so a
