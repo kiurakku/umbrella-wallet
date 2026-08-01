@@ -6,6 +6,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versioning follo
 
 ## [2.4.0] — 2026-08-01
 
+### Desktop
+- **All tokens now show, not just USDT.** Every TRC-20 token on TRON and every ERC-20 token on
+  Ethereum (via Koios-style public APIs / Blockscout, no keys) appears in Holdings — reward tokens,
+  other stablecoins, any token — which is what most "my balance is missing" reports actually were.
+  Unpriced tokens show their real amount at $0 rather than an invented price.
+- **Portfolio-overview ring breakdown.** The right-rail ring now shows what the balance is made of:
+  a proportional bar plus a per-asset legend (symbol · share · value), top assets with the rest
+  folded into "Other".
+- The Windows app now ships as **`Umbrella.exe`**.
+
 ### Coins — Cardano (ADA) sending
 - **Real ADA sending.** Cardano payment transactions are now built, signed and broadcast on-device:
   the CBOR transaction body, the BIP32-Ed25519 signature (extended-key ed25519, implemented from the

@@ -482,6 +482,10 @@ public partial class MainViewModel : ViewModelBase
     public ObservableCollection<HoldingRowViewModel> Holdings { get; } = [];
     public ObservableCollection<ActivityRowViewModel> Activity { get; } = [];
 
+    /// <summary>What the total is made of — top assets by value, for the Portfolio-overview ring.</summary>
+    public ObservableCollection<PortfolioSlice> PortfolioBreakdown { get; } = [];
+    public bool HasBreakdown => PortfolioBreakdown.Count > 0;
+
     /// <summary>Drives the Activity empty-state; raised whenever the log changes.</summary>
     public bool HasActivity => Activity.Count > 0;
 
@@ -1567,23 +1571,20 @@ public partial class MainViewModel : ViewModelBase
                 }
             }
 
-            // USDT-TRC20 held on our OWN derived TRON account — Tether on TRON is what most
-            // people mean by "USDT", so it belongs in Holdings next to the native coins.
+            // Every TRC-20 token on our OWN derived TRON account — not just USDT. Reward tokens,
+            // other stablecoins and any TRC-20 asset now appear next to the native coins, which is
+            // what most "my TRON balance is missing" reports actually are.
             var tronAccount = Accounts.FirstOrDefault(a => a.Symbol == "TRX" && a.SupportStatus == "Ready");
             if (tronAccount is not null && IsRealAddress(tronAccount.Address))
             {
-                var ownUsdt = await _balances.GetTronUsdtAsync(tronAccount.Address, ct);
-                if (ownUsdt is not null)
-                {
-                    var row = new WalletAccountViewModel(
-                        "USDT", "Tether · TRC20", "Ready",
-                        tronAccount.Address, "TRC20 on TRON",
-                        (double)UsdtPrice(prices), (double)ownUsdt.Value, "USDT (TRC20)", 0);
-                    var existing = Accounts.FirstOrDefault(a =>
-                        a.Symbol == "USDT" && a.SupportStatus == "Ready");
-                    if (existing is null) Accounts.Add(row);
-                    else Accounts[Accounts.IndexOf(existing)] = row;
-                }
+                await AddTronTokenRowsAsync(tronAccount.Address, "Ready", prices, ct);
+            }
+
+            // Same for ERC-20 tokens on our OWN Ethereum account — any token, not just native ETH.
+            var ethAccount = Accounts.FirstOrDefault(a => a.Symbol == "ETH" && a.SupportStatus == "Ready");
+            if (ethAccount is not null && IsRealAddress(ethAccount.Address))
+            {
+                await AddEthTokenRowsAsync(ethAccount.Address, "Ready", prices, ct);
             }
 
             // Watch-only
@@ -1615,23 +1616,14 @@ public partial class MainViewModel : ViewModelBase
                     Accounts[i] = row;
                 }
 
-                // A TRON / TRC20 address usually holds USDT (Tether on TRON) — show it as its own row.
+                // A watched TRON address can hold any TRC-20 tokens — show them all, not just USDT.
                 if (IsTronLike(watch.Chain))
                 {
-                    var usdt = await _balances.GetTronUsdtAsync(watch.Address, ct);
-                    if (usdt is not null)
-                    {
-                        var usdtRow = new WalletAccountViewModel(
-                            "USDT",
-                            string.IsNullOrWhiteSpace(watch.Label) ? "USDT · TRC20" : $"{watch.Label} · USDT",
-                            "Watch", watch.Address, "TRC20 · Tether",
-                            (double)UsdtPrice(prices), (double)usdt.Value, "USDT (TRC20)", 0);
-                        var existingUsdt = Accounts.FirstOrDefault(a =>
-                            a.Address.Equals(watch.Address, StringComparison.OrdinalIgnoreCase) &&
-                            a.Symbol == "USDT");
-                        if (existingUsdt is null) Accounts.Add(usdtRow);
-                        else Accounts[Accounts.IndexOf(existingUsdt)] = usdtRow;
-                    }
+                    await AddTronTokenRowsAsync(watch.Address, "Watch", prices, ct);
+                }
+                else if (chain.Value == ChainId.Eth)
+                {
+                    await AddEthTokenRowsAsync(watch.Address, "Watch", prices, ct);
                 }
             }
 
@@ -1653,6 +1645,50 @@ public partial class MainViewModel : ViewModelBase
         finally
         {
             IsBusy = false;
+        }
+    }
+
+    /// <summary>
+    /// Adds/refreshes a Holdings row for every TRC-20 token at a TRON address (own or watch-only),
+    /// so any token — reward tokens, other stablecoins, tokenised assets — shows up, not just USDT.
+    /// </summary>
+    private async Task AddTronTokenRowsAsync(
+        string address, string status,
+        IReadOnlyDictionary<string, (decimal Usd, decimal Change24h)> prices, CancellationToken ct) =>
+        AddTokenRows(await _balances.GetTronTokensAsync(address, ct),
+            address, status, prices, marker: "TRC20 on TRON", chain: "TRON", suffix: "TRC20");
+
+    private async Task AddEthTokenRowsAsync(
+        string address, string status,
+        IReadOnlyDictionary<string, (decimal Usd, decimal Change24h)> prices, CancellationToken ct) =>
+        AddTokenRows(await _balances.GetEthTokensAsync(address, ct),
+            address, status, prices, marker: "ERC20 on Ethereum", chain: "Ethereum", suffix: "ERC20");
+
+    /// <summary>Reconciles the Holdings rows for a set of tokens at one address (TRC-20 or ERC-20).</summary>
+    private void AddTokenRows(
+        IReadOnlyList<TokenBalance> tokens, string address, string status,
+        IReadOnlyDictionary<string, (decimal Usd, decimal Change24h)> prices,
+        string marker, string chain, string suffix)
+    {
+        // Drop previous token rows for this address+network so removed or zeroed tokens don't linger.
+        foreach (var stale in Accounts
+                     .Where(a => a.Derivation == marker &&
+                                 a.Address.Equals(address, StringComparison.OrdinalIgnoreCase))
+                     .ToList())
+        {
+            Accounts.Remove(stale);
+        }
+
+        foreach (var tok in tokens)
+        {
+            // Price known tokens from the live feed; treat the major stablecoins as $1; an unknown
+            // token shows its real amount at $0 rather than an invented price.
+            var usd = prices.TryGetValue(tok.Symbol, out var pr)
+                ? (double)pr.Usd
+                : tok.Symbol is "USDT" or "USDC" or "DAI" or "TUSD" or "USDD" ? 1.0 : 0.0;
+            Accounts.Add(new WalletAccountViewModel(
+                tok.Symbol, $"{tok.Name} · {suffix}", status,
+                address, marker, usd, (double)tok.Amount, chain, 0));
         }
     }
 
@@ -2657,6 +2693,48 @@ public partial class MainViewModel : ViewModelBase
             : $"{(avg >= 0 ? "▲" : "▼")} {Math.Abs(avg):0.00}%   {(delta >= 0 ? "+" : "-")}${Math.Abs(delta):N2} · 24h";
         OnPropertyChanged(nameof(BalanceDisplayMain));
         OnPropertyChanged(nameof(BalanceDisplayCents));
+        RebuildBreakdown(total);
+    }
+
+    private static readonly string[] SliceColors =
+        ["#E7CA83", "#7DCF8F", "#5AC8B4", "#8A5FD6", "#D14A55", "#E0863C", "#5A9BD6", "#B76EC8"];
+
+    /// <summary>
+    /// Rebuilds the "what is my money made of" breakdown: the top assets by USD value, each with its
+    /// share of the total and a colour. Assets past the top few are folded into an "Other" slice.
+    /// </summary>
+    private void RebuildBreakdown(double total)
+    {
+        PortfolioBreakdown.Clear();
+        if (total > 0)
+        {
+            var byAsset = Holdings
+                .Where(h => h.Value > 0)
+                .GroupBy(h => h.Symbol)
+                .Select(g => (Symbol: g.Key, Value: g.Sum(h => h.Value)))
+                .OrderByDescending(x => x.Value)
+                .ToList();
+
+            var top = byAsset.Take(7).ToList();
+            var i = 0;
+            foreach (var a in top)
+            {
+                PortfolioBreakdown.Add(new PortfolioSlice(
+                    a.Symbol, a.Value / total * 100.0, a.Value,
+                    new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse(SliceColors[i % SliceColors.Length]))));
+                i++;
+            }
+
+            if (byAsset.Count > top.Count)
+            {
+                var restVal = byAsset.Skip(top.Count).Sum(x => x.Value);
+                PortfolioBreakdown.Add(new PortfolioSlice(
+                    "Other", restVal / total * 100.0, restVal,
+                    new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#6A6A72"))));
+            }
+        }
+
+        OnPropertyChanged(nameof(HasBreakdown));
     }
 
     private async Task LoadExchangesAsync(string mnemonic)
@@ -2864,6 +2942,15 @@ public partial class MainViewModel : ViewModelBase
         ConfirmPassword = string.Empty;
         FormError = string.Empty;
     }
+}
+
+/// <summary>One slice of the portfolio-overview breakdown: an asset, its share, value and colour.</summary>
+public sealed record PortfolioSlice(string Symbol, double Percent, double Value, Avalonia.Media.IBrush Brush)
+{
+    public string PercentLabel => $"{Percent:0.#}%";
+    public string ValueLabel => $"${Value:N2}";
+    /// <summary>Segment width for a fixed 232 px stacked bar (min 3 px so a tiny slice stays visible).</summary>
+    public double BarWidth => System.Math.Max(3, Percent / 100.0 * 232.0);
 }
 
 public sealed record WalletAccountViewModel(

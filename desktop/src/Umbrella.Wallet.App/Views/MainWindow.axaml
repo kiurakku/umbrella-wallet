@@ -1533,15 +1533,39 @@
                         <TextBlock Text="0.00%" FontSize="11" Foreground="{DynamicResource UmTextDim}" HorizontalAlignment="Center"/>
                       </StackPanel>
                     </Grid>
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="18">
-                      <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                        <Ellipse Width="8" Height="8" Fill="{DynamicResource UmAccentBright}"/>
-                        <TextBlock Text="Coins  0%" FontSize="11" Foreground="{DynamicResource UmTextDim}"/>
-                      </StackPanel>
-                      <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                        <Ellipse Width="8" Height="8" Fill="{DynamicResource UmTextMuted}"/>
-                        <TextBlock Text="Tokens  0%" FontSize="11" Foreground="{DynamicResource UmTextDim}"/>
-                      </StackPanel>
+                    <!-- What the total is actually made of: a proportional bar + per-asset legend. -->
+                    <TextBlock IsVisible="{Binding !HasBreakdown}" TextWrapping="Wrap" FontSize="11"
+                               Foreground="{DynamicResource UmTextMuted}"
+                               Text="Add or receive funds to see what your balance is made of."/>
+                    <StackPanel Spacing="10" IsVisible="{Binding HasBreakdown}">
+                      <Border CornerRadius="4" ClipToBounds="True" Height="8" Background="{DynamicResource UmBorder2}">
+                        <ItemsControl ItemsSource="{Binding PortfolioBreakdown}">
+                          <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><StackPanel Orientation="Horizontal"/></ItemsPanelTemplate>
+                          </ItemsControl.ItemsPanel>
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:PortfolioSlice">
+                              <Border Height="8" Width="{Binding BarWidth}" Background="{Binding Brush}"/>
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                      </Border>
+                      <ItemsControl ItemsSource="{Binding PortfolioBreakdown}">
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate x:DataType="vm:PortfolioSlice">
+                            <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,3">
+                              <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="7" VerticalAlignment="Center">
+                                <Ellipse Width="9" Height="9" Fill="{Binding Brush}"/>
+                                <TextBlock Text="{Binding Symbol}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource UmText}"/>
+                              </StackPanel>
+                              <TextBlock Grid.Column="1" Text="{Binding PercentLabel}" FontSize="11" Margin="10,0,0,0"
+                                         Foreground="{DynamicResource UmTextDim}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                              <TextBlock Grid.Column="2" Text="{Binding ValueLabel}" FontSize="11"
+                                         Foreground="{DynamicResource UmTextDim}" VerticalAlignment="Center"/>
+                            </Grid>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
                     </StackPanel>
                   </StackPanel>
                 </Border>

@@ -299,7 +299,116 @@ public sealed class PublicChainBalanceClient
             return null;
         }
     }
+
+    /// <summary>
+    /// Every TRC-20 token held at a TRON address (not just USDT), so reward tokens, other stablecoins
+    /// and any TRC-20 asset show up — this is what most "my balance is missing" cases on TRON are.
+    /// </summary>
+    public async Task<IReadOnlyList<TokenBalance>> GetTronTokensAsync(
+        string address, CancellationToken cancellationToken = default)
+    {
+        var result = new List<TokenBalance>();
+        if (string.IsNullOrWhiteSpace(address) || !address.StartsWith('T')) return result;
+
+        try
+        {
+            using var res = await Http.GetAsync(
+                $"https://apilist.tronscanapi.com/api/account?address={Uri.EscapeDataString(address)}",
+                cancellationToken);
+            if (!res.IsSuccessStatusCode) return result;
+            using var doc = await JsonDocument.ParseAsync(
+                await res.Content.ReadAsStreamAsync(cancellationToken), cancellationToken: cancellationToken);
+
+            if (!doc.RootElement.TryGetProperty("trc20token_balances", out var tokens) ||
+                tokens.ValueKind != JsonValueKind.Array)
+            {
+                return result;
+            }
+
+            foreach (var token in tokens.EnumerateArray())
+            {
+                if (result.Count >= 40) break;
+                var abbr = token.TryGetProperty("tokenAbbr", out var ta) ? ta.GetString() : null;
+                var name = token.TryGetProperty("tokenName", out var tn) ? tn.GetString() : abbr;
+                var contract = token.TryGetProperty("tokenId", out var tid) ? tid.GetString() : null;
+                var decimals = token.TryGetProperty("tokenDecimal", out var td) ? td.GetInt32() : 6;
+                var rawStr = token.TryGetProperty("balance", out var b) ? b.GetString() : null;
+                if (string.IsNullOrWhiteSpace(abbr) || string.IsNullOrWhiteSpace(contract)) continue;
+                if (!System.Numerics.BigInteger.TryParse(rawStr, out var raw) || raw <= 0) continue;
+
+                decimal divisor = 1m;
+                for (var i = 0; i < Math.Clamp(decimals, 0, 28); i++) divisor *= 10m;
+                decimal amount;
+                try { amount = (decimal)raw / divisor; }
+                catch (OverflowException) { continue; }
+
+                result.Add(new TokenBalance(abbr!.ToUpperInvariant(), name ?? abbr!, amount, contract!, decimals));
+            }
+        }
+        catch
+        {
+            // treated as "no tokens"
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Every ERC-20 token held at an Ethereum address, via Blockscout's public (keyless) API. Covers
+    /// any token — stablecoins, reward tokens, on-chain tokenised assets — not just the native ETH.
+    /// </summary>
+    public async Task<IReadOnlyList<TokenBalance>> GetEthTokensAsync(
+        string address, CancellationToken cancellationToken = default)
+    {
+        var result = new List<TokenBalance>();
+        if (string.IsNullOrWhiteSpace(address) || !address.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+            return result;
+
+        try
+        {
+            using var res = await Http.GetAsync(
+                $"https://eth.blockscout.com/api/v2/addresses/{Uri.EscapeDataString(address)}/token-balances",
+                cancellationToken);
+            if (!res.IsSuccessStatusCode) return result;
+            using var doc = await JsonDocument.ParseAsync(
+                await res.Content.ReadAsStreamAsync(cancellationToken), cancellationToken: cancellationToken);
+            if (doc.RootElement.ValueKind != JsonValueKind.Array) return result;
+
+            foreach (var entry in doc.RootElement.EnumerateArray())
+            {
+                if (result.Count >= 40) break; // some addresses carry thousands of airdropped spam tokens
+                if (!entry.TryGetProperty("token", out var token)) continue;
+                var type = token.TryGetProperty("type", out var ty) ? ty.GetString() : null;
+                if (!string.Equals(type, "ERC-20", StringComparison.OrdinalIgnoreCase)) continue; // skip NFTs
+
+                var symbol = token.TryGetProperty("symbol", out var sy) ? sy.GetString() : null;
+                var name = token.TryGetProperty("name", out var nm) ? nm.GetString() : symbol;
+                var contract = token.TryGetProperty("address", out var ad) ? ad.GetString() : null;
+                var decimals = token.TryGetProperty("decimals", out var de) && int.TryParse(de.GetString(), out var d) ? d : 18;
+                var rawStr = entry.TryGetProperty("value", out var v) ? v.GetString() : null;
+                if (string.IsNullOrWhiteSpace(symbol) || string.IsNullOrWhiteSpace(contract)) continue;
+                if (!System.Numerics.BigInteger.TryParse(rawStr, out var raw) || raw <= 0) continue;
+
+                decimal divisor = 1m;
+                for (var i = 0; i < Math.Clamp(decimals, 0, 28); i++) divisor *= 10m;
+                decimal amount;
+                try { amount = (decimal)raw / divisor; }
+                catch (OverflowException) { continue; }
+
+                result.Add(new TokenBalance(symbol!.ToUpperInvariant(), name ?? symbol!, amount, contract!, decimals));
+            }
+        }
+        catch
+        {
+            // treated as "no tokens"
+        }
+
+        return result;
+    }
 }
+
+/// <summary>A fungible token balance (TRC-20 / ERC-20) held at an address.</summary>
+public sealed record TokenBalance(string Symbol, string Name, decimal Amount, string Contract, int Decimals);
 
 /// <summary>
 /// USD prices from public endpoints, no API key. CoinGecko first, Binance as a fallback so a
