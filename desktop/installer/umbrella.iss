@@ -5,7 +5,7 @@
 #define AppName "Umbrella Wallet"
 #define AppVersion "2.4.0"
 #define AppPublisher "the fear"
-#define AppExe "Umbrella.Wallet.App.exe"
+#define AppExe "Umbrella.exe"
 
 [Setup]
 AppId={{7C1B0E2A-0B7E-4E9A-9C2E-UMBRELLA0001}

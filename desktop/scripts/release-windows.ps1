@@ -45,7 +45,15 @@ dotnet publish $csproj -c Release -r win-x64 --self-contained true `
 dotnet publish $csproj -c Release -r win-x64 --self-contained true `
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o $portableDir
 
-Write-Host "Portable: $(Join-Path $portableDir 'Umbrella.Wallet.App.exe')" -ForegroundColor Green
+# Ship the apphost as Umbrella.exe. The assembly stays Umbrella.Wallet.App (so avares:// resource URIs
+# keep resolving); the apphost loads its dll by the embedded name, not its own filename, so renaming
+# just the exe is safe. The installer's AppExe is set to Umbrella.exe to match.
+foreach ($dir in @($appDir, $portableDir)) {
+  $src = Join-Path $dir "Umbrella.Wallet.App.exe"
+  if (Test-Path $src) { Rename-Item $src "Umbrella.exe" -Force }
+}
+
+Write-Host "Portable: $(Join-Path $portableDir 'Umbrella.exe')" -ForegroundColor Green
 
 # 4) Installer (Inno Setup). The .iss reads its own AppVersion; keep it in sync with $version.
 if ($SkipInstaller) {
