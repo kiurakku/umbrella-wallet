@@ -650,6 +650,8 @@ public partial class MainViewModel : ViewModelBase
     public string BalanceDisplayMain => IsBalanceHidden ? "•••••••" : TotalBalanceMain;
     public string BalanceDisplayCents => IsBalanceHidden ? "" : $".{TotalBalanceCents}";
     public string HideBalanceLabel => IsBalanceHidden ? "Show" : "Hide";
+    /// <summary>False while the balance is hidden — used to blank every money figure, not just the total.</summary>
+    public bool AreValuesVisible => !IsBalanceHidden;
 
     partial void OnActiveSectionChanged(string value)
     {
@@ -724,6 +726,7 @@ public partial class MainViewModel : ViewModelBase
         OnPropertyChanged(nameof(BalanceDisplayMain));
         OnPropertyChanged(nameof(BalanceDisplayCents));
         OnPropertyChanged(nameof(HideBalanceLabel));
+        OnPropertyChanged(nameof(AreValuesVisible));
     }
     partial void OnTotalBalanceMainChanged(string value) => OnPropertyChanged(nameof(BalanceDisplayMain));
     partial void OnTotalBalanceCentsChanged(string value) => OnPropertyChanged(nameof(BalanceDisplayCents));
@@ -1540,7 +1543,7 @@ public partial class MainViewModel : ViewModelBase
                     .Select(w => ParseChain(w.Chain))
                     .Where(c => c is not null)
                     .Select(c => SymbolFor(c!.Value)))
-                .Concat(["USDT"])
+                .Concat(["USDT", "BNB", "MATIC", "AVAX"])
                 .Distinct()
                 .ToList();
             var prices = await _rates.GetUsdPricesAsync(symbols, ct);
@@ -1580,11 +1583,13 @@ public partial class MainViewModel : ViewModelBase
                 await AddTronTokenRowsAsync(tronAccount.Address, "Ready", prices, ct);
             }
 
-            // Same for ERC-20 tokens on our OWN Ethereum account — any token, not just native ETH.
+            // Same for ERC-20 tokens on our OWN Ethereum account — any token, not just native ETH —
+            // plus the native coins of the major EVM side-chains (BNB, MATIC, AVAX) at the same address.
             var ethAccount = Accounts.FirstOrDefault(a => a.Symbol == "ETH" && a.SupportStatus == "Ready");
             if (ethAccount is not null && IsRealAddress(ethAccount.Address))
             {
                 await AddEthTokenRowsAsync(ethAccount.Address, "Ready", prices, ct);
+                await AddEvmSideRowsAsync(ethAccount.Address, prices, ct);
             }
 
             // Watch-only
@@ -1663,6 +1668,33 @@ public partial class MainViewModel : ViewModelBase
         IReadOnlyDictionary<string, (decimal Usd, decimal Change24h)> prices, CancellationToken ct) =>
         AddTokenRows(await _balances.GetEthTokensAsync(address, ct),
             address, status, prices, marker: "ERC20 on Ethereum", chain: "Ethereum", suffix: "ERC20");
+
+    /// <summary>Adds Holdings rows for BNB / MATIC / AVAX held at our Ethereum (0x) address.</summary>
+    private async Task AddEvmSideRowsAsync(
+        string address, IReadOnlyDictionary<string, (decimal Usd, decimal Change24h)> prices, CancellationToken ct)
+    {
+        foreach (var stale in Accounts
+                     .Where(a => a.Derivation == "EVM side-chain" &&
+                                 a.Address.Equals(address, StringComparison.OrdinalIgnoreCase))
+                     .ToList())
+        {
+            Accounts.Remove(stale);
+        }
+
+        foreach (var (symbol, amount) in await _balances.GetEvmSideBalancesAsync(address, ct))
+        {
+            var (usd, change) = prices.GetValueOrDefault(symbol);
+            var name = symbol switch
+            {
+                "BNB" => "BNB · BSC",
+                "MATIC" => "Polygon",
+                "AVAX" => "Avalanche",
+                _ => symbol,
+            };
+            Accounts.Add(new WalletAccountViewModel(
+                symbol, name, "Ready", address, "EVM side-chain", (double)usd, (double)amount, symbol, (double)change));
+        }
+    }
 
     /// <summary>Reconciles the Holdings rows for a set of tokens at one address (TRC-20 or ERC-20).</summary>
     private void AddTokenRows(

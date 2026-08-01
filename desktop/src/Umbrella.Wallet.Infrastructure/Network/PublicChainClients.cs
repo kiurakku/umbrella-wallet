@@ -223,6 +223,66 @@ public sealed class PublicChainBalanceClient
         return null;
     }
 
+    // The major EVM chains that share the same 0x address as Ethereum, with public RPC fallbacks.
+    private static readonly (string Symbol, string[] Rpcs)[] EvmSideChains =
+    [
+        ("BNB",   ["https://bsc-dataseed.binance.org", "https://bsc-dataseed1.defibit.io", "https://rpc.ankr.com/bsc"]),
+        ("MATIC", ["https://polygon-rpc.com", "https://rpc.ankr.com/polygon"]),
+        ("AVAX",  ["https://api.avax.network/ext/bc/C/rpc", "https://rpc.ankr.com/avalanche"]),
+    ];
+
+    /// <summary>
+    /// Native balances of the major EVM side-chains (BNB on BSC, MATIC on Polygon, AVAX on Avalanche
+    /// C-chain) at the SAME 0x address, so a wallet imported from MetaMask shows those coins too — not
+    /// just Ethereum mainnet. Only non-zero balances are returned.
+    /// </summary>
+    public async Task<IReadOnlyList<(string Symbol, decimal Amount)>> GetEvmSideBalancesAsync(
+        string address, CancellationToken cancellationToken = default)
+    {
+        var result = new List<(string, decimal)>();
+        if (string.IsNullOrWhiteSpace(address) || !address.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+            return result;
+
+        foreach (var (symbol, rpcs) in EvmSideChains)
+        {
+            var amount = await EvmNativeBalanceAsync(rpcs, address, cancellationToken);
+            if (amount is > 0m) result.Add((symbol, amount.Value));
+        }
+
+        return result;
+    }
+
+    private static async Task<decimal?> EvmNativeBalanceAsync(string[] rpcs, string address, CancellationToken ct)
+    {
+        foreach (var rpc in rpcs)
+        {
+            try
+            {
+                var payload = new
+                {
+                    jsonrpc = "2.0",
+                    id = 1,
+                    method = "eth_getBalance",
+                    @params = new object[] { address, "latest" },
+                };
+                using var res = await Http.PostAsJsonAsync(rpc, payload, ct);
+                if (!res.IsSuccessStatusCode) continue;
+                using var doc = await JsonDocument.ParseAsync(await res.Content.ReadAsStreamAsync(ct), cancellationToken: ct);
+                if (!doc.RootElement.TryGetProperty("result", out var result)) continue;
+                var hex = result.GetString();
+                if (string.IsNullOrWhiteSpace(hex) || hex.Length < 3) continue;
+                var wei = System.Numerics.BigInteger.Parse(hex.AsSpan(2), NumberStyles.HexNumber);
+                return (decimal)wei / 1_000_000_000_000_000_000m;
+            }
+            catch
+            {
+                /* try next RPC */
+            }
+        }
+
+        return null;
+    }
+
     private static async Task<ChainBalance?> GetSolAsync(string address, CancellationToken ct)
     {
         // Solana public JSON-RPC: getBalance returns lamports (1 SOL = 1e9 lamports).
@@ -432,6 +492,9 @@ public sealed class PublicMarketRatesClient
         ["TON"] = "the-open-network",
         ["XMR"] = "monero",
         ["ADA"] = "cardano",
+        ["BNB"] = "binancecoin",
+        ["MATIC"] = "matic-network",
+        ["AVAX"] = "avalanche-2",
         // Tether trades a cent either side of $1; quoting it beats assuming exactly 1.00.
         ["USDT"] = "tether",
     };

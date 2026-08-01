@@ -508,8 +508,18 @@
                                 </StackPanel>
                               </Grid>
                               <TextBlock Grid.Column="1" Classes="mono" FontSize="12" Text="{Binding PriceLabel}" HorizontalAlignment="Right" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                              <TextBlock Grid.Column="2" Classes="mono" FontSize="12" Foreground="{DynamicResource UmTextDim}" Text="{Binding AmountLabel}" HorizontalAlignment="Right" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                              <TextBlock Grid.Column="3" Classes="mono" FontSize="12" Text="{Binding ValueLabel}" HorizontalAlignment="Right" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                              <Grid Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                <TextBlock Classes="mono" FontSize="12" Foreground="{DynamicResource UmTextDim}" Text="{Binding AmountLabel}" TextTrimming="CharacterEllipsis"
+                                           IsVisible="{Binding #RootWindow.((vm:MainViewModel)DataContext).AreValuesVisible}"/>
+                                <TextBlock Classes="mono" FontSize="12" Foreground="{DynamicResource UmTextDim}" Text="••••"
+                                           IsVisible="{Binding #RootWindow.((vm:MainViewModel)DataContext).IsBalanceHidden}"/>
+                              </Grid>
+                              <Grid Grid.Column="3" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                <TextBlock Classes="mono" FontSize="12" Text="{Binding ValueLabel}" TextTrimming="CharacterEllipsis"
+                                           IsVisible="{Binding #RootWindow.((vm:MainViewModel)DataContext).AreValuesVisible}"/>
+                                <TextBlock Classes="mono" FontSize="12" Text="••••"
+                                           IsVisible="{Binding #RootWindow.((vm:MainViewModel)DataContext).IsBalanceHidden}"/>
+                              </Grid>
                               <TextBlock Grid.Column="4" Classes="mono" FontSize="12" Text="{Binding ChangeLabel}" Foreground="{Binding ChangeColor}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                               <Button Grid.Column="5" Classes="ghost" Content="Copy" Height="28" Padding="10,0" Margin="8,0,0,0"
                                       Command="{Binding #RootWindow.((vm:MainViewModel)DataContext).CopyAddressCommand}"
@@ -1528,9 +1538,10 @@
                       <Ellipse Width="132" Height="132" Stroke="{DynamicResource UmAccentDim}" StrokeThickness="12"/>
                       <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                         <TextBlock Classes="serif" FontSize="22" HorizontalAlignment="Center">
-                          <Run Text="$"/><Run Text="{Binding TotalBalanceMain}"/>
+                          <Run Text="$"/><Run Text="{Binding BalanceDisplayMain}"/>
                         </TextBlock>
-                        <TextBlock Text="0.00%" FontSize="11" Foreground="{DynamicResource UmTextDim}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="0.00%" FontSize="11" Foreground="{DynamicResource UmTextDim}" HorizontalAlignment="Center"
+                                   IsVisible="{Binding AreValuesVisible}"/>
                       </StackPanel>
                     </Grid>
                     <!-- What the total is actually made of: a proportional bar + per-asset legend. -->
@@ -1561,7 +1572,8 @@
                               <TextBlock Grid.Column="1" Text="{Binding PercentLabel}" FontSize="11" Margin="10,0,0,0"
                                          Foreground="{DynamicResource UmTextDim}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
                               <TextBlock Grid.Column="2" Text="{Binding ValueLabel}" FontSize="11"
-                                         Foreground="{DynamicResource UmTextDim}" VerticalAlignment="Center"/>
+                                         Foreground="{DynamicResource UmTextDim}" VerticalAlignment="Center"
+                                         IsVisible="{Binding #RootWindow.((vm:MainViewModel)DataContext).AreValuesVisible}"/>
                             </Grid>
                           </DataTemplate>
                         </ItemsControl.ItemTemplate>
