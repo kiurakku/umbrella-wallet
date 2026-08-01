@@ -117,6 +117,9 @@ public partial class MainViewModel : ViewModelBase
             OnPropertyChanged();
             OnPropertyChanged(nameof(DeleteKeyword));
             BuildGuide(); // the guide reads in the wallet's language
+            if (IsUnlocked)
+                PushActivity("Settings", "Language",
+                    Loc.Languages.FirstOrDefault(l => l.Code == value)?.Name ?? value, "changed", "now");
         }
     }
 
@@ -144,6 +147,9 @@ public partial class MainViewModel : ViewModelBase
             _uiSettings.Save();
             OnPropertyChanged();
             OnPropertyChanged(nameof(LogoImage));
+            if (IsUnlocked)
+                PushActivity("Theme", "Appearance",
+                    Theming.Themes.FirstOrDefault(t => t.Id == value)?.Name ?? value, "changed", "now");
         }
     }
 
@@ -163,6 +169,7 @@ public partial class MainViewModel : ViewModelBase
             _uiSettings.Save();
             OnPropertyChanged();
             OnPropertyChanged(nameof(LottieRepeat));
+            if (IsUnlocked) PushActivity("Settings", "Animations", value ? "on" : "off", "changed", "now");
         }
     }
 
@@ -182,6 +189,7 @@ public partial class MainViewModel : ViewModelBase
             OnPropertyChanged(nameof(SidebarDock));
             OnPropertyChanged(nameof(IsSidebarVertical));
             OnPropertyChanged(nameof(IsSidebarHorizontal));
+            if (IsUnlocked) PushActivity("Settings", "Nav panel", value, "changed", "now");
         }
     }
 
@@ -206,6 +214,7 @@ public partial class MainViewModel : ViewModelBase
             OnPropertyChanged();
             OnPropertyChanged(nameof(AutoLockMinutes));
             OnPropertyChanged(nameof(AutoLockLabel));
+            if (IsUnlocked) PushActivity("Security", "Auto-lock", value, "changed", "now");
         }
     }
 
@@ -1059,6 +1068,7 @@ public partial class MainViewModel : ViewModelBase
             PublicHttp.SetProxy(null);
             TorStatus = "Direct connection · traffic is NOT anonymised";
             TorStatusColor = "#E7CA83";
+            if (IsUnlocked) PushActivity("Security", "Tor", "off", "direct connection", "now");
             _ = RefreshMarketAsync();
             return;
         }
@@ -1087,6 +1097,7 @@ public partial class MainViewModel : ViewModelBase
         PublicHttp.SetProxy(_tor.ProxyUri);
         TorStatus = $"{resultMessage} · your IP is hidden from explorers";
         TorStatusColor = "#8FCB9B";
+        if (IsUnlocked) PushActivity("Security", "Tor", "on", "IP hidden from explorers", "now");
         _ = RefreshMarketAsync();
         if (IsUnlocked) _ = RefreshLiveDataAsync();
     }
@@ -2015,6 +2026,7 @@ public partial class MainViewModel : ViewModelBase
             ExchangeLabel = string.Empty;
 
             ExchangeStatus = $"Connected · {result.Assets.Count} assets found";
+            PushActivity("Connected", ExchangeName, "exchange", $"{result.Assets.Count} assets · read-only", "now");
             await RefreshLiveDataAsync();
         });
     }
@@ -2055,11 +2067,13 @@ public partial class MainViewModel : ViewModelBase
             return;
         }
 
+        var label = string.IsNullOrWhiteSpace(WatchLabel) ? Shorten(address) : WatchLabel.Trim();
         WatchAddresses.Add(new WatchAddress(chain, address, WatchLabel.Trim()));
         await _watchStore.SaveAsync(WatchAddresses);
         WatchAddress = string.Empty;
         WatchLabel = string.Empty;
         StatusMessage = $"Linked watch-only {chain} address";
+        PushActivity("Connected", chain, "watch-only", label, "now");
         if (IsUnlocked) await RefreshLiveDataAsync();
     }
 
@@ -2633,6 +2647,7 @@ public partial class MainViewModel : ViewModelBase
         _ = LoadExchangesAsync(mnemonic);
         DeriveAccounts(mnemonic);
         SelectFirstReceive();
+        PushActivity("Security", "Vault", "unlocked", "this device", "now");
     }
 
     private void SelectFirstReceive()
@@ -3165,11 +3180,15 @@ public sealed record ActivityRowViewModel(
     /// <summary>A block-explorer link exists, so the row is actionable (copy the URL).</summary>
     public bool HasLink => !string.IsNullOrWhiteSpace(Explorer);
 
-    /// <summary>Colour the type at a glance: outgoing red, incoming teal, housekeeping muted.</summary>
+    /// <summary>Colour the type at a glance: outgoing red, incoming/connected teal, swap violet,
+    /// theme/settings/security/sync housekeeping muted.</summary>
     public string KindColor => Kind switch
     {
         "Sent" => "#E08A8A",
         "Received" => "#5AC8B4",
+        "Connected" => "#5AC8B4",
+        "Swap" => "#8A5FD6",
+        "Theme" => "#E7CA83",
         _ => "#8A9099",
     };
 }
