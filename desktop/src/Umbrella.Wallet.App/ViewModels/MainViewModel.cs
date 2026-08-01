@@ -540,6 +540,10 @@ public partial class MainViewModel : ViewModelBase
     /// Click an item to read the full note. Newest first.</summary>
     public ObservableCollection<NewsItemViewModel> News { get; } =
     [
+        new("NEW", "Send on every EVM chain — BNB, Polygon, Avalanche and more",
+            "You can now send native BNB (BSC), MATIC (Polygon), AVAX (Avalanche), FTM (Fantom) and CRO (Cronos) — not just Ethereum. They all share your 0x address, so a wallet imported from MetaMask can now spend across six EVM networks from one place.\n\n" +
+            "The signing is the exact same EIP-155 code that's pinned byte-for-byte to the official Ethereum test vector — only the chain id, RPC and explorer change, so a wrong byte can never move funds. Nonce, gas and the balance check come from each chain's public RPCs (with fallbacks), and every request goes through the built-in Tor when it's on, so sending stays anonymous.",
+            "2026-08-01"),
         new("NEW", "Many more coins, every token, NFTs, staking",
             "The wallet now surfaces essentially everything you hold.\n\n" +
             "• Coins — on top of BTC, ETH, LTC, DOGE, SOL, TON, TRON, ADA and XMR, every major EVM network at the same address now shows: BNB (BSC), MATIC (Polygon), AVAX, FTM (Fantom), CRO (Cronos), and ETH on the Arbitrum, Optimism and Base L2s.\n" +
@@ -648,6 +652,11 @@ public partial class MainViewModel : ViewModelBase
         new("TRX", "TRON", "TRON network"),
         new("USDT", "Tether (TRC-20)", "TRON network · fee paid in TRX"),
         new("ADA", "Cardano", "Cardano network"),
+        new("BNB", "BNB", "BNB Smart Chain (BEP-20 address)"),
+        new("MATIC", "Polygon", "Polygon network"),
+        new("AVAX", "Avalanche", "Avalanche C-Chain"),
+        new("FTM", "Fantom", "Fantom Opera"),
+        new("CRO", "Cronos", "Cronos EVM"),
     ];
 
     /// <summary>Networks a watch-only address can be added for.</summary>
@@ -2253,13 +2262,19 @@ public partial class MainViewModel : ViewModelBase
             switch (chain)
             {
                 case "ETH":
+                case "BNB":
+                case "MATIC":
+                case "AVAX":
+                case "FTM":
+                case "CRO":
                 {
-                    var (quote, error) = await _ethSender.PrepareAsync(from.Address, SendTo.Trim(), amount);
+                    var evm = EthTransactionSender.Chains[chain];
+                    var (quote, error) = await _ethSender.PrepareAsync(from.Address, SendTo.Trim(), amount, evm);
                     if (quote is null) { SendError = error ?? "Could not prepare the transaction."; return; }
                     _sendQuote = quote;
-                    SendQuoteSummary = $"Send {Fmt(quote.AmountEth)} ETH  →  {quote.To}";
+                    SendQuoteSummary = $"Send {Fmt(quote.AmountEth)} {quote.Symbol}  →  {quote.To}";
                     SendQuoteFee =
-                        $"Network fee ≈ {Fmt(quote.MaxFeeEth)} ETH · nonce {quote.Nonce} · via {new Uri(quote.Rpc).Host}";
+                        $"Network fee ≈ {Fmt(quote.MaxFeeEth)} {quote.Symbol} · {evm.Name} · nonce {quote.Nonce} · via {new Uri(quote.Rpc).Host}";
                     break;
                 }
 
@@ -2346,15 +2361,19 @@ public partial class MainViewModel : ViewModelBase
             StatusMessage = "Signing locally and broadcasting…";
             switch (_sendSymbol)
             {
-                case "ETH" when _sendQuote is not null:
+                case "ETH" or "BNB" or "MATIC" or "AVAX" or "FTM" or "CRO" when _sendQuote is not null:
                 {
                     var quote = _sendQuote;
+                    // Every EVM chain shares the same Ethereum key and 0x address.
                     var priv = _deriver.DeriveEthereumPrivateKey(_unlockedMnemonic!);
                     try
                     {
                         var result = await _ethSender.SignAndBroadcastAsync(quote, priv);
+                        var explorer = EthTransactionSender.Chains.TryGetValue(quote.Symbol, out var c)
+                            ? c.ExplorerTx + result.TxHash
+                            : $"etherscan.io/tx/{result.TxHash}";
                         await FinishSendAsync(result.Ok, result.TxHash, result.Error,
-                            "ETH", quote.AmountEth, quote.To, $"etherscan.io/tx/{result.TxHash}");
+                            quote.Symbol, quote.AmountEth, quote.To, explorer);
                     }
                     finally
                     {

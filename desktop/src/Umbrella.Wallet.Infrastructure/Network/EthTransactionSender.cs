@@ -14,9 +14,15 @@ public sealed record EthSendQuote(
     BigInteger Nonce,
     BigInteger GasPriceWei,
     decimal MaxFeeEth,
-    string Rpc);
+    string Rpc,
+    long ChainId = 1,
+    string Symbol = "ETH",
+    IReadOnlyList<string>? Rpcs = null);
 
 public sealed record EthSendResult(bool Ok, string? TxHash, string? Error);
+
+/// <summary>An EVM network the wallet can send native coin on, sharing the same 0x address as Ethereum.</summary>
+public sealed record EvmChain(string Symbol, string Name, long ChainId, string ExplorerTx, IReadOnlyList<string> Rpcs);
 
 /// <summary>
 /// Real Ethereum mainnet send: nonce + gas price come from public RPCs, the transaction is
@@ -36,6 +42,23 @@ public sealed class EthTransactionSender
         "https://eth.drpc.org",
     ];
 
+    /// <summary>The EVM networks a native send is supported on (same 0x address, EIP-155 signing).</summary>
+    public static readonly IReadOnlyDictionary<string, EvmChain> Chains =
+        new Dictionary<string, EvmChain>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["ETH"] = new("ETH", "Ethereum", 1, "etherscan.io/tx/", Rpcs),
+            ["BNB"] = new("BNB", "BSC", 56, "bscscan.com/tx/",
+                ["https://bsc-dataseed.binance.org", "https://bsc-dataseed1.defibit.io", "https://rpc.ankr.com/bsc"]),
+            ["MATIC"] = new("MATIC", "Polygon", 137, "polygonscan.com/tx/",
+                ["https://polygon-rpc.com", "https://rpc.ankr.com/polygon"]),
+            ["AVAX"] = new("AVAX", "Avalanche", 43114, "snowtrace.io/tx/",
+                ["https://api.avax.network/ext/bc/C/rpc", "https://rpc.ankr.com/avalanche"]),
+            ["FTM"] = new("FTM", "Fantom", 250, "ftmscan.com/tx/",
+                ["https://rpc.ftm.tools", "https://rpc.ankr.com/fantom"]),
+            ["CRO"] = new("CRO", "Cronos", 25, "cronoscan.com/tx/",
+                ["https://evm.cronos.org", "https://cronos-evm-rpc.publicnode.com"]),
+        };
+
     private static HttpClient Http => PublicHttp.Shared;
 
     /// <summary>
@@ -46,11 +69,13 @@ public sealed class EthTransactionSender
         string fromAddress,
         string toAddress,
         decimal amountEth,
+        EvmChain? chain = null,
         CancellationToken ct = default)
     {
+        chain ??= Chains["ETH"];
         if (!IsHexAddress(toAddress))
         {
-            return (null, "Destination must be a 0x… Ethereum address (42 characters).");
+            return (null, "Destination must be a 0x… (EVM) address of 42 characters.");
         }
 
         if (amountEth <= 0)
@@ -60,7 +85,7 @@ public sealed class EthTransactionSender
 
         var amountWei = new BigInteger(amountEth * 1_000_000_000_000_000_000m);
 
-        foreach (var rpc in Rpcs)
+        foreach (var rpc in chain.Rpcs)
         {
             try
             {
@@ -79,15 +104,16 @@ public sealed class EthTransactionSender
 
                 if (balance < amountWei + maxFeeWei)
                 {
-                    var haveEth = (decimal)balance / 1_000_000_000_000_000_000m;
+                    var have = (decimal)balance / 1_000_000_000_000_000_000m;
                     return (null,
-                        $"Insufficient funds: balance {haveEth:0.######} ETH, " +
-                        $"need {amountEth:0.######} ETH + ~{(decimal)maxFeeWei / 1_000_000_000_000_000_000m:0.######} ETH fee.");
+                        $"Insufficient funds: balance {have:0.######} {chain.Symbol}, " +
+                        $"need {amountEth:0.######} {chain.Symbol} + ~{(decimal)maxFeeWei / 1_000_000_000_000_000_000m:0.######} {chain.Symbol} fee.");
                 }
 
                 return (new EthSendQuote(
                     fromAddress, toAddress, amountEth, amountWei, nonce, paddedGasPrice,
-                    (decimal)maxFeeWei / 1_000_000_000_000_000_000m, rpc), null);
+                    (decimal)maxFeeWei / 1_000_000_000_000_000_000m, rpc,
+                    chain.ChainId, chain.Symbol, chain.Rpcs), null);
             }
             catch
             {
@@ -95,7 +121,7 @@ public sealed class EthTransactionSender
             }
         }
 
-        return (null, "All public Ethereum RPCs are unreachable — check your connection (or Tor).");
+        return (null, $"All public {chain.Name} RPCs are unreachable — check your connection (or Tor).");
     }
 
     /// <summary>Signs the quoted transfer with the given private key and broadcasts it.</summary>
@@ -108,14 +134,14 @@ public sealed class EthTransactionSender
         try
         {
             signedHex = SignTransfer(
-                privateKey, quote.To, quote.AmountWei, quote.Nonce, quote.GasPriceWei, TransferGasLimit);
+                privateKey, quote.ChainId, quote.To, quote.AmountWei, quote.Nonce, quote.GasPriceWei, TransferGasLimit);
         }
         catch (Exception ex)
         {
             return new EthSendResult(false, null, $"Signing failed: {ex.Message}");
         }
 
-        foreach (var rpc in Rpcs)
+        foreach (var rpc in quote.Rpcs ?? Rpcs)
         {
             try
             {
@@ -162,10 +188,21 @@ public sealed class EthTransactionSender
         BigInteger amountWei,
         BigInteger nonce,
         BigInteger gasPriceWei,
+        BigInteger gasLimit) =>
+        SignTransfer(privateKey, ChainId, to, amountWei, nonce, gasPriceWei, gasLimit);
+
+    /// <summary>EIP-155 legacy transfer signature for any EVM chain id (same signing across chains).</summary>
+    public static string SignTransfer(
+        byte[] privateKey,
+        long chainId,
+        string to,
+        BigInteger amountWei,
+        BigInteger nonce,
+        BigInteger gasPriceWei,
         BigInteger gasLimit)
     {
         var signer = new LegacyTransactionSigner();
-        return signer.SignTransaction(privateKey, ChainId, to, amountWei, nonce, gasPriceWei, gasLimit);
+        return signer.SignTransaction(privateKey, chainId, to, amountWei, nonce, gasPriceWei, gasLimit);
     }
 
     private static async Task<string?> CallAsync(string rpc, string method, object[] args, CancellationToken ct)

@@ -4,6 +4,18 @@ All notable releases of **Umbrella Wallet**.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versioning follows [SemVer](https://semver.org/).
 
+## [2.5.0] — 2026-08-01
+
+### Coins — sending on every EVM chain
+- **Send native BNB, MATIC, AVAX, FTM and CRO**, not just Ethereum. The wallet already showed these
+  balances (same 0x address); now it signs and broadcasts their transfers too, reusing the exact
+  EIP-155 signer that is pinned byte-for-byte to the official test vector — only the chain id, RPC and
+  explorer differ. Nonce, gas price and the balance check come from each chain's public RPCs (with
+  fallbacks), and everything routes through the bundled Tor when it is on. So a MetaMask-imported
+  wallet can now spend across Ethereum, BSC, Polygon, Avalanche, Fantom and Cronos from one place.
+- The full 24h portfolio change now shows in the overview ring; Recent Activity, Market (12 more
+  popular coins), News and the Guide were all filled in.
+
 ## [2.4.0] — 2026-08-01
 
 ### Desktop
