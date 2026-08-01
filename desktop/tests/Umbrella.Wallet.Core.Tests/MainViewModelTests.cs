@@ -129,10 +129,14 @@ public sealed class MainViewModelTests : IDisposable
     {
         var vm = NewViewModel();
 
-        Assert.Equal(Chains.ChainCatalog.All.Count, vm.Market.Count);
+        // The wallet's own chains plus popular market-only coins (priced + charted, held via the
+        // EVM/token paths), so the market is broader than the account list.
+        Assert.True(vm.Market.Count > Chains.ChainCatalog.All.Count);
         Assert.Contains(vm.Market, m => m.Symbol == "BTC" && m.IsSupported);
         Assert.Contains(vm.Market, m => m.Symbol == "SOL" && m.IsSupported);
         Assert.Contains(vm.Market, m => m.Symbol == "XMR" && !m.IsSupported);
+        Assert.Contains(vm.Market, m => m.Symbol == "BNB"); // a market-only coin
+        Assert.Contains(vm.Market, m => m.Symbol == "XRP");
     }
 
     /// <summary>Reveal must never expose the phrase without the correct password.</summary>

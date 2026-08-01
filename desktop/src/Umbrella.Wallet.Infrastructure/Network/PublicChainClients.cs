@@ -552,6 +552,12 @@ public sealed class PublicMarketRatesClient
         ["AVAX"] = "avalanche-2",
         ["FTM"] = "fantom",
         ["CRO"] = "crypto-com-chain",
+        ["USDC"] = "usd-coin",
+        ["LINK"] = "chainlink",
+        ["UNI"] = "uniswap",
+        ["XRP"] = "ripple",
+        ["DOT"] = "polkadot",
+        ["BCH"] = "bitcoin-cash",
         // Tether trades a cent either side of $1; quoting it beats assuming exactly 1.00.
         ["USDT"] = "tether",
     };

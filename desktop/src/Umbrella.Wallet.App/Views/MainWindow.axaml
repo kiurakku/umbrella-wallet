@@ -1582,7 +1582,7 @@
                         <TextBlock Classes="serif" FontSize="22" HorizontalAlignment="Center">
                           <Run Text="$"/><Run Text="{Binding BalanceDisplayMain}"/>
                         </TextBlock>
-                        <TextBlock Text="0.00%" FontSize="11" Foreground="{DynamicResource UmTextDim}" HorizontalAlignment="Center"
+                        <TextBlock Text="{Binding PortfolioChangePercent}" FontSize="11" Foreground="{Binding PortfolioChangeColor}" HorizontalAlignment="Center"
                                    IsVisible="{Binding AreValuesVisible}"/>
                       </StackPanel>
                     </Grid>
@@ -1630,14 +1630,18 @@
                       <TextBlock Classes="eyebrow" Text="RECENT ACTIVITY" VerticalAlignment="Center"/>
                       <Button Grid.Column="1" Classes="chip" Content="View all" Command="{Binding SelectSectionCommand}" CommandParameter="Activity"/>
                     </Grid>
-                    <ItemsControl ItemsSource="{Binding Activity}">
+                    <TextBlock IsVisible="{Binding !HasActivity}" FontSize="11.5" Foreground="{DynamicResource UmTextMuted}"
+                               Text="Nothing yet — sends, swaps, connections and setting changes show up here." TextWrapping="Wrap"/>
+                    <ItemsControl ItemsSource="{Binding RecentActivity}" IsVisible="{Binding HasActivity}">
                       <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="vm:ActivityRowViewModel">
                           <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,6" ColumnSpacing="10">
                             <Ellipse Width="7" Height="7" Fill="{Binding KindColor}" VerticalAlignment="Center"/>
                             <StackPanel Grid.Column="1" MinWidth="0">
-                              <TextBlock Text="{Binding Kind}" FontSize="12.5" TextTrimming="CharacterEllipsis"/>
-                              <TextBlock Text="{Binding When}" FontSize="10.5" Foreground="{DynamicResource UmTextMuted}" TextTrimming="CharacterEllipsis"/>
+                              <TextBlock FontSize="12.5" TextTrimming="CharacterEllipsis">
+                                <Run Text="{Binding Kind}"/><Run Text="  "/><Run Text="{Binding Asset}" Foreground="{DynamicResource UmTextDim}"/>
+                              </TextBlock>
+                              <TextBlock Text="{Binding Counterparty}" FontSize="10.5" Foreground="{DynamicResource UmTextMuted}" TextTrimming="CharacterEllipsis"/>
                             </StackPanel>
                             <TextBlock Grid.Column="2" Classes="mono" FontSize="11.5" Text="{Binding Amount}" Foreground="{Binding KindColor}" VerticalAlignment="Center"/>
                           </Grid>

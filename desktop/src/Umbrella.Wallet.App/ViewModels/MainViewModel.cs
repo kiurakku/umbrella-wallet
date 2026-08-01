@@ -37,6 +37,9 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty] private string _statusMessage = "Vault is locked";
     [ObservableProperty] private string _activeSection = "Portfolio";
     [ObservableProperty] private bool _isBalanceHidden;
+    // Compact portfolio 24h change for the overview ring (real, not a hardcoded 0.00%).
+    [ObservableProperty] private string _portfolioChangePercent = "—";
+    [ObservableProperty] private string _portfolioChangeColor = "#8A9099";
     [ObservableProperty] private string _searchQuery = string.Empty;
     [ObservableProperty] private string _chainFilter = "All";
     [ObservableProperty] private string _walletLabel = "Umbrella Wallet";
@@ -447,6 +450,9 @@ public partial class MainViewModel : ViewModelBase
             Market.Add(MarketRowViewModel.Pending(chain));
         }
 
+        foreach (var (sym, name) in ExtraMarketCoins)
+            Market.Add(MarketRowViewModel.PendingCoin(sym, name));
+
         SelectedSendAsset = SendableAssets[0];
         SelectedWatchNetwork = WatchableNetworks[0];
         BuildGuide();
@@ -490,6 +496,8 @@ public partial class MainViewModel : ViewModelBase
     public ObservableCollection<WalletAccountViewModel> Accounts { get; } = [];
     public ObservableCollection<HoldingRowViewModel> Holdings { get; } = [];
     public ObservableCollection<ActivityRowViewModel> Activity { get; } = [];
+    /// <summary>The five most-recent events, for the Portfolio right-rail card.</summary>
+    public ObservableCollection<ActivityRowViewModel> RecentActivity { get; } = [];
 
     /// <summary>What the total is made of — top assets by value, for the Portfolio-overview ring.</summary>
     public ObservableCollection<PortfolioSlice> PortfolioBreakdown { get; } = [];
@@ -519,10 +527,28 @@ public partial class MainViewModel : ViewModelBase
     /// <summary>Every coin the wallet accepts, with live price — readable while locked.</summary>
     public ObservableCollection<MarketRowViewModel> Market { get; } = [];
 
+    /// <summary>Popular coins shown in Market beyond the wallet's own chains — priced + charted; their
+    /// balances still surface via the EVM/token paths, so nothing here is a dead "adapter pending" row.</summary>
+    private static readonly (string Symbol, string Name)[] ExtraMarketCoins =
+    [
+        ("BNB", "BNB"), ("MATIC", "Polygon"), ("AVAX", "Avalanche"), ("FTM", "Fantom"), ("CRO", "Cronos"),
+        ("USDT", "Tether"), ("USDC", "USD Coin"), ("LINK", "Chainlink"), ("UNI", "Uniswap"),
+        ("XRP", "XRP"), ("DOT", "Polkadot"), ("BCH", "Bitcoin Cash"),
+    ];
+
     /// <summary>Product news, shown in the News section. Curated, offline; no network needed.
     /// Click an item to read the full note. Newest first.</summary>
     public ObservableCollection<NewsItemViewModel> News { get; } =
     [
+        new("NEW", "Many more coins, every token, NFTs, staking",
+            "The wallet now surfaces essentially everything you hold.\n\n" +
+            "• Coins — on top of BTC, ETH, LTC, DOGE, SOL, TON, TRON, ADA and XMR, every major EVM network at the same address now shows: BNB (BSC), MATIC (Polygon), AVAX, FTM (Fantom), CRO (Cronos), and ETH on the Arbitrum, Optimism and Base L2s.\n" +
+            "• Tokens — every ERC-20 (Ethereum) and TRC-20 (TRON) token appears automatically: USDC, USDT, LINK, UNI, DAI, SHIB, PEPE and the rest. This is what most 'my balance is missing' reports were.\n" +
+            "• NFTs — the ERC-721/1155 collections on your Ethereum address are listed (names and counts; no images are fetched, so it never leaks your IP).\n" +
+            "• Staking — the coins you can stake with your keys, with each network's typical reward and how to do it.\n" +
+            "• Portfolio overview — the ring now shows a real breakdown of what your balance is made of, with a live 24h change; hiding the balance now blanks every figure everywhere, not just the top total.\n" +
+            "• Activity — sends, swaps, connecting a wallet or exchange, theme/language/settings changes and Tor toggles are all logged now.",
+            "2026-08-01"),
         new("NEW", "Cardano (ADA) sending is live",
             "You can now send ADA, not just receive it. The Cardano transaction is built, signed and broadcast entirely on this device.\n\n" +
             "Cardano uses its own extended-key signature scheme (BIP32-Ed25519), so it was implemented from the elliptic-curve operations and then checked byte-for-byte against Emurgo's cardano-serialization-lib — the transaction body, its hash, the signature and the final signed transaction all match the reference exactly, so the network runs precisely the transfer the reference would build. UTXOs, the validity window and submission go through Koios, and change returns to you. ADA is now a full coin (receive, balance and send); Monero stays receive-only.",
@@ -1254,7 +1280,9 @@ public partial class MainViewModel : ViewModelBase
     {
         try
         {
-            var symbols = ChainCatalog.All.Select(c => c.Symbol).ToList();
+            var symbols = ChainCatalog.All.Select(c => c.Symbol)
+                .Concat(ExtraMarketCoins.Select(e => e.Symbol))
+                .ToList();
             var prices = await _rates.GetUsdPricesAsync(symbols, CancellationToken.None);
             if (prices.Count == 0)
             {
@@ -1270,6 +1298,18 @@ public partial class MainViewModel : ViewModelBase
                 // Keep any sparkline we already fetched so the row doesn't blink empty on refresh.
                 var existingSpark = Market[idx].Spark;
                 Market[idx] = MarketRowViewModel.Live(chain, (double)usd, (double)change) with
+                {
+                    Spark = existingSpark,
+                };
+            }
+
+            foreach (var (sym, name) in ExtraMarketCoins)
+            {
+                var idx = Market.ToList().FindIndex(m => m.Symbol == sym);
+                if (idx < 0) continue;
+                var (usd, change) = prices.GetValueOrDefault(sym);
+                var existingSpark = Market[idx].Spark;
+                Market[idx] = MarketRowViewModel.LiveCoin(sym, name, (double)usd, (double)change) with
                 {
                     Spark = existingSpark,
                 };
@@ -2758,6 +2798,10 @@ public partial class MainViewModel : ViewModelBase
         Change24hLabel = Holdings.Count == 0
             ? "· unlock for live rates"
             : $"{(avg >= 0 ? "▲" : "▼")} {Math.Abs(avg):0.00}%   {(delta >= 0 ? "+" : "-")}${Math.Abs(delta):N2} · 24h";
+        PortfolioChangePercent = weight <= 0
+            ? "—"
+            : $"{(avg >= 0 ? "▲" : "▼")} {Math.Abs(avg):0.00}%";
+        PortfolioChangeColor = weight <= 0 ? "#8A9099" : avg >= 0 ? "#7DCF8F" : "#E08A8A";
         OnPropertyChanged(nameof(BalanceDisplayMain));
         OnPropertyChanged(nameof(BalanceDisplayCents));
         RebuildBreakdown(total);
@@ -2836,6 +2880,9 @@ public partial class MainViewModel : ViewModelBase
     {
         Activity.Insert(0, new ActivityRowViewModel(kind, asset, amount, counter, when, explorer));
         while (Activity.Count > 40) Activity.RemoveAt(Activity.Count - 1);
+
+        RecentActivity.Clear();
+        foreach (var row in Activity.Take(5)) RecentActivity.Add(row);
         OnPropertyChanged(nameof(HasActivity));
     }
 
@@ -3217,6 +3264,14 @@ public sealed record MarketRowViewModel(
 
     public static MarketRowViewModel Live(ChainInfo chain, double price, double change) =>
         new(chain.Symbol, chain.Name, price, change, chain.Support == ChainSupportLevel.Supported, price > 0);
+
+    /// <summary>A market-only coin (priced + charted, held via the token/EVM balance paths, not a
+    /// separate wallet chain). Marked supported since its balance already surfaces in Holdings.</summary>
+    public static MarketRowViewModel PendingCoin(string symbol, string name) =>
+        new(symbol, name, 0, 0, true, false);
+
+    public static MarketRowViewModel LiveCoin(string symbol, string name, double price, double change) =>
+        new(symbol, name, price, change, true, price > 0);
 
     public string PriceLabel => HasPrice
         ? $"${Price.ToString(Price >= 1 ? "N2" : "N6", CultureInfo.InvariantCulture)}"
