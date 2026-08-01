@@ -1570,7 +1570,7 @@ public partial class MainViewModel : ViewModelBase
                     .Select(w => ParseChain(w.Chain))
                     .Where(c => c is not null)
                     .Select(c => SymbolFor(c!.Value)))
-                .Concat(["USDT", "BNB", "MATIC", "AVAX"])
+                .Concat(["USDT", "BNB", "MATIC", "AVAX", "FTM", "CRO"])
                 .Distinct()
                 .ToList();
             var prices = await _rates.GetUsdPricesAsync(symbols, ct);
@@ -1718,18 +1718,12 @@ public partial class MainViewModel : ViewModelBase
             Accounts.Remove(stale);
         }
 
-        foreach (var (symbol, amount) in await _balances.GetEvmSideBalancesAsync(address, ct))
+        foreach (var (symbol, amount, network) in await _balances.GetEvmSideBalancesAsync(address, ct))
         {
             var (usd, change) = prices.GetValueOrDefault(symbol);
-            var name = symbol switch
-            {
-                "BNB" => "BNB · BSC",
-                "MATIC" => "Polygon",
-                "AVAX" => "Avalanche",
-                _ => symbol,
-            };
             Accounts.Add(new WalletAccountViewModel(
-                symbol, name, "Ready", address, "EVM side-chain", (double)usd, (double)amount, symbol, (double)change));
+                symbol, $"{symbol} · {network}", "Ready", address, "EVM side-chain",
+                (double)usd, (double)amount, network, (double)change));
         }
     }
 

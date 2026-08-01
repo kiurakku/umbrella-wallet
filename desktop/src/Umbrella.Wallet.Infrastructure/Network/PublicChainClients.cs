@@ -223,33 +223,39 @@ public sealed class PublicChainBalanceClient
         return null;
     }
 
-    // The major EVM chains that share the same 0x address as Ethereum, with public RPC fallbacks.
-    private static readonly (string Symbol, string[] Rpcs)[] EvmSideChains =
+    // Every EVM network that shares the same 0x address as Ethereum, with public RPC fallbacks. The
+    // L2s (Arbitrum / Optimism / Base) use ETH as their native coin, shown per-network.
+    private static readonly (string Symbol, string Network, string[] Rpcs)[] EvmSideChains =
     [
-        ("BNB",   ["https://bsc-dataseed.binance.org", "https://bsc-dataseed1.defibit.io", "https://rpc.ankr.com/bsc"]),
-        ("MATIC", ["https://polygon-rpc.com", "https://rpc.ankr.com/polygon"]),
-        ("AVAX",  ["https://api.avax.network/ext/bc/C/rpc", "https://rpc.ankr.com/avalanche"]),
+        ("BNB",   "BSC",       ["https://bsc-dataseed.binance.org", "https://bsc-dataseed1.defibit.io", "https://rpc.ankr.com/bsc"]),
+        ("MATIC", "Polygon",   ["https://polygon-rpc.com", "https://rpc.ankr.com/polygon"]),
+        ("AVAX",  "Avalanche", ["https://api.avax.network/ext/bc/C/rpc", "https://rpc.ankr.com/avalanche"]),
+        ("FTM",   "Fantom",    ["https://rpc.ftm.tools", "https://rpc.ankr.com/fantom"]),
+        ("CRO",   "Cronos",    ["https://evm.cronos.org", "https://cronos-evm-rpc.publicnode.com"]),
+        ("ETH",   "Arbitrum",  ["https://arb1.arbitrum.io/rpc", "https://rpc.ankr.com/arbitrum"]),
+        ("ETH",   "Optimism",  ["https://mainnet.optimism.io", "https://rpc.ankr.com/optimism"]),
+        ("ETH",   "Base",      ["https://mainnet.base.org", "https://base.publicnode.com"]),
     ];
 
     /// <summary>
-    /// Native balances of the major EVM side-chains (BNB on BSC, MATIC on Polygon, AVAX on Avalanche
-    /// C-chain) at the SAME 0x address, so a wallet imported from MetaMask shows those coins too — not
-    /// just Ethereum mainnet. Only non-zero balances are returned.
+    /// Native balances of every major EVM network (BNB/MATIC/AVAX/FTM/CRO, plus ETH on the Arbitrum,
+    /// Optimism and Base L2s) at the SAME 0x address, so a MetaMask-imported wallet shows all of them —
+    /// not just Ethereum mainnet. Queried in parallel; only non-zero balances are returned.
     /// </summary>
-    public async Task<IReadOnlyList<(string Symbol, decimal Amount)>> GetEvmSideBalancesAsync(
+    public async Task<IReadOnlyList<(string Symbol, decimal Amount, string Network)>> GetEvmSideBalancesAsync(
         string address, CancellationToken cancellationToken = default)
     {
-        var result = new List<(string, decimal)>();
         if (string.IsNullOrWhiteSpace(address) || !address.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
-            return result;
+            return [];
 
-        foreach (var (symbol, rpcs) in EvmSideChains)
+        var tasks = EvmSideChains.Select(async chain =>
         {
-            var amount = await EvmNativeBalanceAsync(rpcs, address, cancellationToken);
-            if (amount is > 0m) result.Add((symbol, amount.Value));
-        }
+            var amount = await EvmNativeBalanceAsync(chain.Rpcs, address, cancellationToken);
+            return (chain.Symbol, Amount: amount ?? 0m, chain.Network);
+        });
 
-        return result;
+        var results = await Task.WhenAll(tasks);
+        return results.Where(r => r.Amount > 0m).ToList();
     }
 
     private static async Task<decimal?> EvmNativeBalanceAsync(string[] rpcs, string address, CancellationToken ct)
@@ -544,6 +550,8 @@ public sealed class PublicMarketRatesClient
         ["BNB"] = "binancecoin",
         ["MATIC"] = "matic-network",
         ["AVAX"] = "avalanche-2",
+        ["FTM"] = "fantom",
+        ["CRO"] = "crypto-com-chain",
         // Tether trades a cent either side of $1; quoting it beats assuming exactly 1.00.
         ["USDT"] = "tether",
     };

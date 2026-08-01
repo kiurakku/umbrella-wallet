@@ -11,8 +11,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versioning follo
   Ethereum (via Koios-style public APIs / Blockscout, no keys) appears in Holdings — reward tokens,
   other stablecoins, any token — which is what most "my balance is missing" reports actually were.
   Unpriced tokens show their real amount at $0 rather than an invented price.
-- **More coins.** Native BNB (BSC), MATIC (Polygon) and AVAX (Avalanche C-chain) at the same 0x
-  address as Ethereum, so a MetaMask-imported wallet shows those too.
+- **Many more coins.** Every major EVM network at the same 0x address as Ethereum — native BNB (BSC),
+  MATIC (Polygon), AVAX (Avalanche), FTM (Fantom), CRO (Cronos), plus ETH on the Arbitrum, Optimism
+  and Base L2s — queried in parallel. Combined with the automatic ERC-20 / TRC-20 token display, a
+  MetaMask-imported wallet now shows essentially everything it holds.
 - **Portfolio-overview ring breakdown.** The right-rail ring now shows what the balance is made of:
   a proportional bar plus a per-asset legend (symbol · share · value), top assets with the rest
   folded into "Other".
