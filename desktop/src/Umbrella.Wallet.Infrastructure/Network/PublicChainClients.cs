@@ -573,6 +573,17 @@ public sealed class PublicMarketRatesClient
         ["SOL"] = "SOLUSDT",
         ["TON"] = "TONUSDT",
         ["ADA"] = "ADAUSDT",
+        ["BNB"] = "BNBUSDT",
+        ["MATIC"] = "MATICUSDT",
+        ["AVAX"] = "AVAXUSDT",
+        ["FTM"] = "FTMUSDT",
+        ["LINK"] = "LINKUSDT",
+        ["UNI"] = "UNIUSDT",
+        ["XRP"] = "XRPUSDT",
+        ["DOT"] = "DOTUSDT",
+        ["BCH"] = "BCHUSDT",
+        ["USDC"] = "USDCUSDT",
+        // CRO has no Binance USDT pair — it prices via CoinGecko only.
     };
 
     /// <summary>Chart windows offered in the Market view.</summary>
@@ -769,13 +780,57 @@ public sealed class PublicMarketRatesClient
             return new Dictionary<string, (decimal, decimal)>();
         }
 
-        var fromCoinGecko = await TryCoinGeckoAsync(list, cancellationToken);
-        if (fromCoinGecko.Count > 0)
+        // Binance first: it is far less rate-limited than CoinGecko's free tier (which frequently 429s),
+        // and covers most coins. CoinGecko then fills only what Binance lacks (XMR, CRO, …). Merging the
+        // two — rather than falling back all-or-nothing — is why every listed coin actually gets a price.
+        var map = new Dictionary<string, (decimal Usd, decimal Change24h)>(
+            await TryBinanceAsync(list, cancellationToken), StringComparer.OrdinalIgnoreCase);
+
+        var missing = list.Where(s => !map.ContainsKey(s)).ToList();
+        if (missing.Count > 0)
         {
-            return fromCoinGecko;
+            foreach (var kv in await TryCoinGeckoAsync(missing, cancellationToken))
+                map[kv.Key] = kv.Value;
         }
 
-        return await TryBinanceAsync(list, cancellationToken);
+        // Stablecoins that still have no quote (e.g. USDT has no Binance USDT pair and CoinGecko was
+        // rate-limited) sit at ~$1 rather than showing nothing.
+        foreach (var stable in new[] { "USDT", "USDC", "DAI", "TUSD", "USDD" })
+            if (list.Contains(stable) && !map.ContainsKey(stable))
+                map[stable] = (1m, 0m);
+
+        return map;
+    }
+
+    /// <summary>
+    /// USD → <paramref name="code"/> fiat rate (EUR, UAH, RUB, …), so balances can display in the user's
+    /// currency. Keyless via open.er-api.com; returns 1 on any failure so amounts degrade to USD rather
+    /// than vanish.
+    /// </summary>
+    public async Task<decimal> GetFiatRateAsync(string code, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(code) || string.Equals(code, "USD", StringComparison.OrdinalIgnoreCase))
+            return 1m;
+
+        try
+        {
+            using var res = await Http.GetAsync("https://open.er-api.com/v6/latest/USD", cancellationToken);
+            if (!res.IsSuccessStatusCode) return 1m;
+            using var doc = await JsonDocument.ParseAsync(
+                await res.Content.ReadAsStreamAsync(cancellationToken), cancellationToken: cancellationToken);
+            if (doc.RootElement.TryGetProperty("rates", out var rates) &&
+                rates.TryGetProperty(code.ToUpperInvariant(), out var r) &&
+                r.TryGetDecimal(out var rate) && rate > 0m)
+            {
+                return rate;
+            }
+        }
+        catch
+        {
+            // fall through to 1.0 (USD)
+        }
+
+        return 1m;
     }
 
     private static async Task<Dictionary<string, (decimal, decimal)>> TryCoinGeckoAsync(

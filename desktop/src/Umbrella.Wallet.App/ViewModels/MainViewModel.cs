@@ -138,6 +138,42 @@ public partial class MainViewModel : ViewModelBase
 
     public IReadOnlyList<Loc.Language> Languages => Loc.Languages;
 
+    // --- Display currency ---------------------------------------------------
+    public IReadOnlyList<Fx.Currency> Currencies => Fx.Currencies;
+
+    /// <summary>The chosen fiat's symbol, bound where the UI shows a "$" prefix.</summary>
+    public string CurrencySymbol => Fx.Symbol;
+
+    /// <summary>"TOTAL BALANCE · &lt;currency&gt;" caption above the balance.</summary>
+    public string TotalBalanceCaption => $"TOTAL BALANCE · {_uiSettings.Currency}";
+
+    /// <summary>Fiat to show balances in. Prices stay USD internally; <see cref="Fx"/> converts.</summary>
+    public string CurrencyCode
+    {
+        get => _uiSettings.Currency;
+        set
+        {
+            if (_uiSettings.Currency == value || Fx.Currencies.All(c => c.Code != value)) return;
+            _uiSettings.Currency = value;
+            _uiSettings.Save();
+            OnPropertyChanged();
+            if (IsUnlocked) PushActivity("Settings", "Currency", value, "changed", "now");
+            _ = ApplyCurrencyAsync();
+        }
+    }
+
+    /// <summary>Loads the USD→currency rate and repaints every money figure in the new currency.</summary>
+    private async Task ApplyCurrencyAsync()
+    {
+        Fx.Symbol = Fx.SymbolFor(_uiSettings.Currency);
+        Fx.Rate = await _rates.GetFiatRateAsync(_uiSettings.Currency);
+        OnPropertyChanged(nameof(CurrencySymbol));
+        OnPropertyChanged(nameof(TotalBalanceCaption));
+        RefreshHoldings();   // rebuild Holdings rows so their Fx-based labels re-read the new rate
+        RecalcBalance();
+        _ = RefreshMarketAsync(); // market rows re-read prices in the new currency
+    }
+
     /// <summary>Selected colour theme; repaints every themed surface immediately.</summary>
     public string ThemeId
     {
@@ -450,16 +486,17 @@ public partial class MainViewModel : ViewModelBase
             Market.Add(MarketRowViewModel.Pending(chain));
         }
 
-        foreach (var (sym, name) in ExtraMarketCoins)
-            Market.Add(MarketRowViewModel.PendingCoin(sym, name));
+        foreach (var (sym, name, holdable) in ExtraMarketCoins)
+            Market.Add(MarketRowViewModel.PendingCoin(sym, name, holdable));
 
         SelectedSendAsset = SendableAssets[0];
         SelectedWatchNetwork = WatchableNetworks[0];
         BuildGuide();
         LoadProfileImages();
 
+        Fx.Symbol = Fx.SymbolFor(_uiSettings.Currency); // right symbol immediately; rate loads next
         _ = LoadWatchAddressesAsync();
-        _ = RefreshMarketAsync();
+        _ = ApplyCurrencyAsync(); // fetches the USD→currency rate, then refreshes market/holdings
         RefreshHoldings();
         RecalcBalance();
         StartAutoRefresh();
@@ -498,6 +535,16 @@ public partial class MainViewModel : ViewModelBase
     public ObservableCollection<ActivityRowViewModel> Activity { get; } = [];
     /// <summary>The five most-recent events, for the Portfolio right-rail card.</summary>
     public ObservableCollection<ActivityRowViewModel> RecentActivity { get; } = [];
+    /// <summary>Activity narrowed by the selected filter tab.</summary>
+    public ObservableCollection<ActivityRowViewModel> FilteredActivity { get; } = [];
+    /// <summary>Money movements only (sends, receives, swaps) — the Transactions section + history.</summary>
+    public ObservableCollection<ActivityRowViewModel> Transactions { get; } = [];
+    public bool HasTransactions => Transactions.Count > 0;
+
+    public IReadOnlyList<string> ActivityFilters { get; } =
+        ["All", "Transactions", "Connections", "Settings", "System"];
+    [ObservableProperty] private string _activityFilter = "All";
+    partial void OnActivityFilterChanged(string value) => RebuildFilteredActivity();
 
     /// <summary>What the total is made of — top assets by value, for the Portfolio-overview ring.</summary>
     public ObservableCollection<PortfolioSlice> PortfolioBreakdown { get; } = [];
@@ -529,17 +576,27 @@ public partial class MainViewModel : ViewModelBase
 
     /// <summary>Popular coins shown in Market beyond the wallet's own chains — priced + charted; their
     /// balances still surface via the EVM/token paths, so nothing here is a dead "adapter pending" row.</summary>
-    private static readonly (string Symbol, string Name)[] ExtraMarketCoins =
+    // Holdable = the wallet actually derives an address for it (EVM coins share the 0x address; the
+    // tokens live at the ETH/TRON address). XRP/DOT/BCH are market-only until each gets its own chain.
+    private static readonly (string Symbol, string Name, bool Holdable)[] ExtraMarketCoins =
     [
-        ("BNB", "BNB"), ("MATIC", "Polygon"), ("AVAX", "Avalanche"), ("FTM", "Fantom"), ("CRO", "Cronos"),
-        ("USDT", "Tether"), ("USDC", "USD Coin"), ("LINK", "Chainlink"), ("UNI", "Uniswap"),
-        ("XRP", "XRP"), ("DOT", "Polkadot"), ("BCH", "Bitcoin Cash"),
+        ("BNB", "BNB", true), ("MATIC", "Polygon", true), ("AVAX", "Avalanche", true),
+        ("FTM", "Fantom", true), ("CRO", "Cronos", true),
+        ("USDT", "Tether", true), ("USDC", "USD Coin", true), ("LINK", "Chainlink", true), ("UNI", "Uniswap", true),
+        ("XRP", "XRP", false), ("DOT", "Polkadot", false), ("BCH", "Bitcoin Cash", false),
     ];
 
     /// <summary>Product news, shown in the News section. Curated, offline; no network needed.
     /// Click an item to read the full note. Newest first.</summary>
     public ObservableCollection<NewsItemViewModel> News { get; } =
     [
+        new("NEW", "Your currency, a Transactions view, and a fixed Market",
+            "Three things people asked for:\n\n" +
+            "• Display currency — Settings → Appearance now lets you show everything in USD, EUR, UAH (₴), RUB, GBP, CNY, JPY and more. The total, holdings, breakdown and market all convert; your coins don't change, only how their value reads. The rate is fetched anonymously (through Tor when it's on).\n" +
+            "• Transactions — a dedicated section lists your money movements (sends, receives, swaps) with a one-click copy of each explorer link, and the Activity feed now has a filter (All / Transactions / Connections / Settings / System).\n" +
+            "• Market — prices now come from Binance first (CoinGecko's free tier was rate-limiting and blanking rows), so every coin prices and charts again; the market-only coins (XRP/DOT/BCH) now say so honestly.\n\n" +
+            "Also: two new themes — Uniswap (magenta-pink) and Ocean (teal).",
+            "2026-08-01"),
         new("NEW", "Send on every EVM chain — BNB, Polygon, Avalanche and more",
             "You can now send native BNB (BSC), MATIC (Polygon), AVAX (Avalanche), FTM (Fantom) and CRO (Cronos) — not just Ethereum. They all share your 0x address, so a wallet imported from MetaMask can now spend across six EVM networks from one place.\n\n" +
             "The signing is the exact same EIP-155 code that's pinned byte-for-byte to the official Ethereum test vector — only the chain id, RPC and explorer change, so a wrong byte can never move funds. Nonce, gas and the balance check come from each chain's public RPCs (with fallbacks), and every request goes through the built-in Tor when it's on, so sending stays anonymous.",
@@ -676,6 +733,7 @@ public partial class MainViewModel : ViewModelBase
     public bool IsSend => ActiveSection == "Send";
     public bool IsSwap => ActiveSection == "Swap";
     public bool IsActivity => ActiveSection == "Activity";
+    public bool IsTransactions => ActiveSection == "Transactions";
     public bool IsSettings => ActiveSection == "Settings";
     public bool IsConnect => ActiveSection == "Connect";
     public bool IsMarket => ActiveSection == "Market";
@@ -799,6 +857,7 @@ public partial class MainViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsSend));
         OnPropertyChanged(nameof(IsSwap));
         OnPropertyChanged(nameof(IsActivity));
+        OnPropertyChanged(nameof(IsTransactions));
         OnPropertyChanged(nameof(IsSettings));
         OnPropertyChanged(nameof(IsConnect));
         OnPropertyChanged(nameof(IsMarket));
@@ -1312,13 +1371,13 @@ public partial class MainViewModel : ViewModelBase
                 };
             }
 
-            foreach (var (sym, name) in ExtraMarketCoins)
+            foreach (var (sym, name, holdable) in ExtraMarketCoins)
             {
                 var idx = Market.ToList().FindIndex(m => m.Symbol == sym);
                 if (idx < 0) continue;
                 var (usd, change) = prices.GetValueOrDefault(sym);
                 var existingSpark = Market[idx].Spark;
-                Market[idx] = MarketRowViewModel.LiveCoin(sym, name, (double)usd, (double)change) with
+                Market[idx] = MarketRowViewModel.LiveCoin(sym, name, (double)usd, (double)change, holdable) with
                 {
                     Spark = existingSpark,
                 };
@@ -2799,8 +2858,9 @@ public partial class MainViewModel : ViewModelBase
 
     private void RecalcBalance()
     {
-        var total = Holdings.Sum(h => h.Value);
-        var parts = total.ToString("N2", CultureInfo.InvariantCulture).Split('.');
+        var total = Holdings.Sum(h => h.Value);                 // USD
+        var displayTotal = total * (double)Fx.Rate;             // in the chosen currency
+        var parts = displayTotal.ToString("N2", CultureInfo.InvariantCulture).Split('.');
         TotalBalanceMain = parts[0];
         TotalBalanceCents = parts.Length > 1 ? parts[1] : "00";
         double weighted = 0;
@@ -2813,10 +2873,10 @@ public partial class MainViewModel : ViewModelBase
         }
 
         var avg = weight > 0 ? weighted / weight : 0;
-        var delta = total * (avg / 100.0);
+        var delta = displayTotal * (avg / 100.0);
         Change24hLabel = Holdings.Count == 0
             ? "· unlock for live rates"
-            : $"{(avg >= 0 ? "▲" : "▼")} {Math.Abs(avg):0.00}%   {(delta >= 0 ? "+" : "-")}${Math.Abs(delta):N2} · 24h";
+            : $"{(avg >= 0 ? "▲" : "▼")} {Math.Abs(avg):0.00}%   {(delta >= 0 ? "+" : "-")}{Fx.Symbol}{Math.Abs(delta):N2} · 24h";
         PortfolioChangePercent = weight <= 0
             ? "—"
             : $"{(avg >= 0 ? "▲" : "▼")} {Math.Abs(avg):0.00}%";
@@ -2902,7 +2962,26 @@ public partial class MainViewModel : ViewModelBase
 
         RecentActivity.Clear();
         foreach (var row in Activity.Take(5)) RecentActivity.Add(row);
+        RebuildFilteredActivity();
+        RebuildTransactions();
         OnPropertyChanged(nameof(HasActivity));
+    }
+
+    public bool HasFilteredActivity => FilteredActivity.Count > 0;
+
+    private void RebuildFilteredActivity()
+    {
+        FilteredActivity.Clear();
+        foreach (var row in Activity.Where(a => ActivityFilter == "All" || a.Category == ActivityFilter))
+            FilteredActivity.Add(row);
+        OnPropertyChanged(nameof(HasFilteredActivity));
+    }
+
+    private void RebuildTransactions()
+    {
+        Transactions.Clear();
+        foreach (var row in Activity.Where(a => a.IsTransaction)) Transactions.Add(row);
+        OnPropertyChanged(nameof(HasTransactions));
     }
 
     /// <summary>Copy a transaction's explorer link to the clipboard — deliberately not opened in
@@ -3081,7 +3160,7 @@ public partial class MainViewModel : ViewModelBase
 public sealed record PortfolioSlice(string Symbol, double Percent, double Value, Avalonia.Media.IBrush Brush)
 {
     public string PercentLabel => $"{Percent:0.#}%";
-    public string ValueLabel => $"${Value:N2}";
+    public string ValueLabel => Fx.Money(Value);
     /// <summary>Segment width for a fixed 232 px stacked bar (min 3 px so a tiny slice stays visible).</summary>
     public double BarWidth => System.Math.Max(3, Percent / 100.0 * 232.0);
 }
@@ -3158,9 +3237,9 @@ public sealed record HoldingRowViewModel(
     string Address,
     string SupportStatus)
 {
-    public string PriceLabel => $"${Price.ToString("N2", CultureInfo.InvariantCulture)}";
+    public string PriceLabel => Fx.Price(Price);
     public string AmountLabel => $"{Amount.ToString("N6", CultureInfo.InvariantCulture)} {Symbol}";
-    public string ValueLabel => $"${Value.ToString("N2", CultureInfo.InvariantCulture)}";
+    public string ValueLabel => Fx.Money(Value);
     public string ChangeLabel =>
         $"{(Change24h > 0 ? "▲" : Change24h < 0 ? "▼" : "·")} {Math.Abs(Change24h):0.00}%";
     public string ChangeColor =>
@@ -3240,6 +3319,18 @@ public sealed record ActivityRowViewModel(
     /// <summary>A block-explorer link exists, so the row is actionable (copy the URL).</summary>
     public bool HasLink => !string.IsNullOrWhiteSpace(Explorer);
 
+    /// <summary>True for money movements (used by the Transactions section and the "Transactions" filter).</summary>
+    public bool IsTransaction => Kind is "Sent" or "Received" or "Swap";
+
+    /// <summary>Which activity filter tab this row belongs to.</summary>
+    public string Category => Kind switch
+    {
+        "Sent" or "Received" or "Swap" => "Transactions",
+        "Connected" => "Connections",
+        "Theme" or "Settings" => "Settings",
+        _ => "System",
+    };
+
     /// <summary>Colour the type at a glance: outgoing red, incoming/connected teal, swap violet,
     /// theme/settings/security/sync housekeeping muted.</summary>
     public string KindColor => Kind switch
@@ -3286,15 +3377,13 @@ public sealed record MarketRowViewModel(
 
     /// <summary>A market-only coin (priced + charted, held via the token/EVM balance paths, not a
     /// separate wallet chain). Marked supported since its balance already surfaces in Holdings.</summary>
-    public static MarketRowViewModel PendingCoin(string symbol, string name) =>
-        new(symbol, name, 0, 0, true, false);
+    public static MarketRowViewModel PendingCoin(string symbol, string name, bool holdable) =>
+        new(symbol, name, 0, 0, holdable, false);
 
-    public static MarketRowViewModel LiveCoin(string symbol, string name, double price, double change) =>
-        new(symbol, name, price, change, true, price > 0);
+    public static MarketRowViewModel LiveCoin(string symbol, string name, double price, double change, bool holdable) =>
+        new(symbol, name, price, change, holdable, price > 0);
 
-    public string PriceLabel => HasPrice
-        ? $"${Price.ToString(Price >= 1 ? "N2" : "N6", CultureInfo.InvariantCulture)}"
-        : "—";
+    public string PriceLabel => HasPrice ? Fx.Price(Price) : "—";
 
     public string ChangeLabel => HasPrice
         ? $"{(Change24h > 0 ? "▲" : Change24h < 0 ? "▼" : "·")} {Math.Abs(Change24h):0.00}%"

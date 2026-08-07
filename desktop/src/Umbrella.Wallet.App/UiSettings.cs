@@ -13,6 +13,7 @@ public sealed class UiSettings
 {
     public string Theme { get; set; } = "purple";
     public string Language { get; set; } = "en";
+    public string Currency { get; set; } = "USD";
     public string SidebarPosition { get; set; } = "Left";
     public bool AnimationsEnabled { get; set; } = true;
 

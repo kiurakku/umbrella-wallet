@@ -4,6 +4,21 @@ All notable releases of **Umbrella Wallet**.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versioning follows [SemVer](https://semver.org/).
 
+## [2.6.0] — 2026-08-01
+
+### Desktop
+- **Display currency.** Settings → Appearance lets you show balances and prices in USD, EUR, UAH, RUB,
+  GBP, CNY, JPY, PLN, TRY or INR — the total, holdings, breakdown and market all convert (USD→currency
+  rate via a keyless API, routed through Tor when on). Coins are unchanged; only how their value reads.
+- **Transactions section + Activity filters.** A dedicated Transactions view lists money movements
+  (sends, receives, swaps) with a copy-explorer-link on each; the Activity feed gains a filter
+  (All / Transactions / Connections / Settings / System).
+- **Market fixed + fuller.** Prices now come from Binance first (CoinGecko's free tier was rate-limiting
+  and blanking every row), with CoinGecko filling only what Binance lacks — so BNB/MATIC/AVAX/FTM/LINK/
+  UNI/XRP/DOT/BCH/USDC all price and chart. Market-only coins (XRP/DOT/BCH) now say so honestly instead
+  of claiming a wallet address.
+- **Two more themes** — Uniswap (magenta-pink) and Ocean (teal) — bringing the palette to 13.
+
 ## [2.5.0] — 2026-08-01
 
 ### Coins — sending on every EVM chain

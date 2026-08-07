@@ -30,6 +30,8 @@ public static class Theming
         new("crimson", "Crimson"),
         new("amber", "Amber"),
         new("slate", "Slate"),
+        new("uniswap", "Uniswap · pink"),
+        new("ocean", "Ocean · teal"),
     ];
 
     /// <summary>Order matters only for readability; every theme must define every key.</summary>
@@ -141,6 +143,24 @@ public static class Theming
             "#1B8C7E", "#2DE0C0", "#23BEA6", "#124038", "#0F3730",
             "#EAF6F4", "#C0D4D0", "#849792", "#6C7E7A", "#2DE0C0",
             "#EAF6F4", "#FFFFFF", "#0A0C0D",
+        ],
+        // Uniswap-style: hot magenta-pink on a deep violet near-black (the app.uniswap.org mood).
+        ["uniswap"] =
+        [
+            "#0B0712", "#120A1B", "#190F26", "#140B20", "#241534", "#301C44",
+            "#241534", "#3A2352", "#4E2F6E",
+            "#B02FC0", "#FC72FF", "#E24FE8", "#3A1547", "#2E1238",
+            "#F6EDFB", "#D6C2E2", "#A088AD", "#82708C", "#6FD3A0",
+            "#F6EDFB", "#FFFFFF", "#0B0712",
+        ],
+        // Deep-ocean teal/cyan on midnight blue.
+        ["ocean"] =
+        [
+            "#04090E", "#071119", "#0B1B26", "#08151F", "#102A3A", "#153A4F",
+            "#0F2432", "#1B3B50", "#265069",
+            "#1E7FA8", "#38C6E0", "#2AA6C0", "#123A4C", "#0F3040",
+            "#E6F4FA", "#B6D0DC", "#7C96A2", "#647C86", "#43F5C0",
+            "#E6F4FA", "#FFFFFF", "#04090E",
         ],
     };
 
