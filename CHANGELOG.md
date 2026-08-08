@@ -4,6 +4,23 @@ All notable releases of **Umbrella Wallet**.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versioning follows [SemVer](https://semver.org/).
 
+## [2.8.5] — 2026-08-08
+
+### Desktop
+- **One login password for every wallet.** Adding a wallet no longer asks for a separate password —
+  it reuses your app password, and switching between wallets unlocks instantly instead of re-prompting.
+  (If a wallet happens to use a different password, it still asks.) The password is held only in memory
+  while unlocked and wiped on lock, same as the seed.
+- **Clearer "invalid phrase" for TON/Telegram wallets.** Importing a recovery phrase from Telegram
+  Wallet / Tonkeeper (TON) now explains *why* it's rejected: those wallets use the same wordlist but the
+  TON mnemonic standard, which isn't BIP39 — so it can't be imported here, and your funds stay safe in
+  that wallet. (Full TON-wallet import is planned as a separate, test-pinned feature.)
+- **Fixed the rain animation.** The ambient streaks used to fall in three synchronised rows (they all
+  shared one animation phase). They now have varied speeds and per-drop delays, so it reads as real rain,
+  and travels the full height of a maximised window. Kept deliberately subtle.
+- **Settings search.** A search box at the top of Settings finds any option by name or keyword and jumps
+  straight to its pane.
+
 ## [2.8.4] — 2026-08-08
 
 ### Desktop

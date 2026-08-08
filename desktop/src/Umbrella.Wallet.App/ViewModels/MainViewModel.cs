@@ -367,6 +367,59 @@ public partial class MainViewModel : ViewModelBase
         SelectSection("Settings");
     }
 
+    // --- Settings search -----------------------------------------------------
+    /// <summary>Everything you can find in Settings, with the pane each lives in. Drives the search box.</summary>
+    private static readonly SettingsShortcut[] SettingsCatalog =
+    [
+        new("Language", "Appearance", "interface language english ukrainian"),
+        new("Theme", "Appearance", "colors dark brand uniswap binance bitcoin telegram tron"),
+        new("Display currency", "Appearance", "usd eur uah rub fiat money symbol"),
+        new("Wallets", "Wallets", "switch multiple accounts binance"),
+        new("Add a wallet", "Wallets", "new wallet import second savings"),
+        new("Rename wallet", "Wallets", "label name"),
+        new("Auto-lock timer", "Security", "idle lock minutes"),
+        new("Reveal recovery phrase", "Backup", "seed words 24 mnemonic show"),
+        new("Backup & restore", "Backup", "export import vault file"),
+        new("Monero keys", "Backup", "xmr spend view secret"),
+        new("Tor / network privacy", "Privacy", "tor onion routing ip"),
+        new("Screenshot protection", "Privacy", "hide seed capture screen"),
+        new("Guide & docs", "Guide", "help documentation how to"),
+        new("Delete wallet", "Danger", "erase wipe remove everything"),
+        new("Clear history", "Danger", "activity transactions log"),
+        new("Disconnect all", "Danger", "watch addresses exchanges unlink"),
+    ];
+
+    public ObservableCollection<SettingsShortcut> SettingsResults { get; } = [];
+    public bool HasSettingsResults => SettingsResults.Count > 0;
+
+    [ObservableProperty] private string _settingsSearch = string.Empty;
+
+    partial void OnSettingsSearchChanged(string value)
+    {
+        SettingsResults.Clear();
+        var q = value?.Trim();
+        if (!string.IsNullOrEmpty(q))
+        {
+            foreach (var s in SettingsCatalog)
+            {
+                if (s.Label.Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                    s.Keywords.Contains(q, StringComparison.OrdinalIgnoreCase))
+                {
+                    SettingsResults.Add(s);
+                }
+            }
+        }
+        OnPropertyChanged(nameof(HasSettingsResults));
+    }
+
+    /// <summary>Open a settings pane from a search result and clear the query.</summary>
+    [RelayCommand]
+    private void OpenSetting(string? tab)
+    {
+        if (!string.IsNullOrWhiteSpace(tab)) SettingsTab = tab;
+        SettingsSearch = string.Empty;
+    }
+
     // --- Developer fee -------------------------------------------------------
     // Baked into the build (DeveloperFeeConfig): the recipient address is obfuscated and never shown
     // in the UI. The fee percentage is still disclosed in the send review before the user confirms.
@@ -464,6 +517,9 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty] private System.Collections.Generic.List<Avalonia.Point> _chartPoints = new();
 
     private string? _unlockedMnemonic;
+    // One common login password for the whole app: captured on unlock/create so additional wallets
+    // reuse it and switching between wallets doesn't re-prompt. Wiped on lock alongside the seed.
+    private string? _sessionPassword;
     private readonly WalletRegistry _registry;
     private EncryptedFileSeedVault _vault;
     // Add-wallet flow: while true, a create/import writes an *additional* wallet rather than the first.
@@ -636,6 +692,13 @@ public partial class MainViewModel : ViewModelBase
     /// Click an item to read the full note. Newest first.</summary>
     public ObservableCollection<NewsItemViewModel> News { get; } =
     [
+        new("NEW", "One password for all wallets, plus fixes",
+            "Follow-ups from your feedback:\n\n" +
+            "• One login password. Adding a wallet now reuses your app password instead of asking for a new one, and switching between wallets unlocks instantly. The password lives only in memory while you're unlocked and is wiped on lock.\n" +
+            "• Telegram / TON wallets. If you paste a recovery phrase from Telegram Wallet or Tonkeeper and it says \"invalid\", that's expected — TON wallets use the same words but a different (non-BIP39) standard, so they can't be imported here. Your coins are safe in that wallet. The message now explains this, and full TON import is planned.\n" +
+            "• Rain, fixed. The ambient streaks fell in stiff synchronised rows; now they drift at varied speeds like real rain, and stay subtle.\n" +
+            "• Settings search. A search box up top finds any setting and jumps to it.",
+            "2026-08-08"),
         new("NEW", "Multiple wallets, like Binance accounts",
             "You can now keep several independent wallets on this device and switch between them:\n\n" +
             "• Open Settings → Wallets (or tap ⇄ Wallets in the sidebar) to add a new wallet, switch, rename or remove one.\n" +
@@ -983,6 +1046,7 @@ public partial class MainViewModel : ViewModelBase
         {
             var mnemonic = _mnemonics.Generate();
             await _vault.CreateAsync(mnemonic, Password);
+            _sessionPassword = Password;
             HasVault = true;
             FinalizeWalletRegistration();
             SetUnlocked(mnemonic);
@@ -1020,6 +1084,7 @@ public partial class MainViewModel : ViewModelBase
         await RunBusyAsync(async () =>
         {
             await _vault.CreateAsync(result.NormalizedMnemonic, Password);
+            _sessionPassword = Password;
             HasVault = true;
             FinalizeWalletRegistration();
             SetUnlocked(result.NormalizedMnemonic);
@@ -1046,6 +1111,7 @@ public partial class MainViewModel : ViewModelBase
         await RunBusyAsync(async () =>
         {
             var mnemonic = await _vault.UnlockAsync(Password);
+            _sessionPassword = Password;
             ClearPasswordFields();
             SetUnlocked(mnemonic);
             ActiveSection = "Portfolio";
@@ -1396,6 +1462,7 @@ public partial class MainViewModel : ViewModelBase
             _unlockedMnemonic = string.Empty;
             _unlockedMnemonic = null;
         }
+        _sessionPassword = null;
 
         IsUnlocked = false;
         PendingPhraseBackup = false;
@@ -1442,20 +1509,41 @@ public partial class MainViewModel : ViewModelBase
         OnPropertyChanged(nameof(HasMultipleWallets));
     }
 
-    /// <summary>Switch to another wallet: locks the current one (wiping its seed from memory) and shows
-    /// the unlock screen for the target, exactly like a fresh unlock.</summary>
+    /// <summary>Switch to another wallet. With one common password, the target is unlocked seamlessly;
+    /// if it happens to use a different password, we fall back to the unlock screen.</summary>
     [RelayCommand]
-    private void SwitchWallet(string? id)
+    private async Task SwitchWalletAsync(string? id)
     {
         if (string.IsNullOrWhiteSpace(id) || id == _registry.Active?.Id) return;
+        var pw = _sessionPassword;               // capture before LockVault wipes it
         _registry.SetActive(id);
         LockVault();
         _vault = BuildActiveVault();
         HasVault = _vault.Exists;
-        SetupStage = HasVault ? SetupStage : "Welcome";
         RefreshWalletList();
+
+        // Seamless switch when the common password matches (the normal case).
+        if (HasVault && !string.IsNullOrEmpty(pw))
+        {
+            try
+            {
+                var mnemonic = await _vault.UnlockAsync(pw);
+                _sessionPassword = pw;
+                SetUnlocked(mnemonic);
+                ActiveSection = "Portfolio";
+                StatusMessage = $"Switched to “{ActiveWalletLabel}”";
+                await RefreshLiveDataAsync();
+                return;
+            }
+            catch
+            {
+                // This wallet uses a different password — ask for it below.
+            }
+        }
+
+        SetupStage = HasVault ? SetupStage : "Welcome";
         StatusMessage = HasVault
-            ? $"Switched to “{ActiveWalletLabel}” · unlock to continue"
+            ? $"Switched to “{ActiveWalletLabel}” · enter its password"
             : $"“{ActiveWalletLabel}” · create or import to set it up";
     }
 
@@ -1465,6 +1553,7 @@ public partial class MainViewModel : ViewModelBase
     private void BeginAddWallet()
     {
         var label = string.IsNullOrWhiteSpace(NewWalletLabel) ? $"Wallet {_registry.Wallets.Count + 1}" : NewWalletLabel.Trim();
+        var pw = _sessionPassword;             // reuse the one common password (captured before LockVault)
         _previousActiveWalletId = _registry.Active?.Id;
         var entry = _registry.Add(label);
         _pendingNewWalletId = entry.Id;
@@ -1474,6 +1563,10 @@ public partial class MainViewModel : ViewModelBase
         _vault = BuildActiveVault();       // points at the new (not-yet-created) vault → HasVault=false
         HasVault = false;
         NewWalletLabel = string.Empty;
+        // Pre-fill the common password so the new wallet reuses it — the onboarding hides the password
+        // fields while IsAddingWallet, so there is one login password for the whole app.
+        Password = pw ?? string.Empty;
+        ConfirmPassword = pw ?? string.Empty;
         SetupStage = "Welcome";
         RefreshWalletList();
         StatusMessage = $"New wallet “{label}” · create or import its seed";
@@ -3722,6 +3815,12 @@ public sealed record CandleVm(
 /// <summary>One row in the P2P & DEX directory — a self-custody venue the user opens externally.</summary>
 public sealed record P2pVenue(
     string Name, string Kind, string Custody, string Description, string Url, string Tag, string Accent);
+
+/// <summary>A searchable Settings entry: a label, the pane it lives in, and hidden keywords.</summary>
+public sealed record SettingsShortcut(string Label, string Tab, string Keywords)
+{
+    public string TabLabel => Tab;
+}
 
 /// <summary>One wallet in the multi-wallet switcher.</summary>
 public sealed record WalletListItemViewModel(string Id, string Label, bool IsActive, bool IsLegacy)

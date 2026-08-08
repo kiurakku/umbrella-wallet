@@ -511,33 +511,67 @@
             <Setter Property="RadiusX" Value="1" />
             <Setter Property="RadiusY" Value="1" />
         </Style>
-        <Style Selector="Rectangle.rainA">
+        <!-- Six variants with different durations AND start delays. The delay gives each drop a
+             permanent phase offset, so they no longer fall in lockstep (the old A/B/C shared one
+             phase and marched in three synchronised rows). End Y is well past a maximised window so
+             a drop travels the whole height before recycling. -->
+        <Style Selector="Rectangle.rain1">
             <Style.Animations>
-                <Animation Duration="0:0:1.35" IterationCount="INFINITE" Easing="LinearEasing">
-                    <KeyFrame Cue="0%"><Setter Property="TranslateTransform.Y" Value="-180" /><Setter Property="Opacity" Value="0" /></KeyFrame>
-                    <KeyFrame Cue="14%"><Setter Property="Opacity" Value="0.85" /></KeyFrame>
-                    <KeyFrame Cue="86%"><Setter Property="Opacity" Value="0.85" /></KeyFrame>
-                    <KeyFrame Cue="100%"><Setter Property="TranslateTransform.Y" Value="940" /><Setter Property="Opacity" Value="0" /></KeyFrame>
+                <Animation Duration="0:0:1.35" Delay="0:0:0" IterationCount="INFINITE" Easing="LinearEasing">
+                    <KeyFrame Cue="0%"><Setter Property="TranslateTransform.Y" Value="-200" /><Setter Property="Opacity" Value="0" /></KeyFrame>
+                    <KeyFrame Cue="12%"><Setter Property="Opacity" Value="0.8" /></KeyFrame>
+                    <KeyFrame Cue="88%"><Setter Property="Opacity" Value="0.8" /></KeyFrame>
+                    <KeyFrame Cue="100%"><Setter Property="TranslateTransform.Y" Value="1320" /><Setter Property="Opacity" Value="0" /></KeyFrame>
                 </Animation>
             </Style.Animations>
         </Style>
-        <Style Selector="Rectangle.rainB">
+        <Style Selector="Rectangle.rain2">
             <Style.Animations>
-                <Animation Duration="0:0:0.95" IterationCount="INFINITE" Easing="LinearEasing">
-                    <KeyFrame Cue="0%"><Setter Property="TranslateTransform.Y" Value="-160" /><Setter Property="Opacity" Value="0" /></KeyFrame>
-                    <KeyFrame Cue="14%"><Setter Property="Opacity" Value="0.7" /></KeyFrame>
-                    <KeyFrame Cue="86%"><Setter Property="Opacity" Value="0.7" /></KeyFrame>
-                    <KeyFrame Cue="100%"><Setter Property="TranslateTransform.Y" Value="940" /><Setter Property="Opacity" Value="0" /></KeyFrame>
+                <Animation Duration="0:0:0.95" Delay="0:0:0.42" IterationCount="INFINITE" Easing="LinearEasing">
+                    <KeyFrame Cue="0%"><Setter Property="TranslateTransform.Y" Value="-200" /><Setter Property="Opacity" Value="0" /></KeyFrame>
+                    <KeyFrame Cue="12%"><Setter Property="Opacity" Value="0.68" /></KeyFrame>
+                    <KeyFrame Cue="88%"><Setter Property="Opacity" Value="0.68" /></KeyFrame>
+                    <KeyFrame Cue="100%"><Setter Property="TranslateTransform.Y" Value="1320" /><Setter Property="Opacity" Value="0" /></KeyFrame>
                 </Animation>
             </Style.Animations>
         </Style>
-        <Style Selector="Rectangle.rainC">
+        <Style Selector="Rectangle.rain3">
             <Style.Animations>
-                <Animation Duration="0:0:1.85" IterationCount="INFINITE" Easing="LinearEasing">
-                    <KeyFrame Cue="0%"><Setter Property="TranslateTransform.Y" Value="-220" /><Setter Property="Opacity" Value="0" /></KeyFrame>
-                    <KeyFrame Cue="14%"><Setter Property="Opacity" Value="0.9" /></KeyFrame>
-                    <KeyFrame Cue="86%"><Setter Property="Opacity" Value="0.9" /></KeyFrame>
-                    <KeyFrame Cue="100%"><Setter Property="TranslateTransform.Y" Value="980" /><Setter Property="Opacity" Value="0" /></KeyFrame>
+                <Animation Duration="0:0:1.85" Delay="0:0:0.16" IterationCount="INFINITE" Easing="LinearEasing">
+                    <KeyFrame Cue="0%"><Setter Property="TranslateTransform.Y" Value="-200" /><Setter Property="Opacity" Value="0" /></KeyFrame>
+                    <KeyFrame Cue="12%"><Setter Property="Opacity" Value="0.9" /></KeyFrame>
+                    <KeyFrame Cue="88%"><Setter Property="Opacity" Value="0.9" /></KeyFrame>
+                    <KeyFrame Cue="100%"><Setter Property="TranslateTransform.Y" Value="1320" /><Setter Property="Opacity" Value="0" /></KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+        <Style Selector="Rectangle.rain4">
+            <Style.Animations>
+                <Animation Duration="0:0:1.15" Delay="0:0:0.72" IterationCount="INFINITE" Easing="LinearEasing">
+                    <KeyFrame Cue="0%"><Setter Property="TranslateTransform.Y" Value="-200" /><Setter Property="Opacity" Value="0" /></KeyFrame>
+                    <KeyFrame Cue="12%"><Setter Property="Opacity" Value="0.75" /></KeyFrame>
+                    <KeyFrame Cue="88%"><Setter Property="Opacity" Value="0.75" /></KeyFrame>
+                    <KeyFrame Cue="100%"><Setter Property="TranslateTransform.Y" Value="1320" /><Setter Property="Opacity" Value="0" /></KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+        <Style Selector="Rectangle.rain5">
+            <Style.Animations>
+                <Animation Duration="0:0:1.55" Delay="0:0:0.28" IterationCount="INFINITE" Easing="LinearEasing">
+                    <KeyFrame Cue="0%"><Setter Property="TranslateTransform.Y" Value="-200" /><Setter Property="Opacity" Value="0" /></KeyFrame>
+                    <KeyFrame Cue="12%"><Setter Property="Opacity" Value="0.85" /></KeyFrame>
+                    <KeyFrame Cue="88%"><Setter Property="Opacity" Value="0.85" /></KeyFrame>
+                    <KeyFrame Cue="100%"><Setter Property="TranslateTransform.Y" Value="1320" /><Setter Property="Opacity" Value="0" /></KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+        <Style Selector="Rectangle.rain6">
+            <Style.Animations>
+                <Animation Duration="0:0:0.80" Delay="0:0:0.55" IterationCount="INFINITE" Easing="LinearEasing">
+                    <KeyFrame Cue="0%"><Setter Property="TranslateTransform.Y" Value="-200" /><Setter Property="Opacity" Value="0" /></KeyFrame>
+                    <KeyFrame Cue="12%"><Setter Property="Opacity" Value="0.62" /></KeyFrame>
+                    <KeyFrame Cue="88%"><Setter Property="Opacity" Value="0.62" /></KeyFrame>
+                    <KeyFrame Cue="100%"><Setter Property="TranslateTransform.Y" Value="1320" /><Setter Property="Opacity" Value="0" /></KeyFrame>
                 </Animation>
             </Style.Animations>
         </Style>

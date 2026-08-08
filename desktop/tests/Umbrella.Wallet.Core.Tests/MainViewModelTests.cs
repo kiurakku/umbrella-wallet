@@ -262,8 +262,8 @@ public sealed class MainViewModelTests : IDisposable
         Assert.Equal("Savings", vm.ActiveWalletLabel);
         Assert.Equal(2, vm.Wallets.Count);
 
-        // Switch back to Main → locked, must re-enter Main's password.
-        vm.SwitchWalletCommand.Execute(mainId);
+        // Switch back to Main → its password differs, so it must re-prompt (no seamless unlock).
+        await vm.SwitchWalletCommand.ExecuteAsync(mainId);
         Assert.False(vm.IsUnlocked);
         Assert.True(vm.IsUnlockStage);
         Assert.Equal("Main wallet", vm.ActiveWalletLabel);
@@ -278,6 +278,39 @@ public sealed class MainViewModelTests : IDisposable
         await vm.UnlockCommand.ExecuteAsync(null);
         Assert.True(vm.IsUnlocked);
         Assert.Equal("Main wallet", vm.ActiveWalletLabel);
+    }
+
+    /// <summary>One common app password: adding a wallet reuses it (no new password asked), and
+    /// switching between wallets unlocks seamlessly without re-prompting.</summary>
+    [Fact]
+    public async Task MultiWallet_OneCommonPassword_AddsAndSwitchesSeamlessly()
+    {
+        var vm = NewViewModel();
+        vm.Password = GoodPassword;
+        vm.ConfirmPassword = GoodPassword;
+        await vm.CreateWalletCommand.ExecuteAsync(null);
+        vm.ConfirmPhraseBackupCommand.Execute(null);
+        var mainId = vm.Wallets.Single(w => w.IsActive).Id;
+
+        // Add a second wallet WITHOUT setting a new password — BeginAddWallet pre-fills the common one.
+        vm.NewWalletLabel = "Savings";
+        vm.BeginAddWalletCommand.Execute(null);
+        Assert.Equal(GoodPassword, vm.Password); // reused, not blank
+        await vm.CreateWalletCommand.ExecuteAsync(null);
+        vm.ConfirmPhraseBackupCommand.Execute(null);
+        Assert.True(vm.IsUnlocked);
+        Assert.Equal("Savings", vm.ActiveWalletLabel);
+        var savingsId = vm.Wallets.Single(w => w.IsActive).Id;
+
+        // Switch back to Main → seamless, no password prompt.
+        await vm.SwitchWalletCommand.ExecuteAsync(mainId);
+        Assert.True(vm.IsUnlocked);
+        Assert.Equal("Main wallet", vm.ActiveWalletLabel);
+
+        // Forward to Savings again → also seamless.
+        await vm.SwitchWalletCommand.ExecuteAsync(savingsId);
+        Assert.True(vm.IsUnlocked);
+        Assert.Equal("Savings", vm.ActiveWalletLabel);
     }
 
     /// <summary>Cancelling an add-wallet must de-register the pending wallet and leave exactly the
