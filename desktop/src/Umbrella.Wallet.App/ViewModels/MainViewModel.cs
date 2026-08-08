@@ -591,6 +591,13 @@ public partial class MainViewModel : ViewModelBase
     /// Click an item to read the full note. Newest first.</summary>
     public ObservableCollection<NewsItemViewModel> News { get; } =
     [
+        new("NEW", "Pro charts, a P2P & DEX hub, and Market search",
+            "This release is all about trading and looking at prices like a pro:\n\n" +
+            "• Charts got serious. Hover any coin's chart for a crosshair with a live price + time readout, flip between Line and Candles, and enjoy a soft gradient fill and a change-over-window badge (first→last). It feels like a real trading terminal now.\n" +
+            "• New P2P & DEX section. A curated hub of non-custodial ways to trade: the in-wallet THORChain swap first, then on-chain DEXes (Uniswap, THORSwap, Jupiter, 1inch, PancakeSwap) and peer-to-peer escrow (Bisq, Hodl Hodl, RoboSats, Peach). Every one keeps custody with you; each shows its model and opens in your browser.\n" +
+            "• Market search. Filter the coin list by name or ticker instantly, with one-tap refresh — the prices keep updating live while you type.\n\n" +
+            "We list third-party venues for convenience, not as endorsements — Umbrella takes no fee and holds nothing. No trade ever needs your recovery phrase.",
+            "2026-08-08"),
         new("NEW", "History that stays, smart wallet linking, and 8 brand themes",
             "A round of fixes and polish:\n\n" +
             "• History persists — your activity and transactions no longer vanish when you close the wallet. They're kept on this device only (never a server), with real timestamps, and you can wipe them any time in Settings → Danger zone.\n" +
@@ -749,6 +756,7 @@ public partial class MainViewModel : ViewModelBase
     public bool IsNews => ActiveSection == "News";
     public bool IsNfts => ActiveSection == "Nfts";
     public bool IsStaking => ActiveSection == "Staking";
+    public bool IsP2p => ActiveSection == "P2p";
 
     // --- Onboarding state machine: each is a full-screen page, sidebar only in the workspace ---
     public bool IsWelcomeStage => !HasVault && SetupStage == "Welcome";
@@ -873,6 +881,7 @@ public partial class MainViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsNews));
         OnPropertyChanged(nameof(IsNfts));
         OnPropertyChanged(nameof(IsStaking));
+        OnPropertyChanged(nameof(IsP2p));
         OnPropertyChanged(nameof(IsWelcomeStage));
         OnPropertyChanged(nameof(IsCreateStage));
         OnPropertyChanged(nameof(IsImportStage));
@@ -1370,9 +1379,67 @@ public partial class MainViewModel : ViewModelBase
             "Receive" => "Receive · share a derived address or QR",
             "Connect" => "Connect · add watch-only addresses from MetaMask / explorers",
             "Market" => $"Market · live prices · {ChartRange} charts, click a coin for detail",
+            "Swap" => "Swap · non-custodial cross-chain swaps route through THORChain vaults",
+            "P2p" => "P2P & DEX · non-custodial venues to trade — your keys never leave this device",
             _ => StatusMessage,
         };
     }
+
+    /// <summary>Opens an external URL in the user's default browser. Used by the P2P/DEX directory and
+    /// guide links — public destinations only, no wallet data ever travels in the URL.</summary>
+    [RelayCommand]
+    private void OpenUrl(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return;
+        if (!url.StartsWith("https://", StringComparison.OrdinalIgnoreCase)) return;
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = url,
+                UseShellExecute = true,
+            });
+            StatusMessage = $"Opened {url} in your browser";
+        }
+        catch (Exception ex)
+        {
+            Fail($"Could not open the link: {ex.Message}");
+        }
+    }
+
+    /// <summary>Curated non-custodial venues for the P2P & DEX page. Every entry keeps custody with the
+    /// user (on-chain DEX or P2P escrow) — no custodial order-book exchanges are listed, in keeping with
+    /// the wallet's self-custody stance. These are external sites the user opens in their own browser.</summary>
+    public ObservableCollection<P2pVenue> P2pVenues { get; } =
+    [
+        new("THORSwap", "DEX aggregator", "Non-custodial",
+            "Cross-chain swaps (BTC ↔ ETH ↔ more) routed over THORChain — the same engine behind this wallet's own Swap tab.",
+            "https://www.thorswap.finance", "TS", "#0A9E8E"),
+        new("Uniswap", "DEX", "Non-custodial",
+            "The largest Ethereum & L2 DEX. Connect a wallet and swap any ERC-20 on-chain; liquidity from pooled AMMs.",
+            "https://app.uniswap.org", "UNI", "#FF007A"),
+        new("Jupiter", "DEX aggregator", "Non-custodial",
+            "Best-route Solana swaps across every Solana AMM in one transaction. Fast and cheap.",
+            "https://jup.ag", "JUP", "#22C55E"),
+        new("1inch", "DEX aggregator", "Non-custodial",
+            "Splits an order across many DEXes for the best on-chain price across Ethereum and other EVM chains.",
+            "https://app.1inch.io", "1IN", "#1B67F0"),
+        new("PancakeSwap", "DEX", "Non-custodial",
+            "The main BNB Chain DEX (also on Ethereum and more) — swap, provide liquidity, all on-chain.",
+            "https://pancakeswap.finance", "CAKE", "#D1884F"),
+        new("Bisq", "P2P exchange", "Non-custodial · P2P",
+            "Desktop, account-free Bitcoin ↔ fiat over a secured peer network with security deposits. Nothing is held by a company.",
+            "https://bisq.network", "BSQ", "#25B135"),
+        new("Hodl Hodl", "P2P escrow", "Non-custodial · escrow",
+            "Global Bitcoin P2P with multisig escrow and no KYC — funds sit in escrow you co-sign, never in custody.",
+            "https://hodlhodl.com", "HH", "#F59E0B"),
+        new("RoboSats", "P2P · Lightning", "Non-custodial · P2P",
+            "Private Bitcoin Lightning P2P using hold invoices. Nickname-only, no accounts, no data collection.",
+            "https://robosats.com", "ROBO", "#8A5FD6"),
+        new("Peach", "P2P", "Non-custodial · escrow",
+            "Bitcoin ↔ fiat peer-to-peer with escrow, mobile-first, many local payment methods.",
+            "https://peachbitcoin.com", "PCH", "#F97362"),
+    ];
 
     /// <summary>
     /// Market prices are public data, so this runs with the vault locked too — the user can
@@ -1526,6 +1593,45 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty] private string _chartHigh = string.Empty;
     [ObservableProperty] private string _chartLow = string.Empty;
 
+    // --- Chart view mode (Candles ⇄ Line), like a pro charting UI ---------------
+    [ObservableProperty] private string _chartViewMode = "Candles";
+    public bool IsCandleView => ChartViewMode == "Candles";
+    public bool IsLineView => ChartViewMode == "Line";
+    partial void OnChartViewModeChanged(string value)
+    {
+        OnPropertyChanged(nameof(IsCandleView));
+        OnPropertyChanged(nameof(IsLineView));
+    }
+
+    [RelayCommand]
+    private void SetChartView(string? mode)
+    {
+        if (!string.IsNullOrWhiteSpace(mode)) ChartViewMode = mode;
+    }
+
+    // --- Change over the selected window (first→last close), shown in the header --
+    [ObservableProperty] private string _chartChangeLabel = string.Empty;
+    [ObservableProperty] private string _chartChangeColor = "#8A9099";
+
+    /// <summary>Soft vertical gradient under the price line — the change colour fading to nothing,
+    /// like Kraken/TradingView. Rebuilt each time a chart is drawn so it tracks the up/down colour.</summary>
+    [ObservableProperty] private Avalonia.Media.IBrush _chartAreaBrush =
+        new Avalonia.Media.SolidColorBrush(Avalonia.Media.Colors.Transparent);
+
+    // --- Crosshair (hover) state, driven from the view code-behind ----------------
+    [ObservableProperty] private bool _crosshairVisible;
+    [ObservableProperty] private double _crosshairLineLeft;
+    [ObservableProperty] private double _crosshairDotLeft;
+    [ObservableProperty] private double _crosshairDotTop;
+    [ObservableProperty] private double _crosshairLabelLeft;
+    [ObservableProperty] private string _crosshairPrice = string.Empty;
+    [ObservableProperty] private string _crosshairTime = string.Empty;
+
+    // Raw candles + scale of the open chart, so the crosshair can map pixels back to price/time.
+    private IReadOnlyList<PriceCandle> _detailCandles = [];
+    private double _chartMin;
+    private double _chartMax;
+
     /// <summary>
     /// Turns a price series into a plotted chart: gridlines with price labels, time labels along
     /// the bottom, a stroked line and the filled area beneath it.
@@ -1536,6 +1642,8 @@ public partial class MainViewModel : ViewModelBase
         ChartPoints = [];
         ChartCandles = [];
         ChartHigh = ChartLow = string.Empty;
+        CrosshairVisible = false;
+        _detailCandles = candles;
         if (candles.Count < 2) return;
 
         var min = candles.Min(c => c.Low);
@@ -1543,6 +1651,8 @@ public partial class MainViewModel : ViewModelBase
         var range = max - min;
         // A dead-flat series would divide by zero; give it a nominal band so it renders centred.
         if (range <= 0) { min -= 1; max += 1; range = max - min; }
+        _chartMin = min;
+        _chartMax = max;
 
         var plotW = PlotRight - PlotLeft;
         var plotH = PlotBottom - PlotTop;
@@ -1594,6 +1704,80 @@ public partial class MainViewModel : ViewModelBase
 
         ChartHigh = $"H {FormatPrice(max)}";
         ChartLow = $"L {FormatPrice(min)}";
+
+        // Change across the whole window (first open → last close), like the header on an exchange.
+        var open0 = candles[0].Open != 0 ? candles[0].Open : candles[0].Close;
+        var closeN = candles[^1].Close;
+        var pct = open0 != 0 ? (closeN - open0) / open0 * 100 : 0;
+        var up = pct >= 0;
+        ChartChangeColor = up ? "#26A69A" : "#EF5350";
+        ChartChangeLabel = $"{(up ? "▲" : "▼")} {Math.Abs(pct):0.00}% · {ChartRange}";
+
+        // Gradient fill under the line: change-colour → transparent, top to bottom.
+        var baseColor = Avalonia.Media.Color.Parse(up ? "#26A69A" : "#EF5350");
+        ChartAreaBrush = new Avalonia.Media.LinearGradientBrush
+        {
+            StartPoint = new Avalonia.RelativePoint(0, 0, Avalonia.RelativeUnit.Relative),
+            EndPoint = new Avalonia.RelativePoint(0, 1, Avalonia.RelativeUnit.Relative),
+            GradientStops =
+            {
+                new Avalonia.Media.GradientStop(Avalonia.Media.Color.FromArgb(0x66, baseColor.R, baseColor.G, baseColor.B), 0),
+                new Avalonia.Media.GradientStop(Avalonia.Media.Color.FromArgb(0x1F, baseColor.R, baseColor.G, baseColor.B), 0.55),
+                new Avalonia.Media.GradientStop(Avalonia.Media.Color.FromArgb(0x00, baseColor.R, baseColor.G, baseColor.B), 1),
+            },
+        };
+    }
+
+    /// <summary>Called from the view as the pointer moves over the chart: snaps to the nearest candle
+    /// and updates the crosshair line, dot and floating price/time readout.</summary>
+    public void UpdateCrosshair(double canvasX)
+    {
+        var n = _detailCandles.Count;
+        if (n < 2) { CrosshairVisible = false; return; }
+
+        var plotW = PlotRight - PlotLeft;
+        var plotH = PlotBottom - PlotTop;
+        var range = _chartMax - _chartMin;
+        if (range <= 0) { CrosshairVisible = false; return; }
+
+        var frac = Math.Clamp((canvasX - PlotLeft) / plotW, 0, 1);
+        var i = Math.Clamp((int)Math.Round(frac * (n - 1)), 0, n - 1);
+        var c = _detailCandles[i];
+
+        var x = PlotLeft + plotW * i / (double)(n - 1);
+        var y = PlotTop + (1 - (c.Close - _chartMin) / range) * plotH;
+
+        CrosshairLineLeft = x;
+        CrosshairDotLeft = x - 4;
+        CrosshairDotTop = y - 4;
+        CrosshairLabelLeft = Math.Clamp(x - 62, PlotLeft, PlotRight - 124);
+        CrosshairPrice = FormatPrice(c.Close);
+        CrosshairTime = CrosshairTimeLabel(i, n);
+        CrosshairVisible = true;
+    }
+
+    public void HideCrosshair() => CrosshairVisible = false;
+
+    /// <summary>Approximate wall-clock label for a hovered candle: the window is evenly spaced, so
+    /// candle i of n maps to now − span·(1 − i/(n−1)).</summary>
+    private string CrosshairTimeLabel(int i, int n)
+    {
+        var frac = (double)i / (n - 1);
+        var span = ChartRange switch
+        {
+            "1H" => TimeSpan.FromHours(1),
+            "24H" => TimeSpan.FromHours(24),
+            "7D" => TimeSpan.FromDays(7),
+            "30D" => TimeSpan.FromDays(30),
+            _ => TimeSpan.FromDays(365),
+        };
+        var t = DateTime.Now - TimeSpan.FromTicks((long)(span.Ticks * (1 - frac)));
+        return ChartRange switch
+        {
+            "1H" or "24H" => t.ToString("HH:mm", CultureInfo.InvariantCulture),
+            "7D" or "30D" => t.ToString("MMM d · HH:mm", CultureInfo.InvariantCulture),
+            _ => t.ToString("MMM d, yyyy", CultureInfo.InvariantCulture),
+        };
     }
 
     private static string FormatPrice(double value) => value switch
@@ -1612,6 +1796,13 @@ public partial class MainViewModel : ViewModelBase
         "30D" => ["-30d", "-22d", "-15d", "-7d", "now"],
         _ => ["-1y", "-9m", "-6m", "-3m", "now"],
     };
+
+    /// <summary>Free-text Market filter — matches ticker or name. Drives per-row visibility via
+    /// <see cref="MarketFilterConverter"/>, so live price updates (indexed by symbol) are untouched.</summary>
+    [ObservableProperty] private string _marketQuery = string.Empty;
+
+    [RelayCommand]
+    private void ClearMarketQuery() => MarketQuery = string.Empty;
 
     /// <summary>Selected chart window. Changing it reloads every chart at the new resolution.</summary>
     [ObservableProperty] private string _chartRange = "24H";
@@ -1649,6 +1840,8 @@ public partial class MainViewModel : ViewModelBase
     private void CloseChart()
     {
         HasChart = false;
+        CrosshairVisible = false;
+        _detailCandles = [];
         ChartPoints = new System.Collections.Generic.List<Avalonia.Point>();
     }
 
@@ -3301,6 +3494,10 @@ public static class CoinNetworks
 public sealed record CandleVm(
     double ItemX, double ItemY, double W, double H,
     double WickLocalX, double BodyLocalY, double BodyH, string Color);
+
+/// <summary>One row in the P2P & DEX directory — a self-custody venue the user opens externally.</summary>
+public sealed record P2pVenue(
+    string Name, string Kind, string Custody, string Description, string Url, string Tag, string Accent);
 
 public sealed record HoldingRowViewModel(
     string Symbol,

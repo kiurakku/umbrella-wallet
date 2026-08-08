@@ -206,6 +206,18 @@ public partial class MainWindow : Window
         _heroShift.Y = 0;
     }
 
+    // --- Market detail chart crosshair: map the pointer X to the nearest candle. ---
+    private void OnChartPointerMoved(object? sender, PointerEventArgs e)
+    {
+        if (DataContext is not MainViewModel vm || sender is not Control canvas) return;
+        vm.UpdateCrosshair(e.GetPosition(canvas).X);
+    }
+
+    private void OnChartPointerExited(object? sender, PointerEventArgs e)
+    {
+        (DataContext as MainViewModel)?.HideCrosshair();
+    }
+
     private void OnUserActivity(object? sender, EventArgs eventArgs) => ResetAutoLock();
 
     private void ResetAutoLock()

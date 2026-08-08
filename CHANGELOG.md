@@ -4,6 +4,20 @@ All notable releases of **Umbrella Wallet**.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versioning follows [SemVer](https://semver.org/).
 
+## [2.8.0] — 2026-08-08
+
+### Desktop
+- **Pro-grade charts.** The Market detail chart now has an interactive **hover crosshair** with a
+  floating price + time readout, a **Line ⇄ Candles** toggle, a soft **gradient area fill** under the
+  line (fading in the up/down colour, Kraken/TradingView-style) and a **change-over-window badge**
+  (first→last, e.g. `▲ 4.21% · 7D`).
+- **New P2P & DEX section.** A curated directory of **non-custodial** ways to trade — the in-wallet
+  THORChain swap up top, then on-chain DEXes (Uniswap, THORSwap, Jupiter, 1inch, PancakeSwap) and
+  peer-to-peer escrow venues (Bisq, Hodl Hodl, RoboSats, Peach). Each shows its custody model and opens
+  in your own browser; no custodial exchanges are listed, and Umbrella takes no fee and holds nothing.
+- **Market search.** A live filter box matches by ticker or name, plus a one-tap refresh — the coin
+  list stays fully live while you type.
+
 ## [2.7.0] — 2026-08-01
 
 ### Desktop

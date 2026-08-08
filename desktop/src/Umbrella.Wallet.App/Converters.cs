@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using Avalonia.Data.Converters;
 
@@ -17,4 +18,26 @@ public sealed class StringEqualsConverter : IValueConverter
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
         throw new NotSupportedException();
+}
+
+/// <summary>
+/// Row visibility for the Market search box. Values are [Symbol, Name, Query]; the row is visible
+/// when the query is empty or is a case-insensitive substring of either the ticker or the name.
+/// Kept as an IsVisible filter (not a collection rebuild) so the live price/sparkline updates,
+/// which index rows by symbol, keep working untouched.
+/// </summary>
+public sealed class MarketFilterConverter : IMultiValueConverter
+{
+    public static readonly MarketFilterConverter Instance = new();
+
+    public object Convert(IList<object?> values, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (values.Count < 3) return true;
+        var symbol = values[0]?.ToString() ?? string.Empty;
+        var name = values[1]?.ToString() ?? string.Empty;
+        var query = values[2]?.ToString()?.Trim() ?? string.Empty;
+        if (query.Length == 0) return true;
+        return symbol.Contains(query, StringComparison.OrdinalIgnoreCase)
+            || name.Contains(query, StringComparison.OrdinalIgnoreCase);
+    }
 }
