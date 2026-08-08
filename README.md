@@ -17,7 +17,7 @@ No account. No email. No phone number. No KYC. Just a wallet — the way it was 
 
 <br/>
 
-![Version](https://img.shields.io/badge/version-2.6.0-4B3F86)
+![Version](https://img.shields.io/badge/version-2.7.0-4B3F86)
 ![Windows](https://img.shields.io/badge/Windows-ready-4B3F86?logo=windows&logoColor=white)
 ![Linux](https://img.shields.io/badge/Linux-ready-6E5FB8?logo=linux&logoColor=white)
 ![Desktop](https://img.shields.io/badge/desktop-Avalonia%20·%20.NET%208-8A5FD6)
@@ -37,7 +37,7 @@ No account. No email. No phone number. No KYC. Just a wallet — the way it was 
 
 <br/>
 
-**[⬇️ Installer (v2.6.0)](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-Setup-2.6.0.exe)** · **[Portable zip](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-2.6.0-win-x64-portable.zip)** · [All releases](https://github.com/kiurakku/umbrella-wallet/releases)
+**[⬇️ Installer (v2.7.0)](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-Setup-2.7.0.exe)** · **[Portable zip](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-2.7.0-win-x64-portable.zip)** · [All releases](https://github.com/kiurakku/umbrella-wallet/releases)
 
 <br/>
 
@@ -119,9 +119,9 @@ Umbrella flips that model:
 
 | Platform | Package | Notes |
 |----------|---------|-------|
-| **Windows** | [UmbrellaWallet-Setup-2.6.0.exe](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-Setup-2.6.0.exe) | Installer — choose install folder |
-| **Windows** | [`UmbrellaWallet-2.6.0-win-x64-portable.zip`](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-2.6.0-win-x64-portable.zip) | Portable — unzip and run `Umbrella.exe` |
-| **Linux** | [`UmbrellaWallet-2.6.0-linux-x64.tar.gz`](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-2.6.0-linux-x64.tar.gz) | Unpack, run `./Umbrella.Wallet.App` — no install required |
+| **Windows** | [UmbrellaWallet-Setup-2.7.0.exe](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-Setup-2.7.0.exe) | Installer — choose install folder |
+| **Windows** | [`UmbrellaWallet-2.7.0-win-x64-portable.zip`](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-2.7.0-win-x64-portable.zip) | Portable — unzip and run `Umbrella.exe` |
+| **Linux** | [`UmbrellaWallet-2.7.0-linux-x64.tar.gz`](https://github.com/kiurakku/umbrella-wallet/releases/latest/download/UmbrellaWallet-2.7.0-linux-x64.tar.gz) | Unpack, run `./Umbrella.Wallet.App` — no install required |
 
 ## 🚀 Get started
 
@@ -209,7 +209,11 @@ through code:
 
 ## ⚠️ The honest part
 
-Umbrella is **non-custodial**. That word means: *we never hold your money, so we can never lose it, freeze it — or recover it.* You are the bank now. 🏦 Guard your phrase, check addresses before sending, start with a small test amount. Crypto transactions are final; there is no undo button anywhere in the world. The software is provided as-is, without warranty — see [LICENSE](LICENSE). Nothing here is financial advice.
+Umbrella is **non-custodial**. That word means: *we never hold your money, so we can never lose it, freeze it — or recover it.* You are the bank now. 🏦 Guard your phrase, check addresses before sending, start with a small test amount. Crypto transactions are final; there is no undo button anywhere in the world.
+
+Umbrella is **free, independent, experimental self-custody software** authored by **the fear** — think of it like a community client/mod: yours to run, on your own device, at your own risk. It is provided **as-is, without any warranty**, and the author accepts **no liability** whatsoever — see [LICENSE](LICENSE). Nothing here is financial, tax or legal advice.
+
+**Not affiliated with anyone.** Umbrella is not connected to, endorsed by, or partnered with any exchange, network or brand. All third-party names, logos and trademarks — Bitcoin, Ethereum, TRON, TON, Monero, Uniswap, Binance, Bybit, OKX, WhiteBit, Telegram, MetaMask, and every coin/token name — belong to their respective owners; where a name appears (a colour-theme label, a read-only exchange connector) it identifies that style or service only and implies **no affiliation or endorsement**. You are responsible for any laws or taxes that apply to you where you live.
 
 ## ℹ️ About
 

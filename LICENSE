@@ -1,9 +1,12 @@
 Umbrella Wallet — Free-Use, No-Derivatives License
-Copyright (c) 2026 kiurakku ("the fear"). All rights reserved.
+Copyright (c) 2026 the fear (kiurakku). All rights reserved.
 
-Umbrella Wallet (the "Software") is the property of kiurakku, published in
-this repository. It is offered to the public free of charge on the following
-terms. By downloading, installing or using the Software you accept them.
+Umbrella Wallet (the "Software") is a free, independent, non-custodial wallet
+client authored and published by the fear in this repository. It is provided to
+the public at no charge as experimental, self-custody software for personal and
+educational use — you run it on your own device, hold your own keys, and are in
+sole control of your funds at all times. By downloading, installing or using the
+Software you accept the terms below; if you do not accept them, do not use it.
 
 1. WHAT YOU MAY DO
    a) Download, install and run the Software, for personal or commercial
@@ -67,4 +70,27 @@ terms. By downloading, installing or using the Software you accept them.
 
 8. TERMINATION
    Any breach of Section 2 ends the permissions granted in Section 1
-   automatically. Sections 4 and 5 survive termination.
+   automatically. Sections 4, 5, 9 and 10 survive termination.
+
+9. TRADEMARKS AND NON-AFFILIATION
+   The Software is independent and is NOT affiliated with, endorsed by, sponsored
+   by, or connected to any exchange, blockchain, protocol, wallet or other third
+   party. All third-party names, brands, logos and trademarks — including but not
+   limited to Bitcoin, Ethereum, TRON, TON, Monero, Uniswap, Binance, Bybit, OKX,
+   WhiteBit, Telegram, MetaMask and any coin, token or network name — are the
+   property of their respective owners. Where such a name appears (for example a
+   colour-theme label or an optional read-only exchange connector), it is used
+   solely nominatively, to identify the corresponding style, network or service
+   for the user's convenience, and implies no affiliation, endorsement, ownership
+   or partnership of any kind.
+
+10. NOT A REGULATED SERVICE; NO ADVICE
+   The Software is self-custody software, not a service. The author does not
+   operate an exchange, broker-dealer, money-services business, custodian,
+   payment processor or financial institution, does not take custody of user
+   funds or personal data, and does not execute, intermediate or settle any
+   transaction on a user's behalf — the user's own device signs and broadcasts
+   everything locally. Nothing provided is financial, investment, tax or legal
+   advice. The user is responsible for determining, and complying with, any laws,
+   taxes or regulations that apply to them in their jurisdiction; use where such
+   use is unlawful is prohibited and is solely the user's responsibility.

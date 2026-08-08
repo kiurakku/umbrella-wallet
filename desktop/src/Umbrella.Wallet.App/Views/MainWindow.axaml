@@ -1148,7 +1148,7 @@
                   <TextBlock Classes="serif" FontSize="26" Text="Transactions" VerticalAlignment="Center"/>
                 </StackPanel>
                 <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12.5" Margin="2,0,0,4"
-                           Text="Your money movements this session — sends, receives and swaps. Click a row to copy its block-explorer link (paste into Tor Browser to view). Full on-chain history lives on the explorers; nothing is written to disk here."/>
+                           Text="Your money movements — sends, receives and swaps. Click a row to copy its block-explorer link (paste into Tor Browser to view). History is kept on this device only (never a server) and survives restarts; clear it any time in Settings → Danger zone."/>
 
                 <Border Classes="card" IsVisible="{Binding !HasTransactions}" MinHeight="140">
                   <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="6">
@@ -1192,7 +1192,7 @@
                   <lottie:Lottie Path="avares://Umbrella.Wallet.App/Assets/stickers/fear-10.json" Width="42" Height="42" RepeatCount="{Binding #RootWindow.((vm:MainViewModel)DataContext).LottieRepeat}" VerticalAlignment="Center"/>
                 </StackPanel>
                 <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12.5" Margin="2,0,0,4"
-                           Text="Everything this wallet does in a session — transfers, swaps, connections, setting and security changes. Rows with a transaction can be clicked to copy their explorer link. Nothing is written to disk."/>
+                           Text="Everything this wallet does — transfers, swaps, connections, setting and security changes. Rows with a transaction can be clicked to copy their explorer link. Kept on this device only (never a server); clear it in Settings → Danger zone."/>
 
                 <!-- Filter -->
                 <StackPanel Orientation="Horizontal" Spacing="8" Margin="2,0,0,2">
@@ -1597,6 +1597,30 @@
                                 Command="{Binding HideMoneroKeysCommand}"/>
                       </StackPanel>
                     </Border>
+                  </StackPanel>
+                </Border>
+
+                <!-- Reversible-ish maintenance (keeps the vault + funds) before the irreversible wipe. -->
+                <Border Classes="card" BorderBrush="#7A6230" IsVisible="{Binding IsTabDanger}">
+                  <StackPanel Spacing="12">
+                    <TextBlock Classes="eyebrow" Foreground="#E7CA83" Text="MAINTENANCE"/>
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                      <StackPanel VerticalAlignment="Center" Spacing="2">
+                        <TextBlock Text="Clear history" FontWeight="SemiBold"/>
+                        <TextBlock FontSize="11.5" Foreground="{DynamicResource UmTextDim}" TextWrapping="Wrap"
+                                   Text="Erase the local activity and transaction history from this device. Your coins, keys and on-chain history are untouched."/>
+                      </StackPanel>
+                      <Button Grid.Column="1" Classes="ghost" Content="Clear" VerticalAlignment="Center" Command="{Binding ClearHistoryCommand}"/>
+                    </Grid>
+                    <Border Background="#22FFFFFF" Height="1"/>
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                      <StackPanel VerticalAlignment="Center" Spacing="2">
+                        <TextBlock Text="Disconnect all" FontWeight="SemiBold"/>
+                        <TextBlock FontSize="11.5" Foreground="{DynamicResource UmTextDim}" TextWrapping="Wrap"
+                                   Text="Remove every linked watch-only address and connected exchange. Your own wallet and funds stay; you can re-link any time."/>
+                      </StackPanel>
+                      <Button Grid.Column="1" Classes="ghost" Content="Disconnect" VerticalAlignment="Center" Command="{Binding DisconnectAllCommand}"/>
+                    </Grid>
                   </StackPanel>
                 </Border>
 

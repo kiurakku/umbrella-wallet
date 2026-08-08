@@ -460,6 +460,7 @@ public partial class MainViewModel : ViewModelBase
     private readonly PublicChainBalanceClient _balances = new();
     private readonly PublicMarketRatesClient _rates = new();
     private readonly WatchAddressStore _watchStore = new();
+    private readonly ActivityStore _activityStore = new();
     private readonly ExchangeCredentialStore _exchangeStore = new();
     private readonly EthTransactionSender _ethSender = new();
     private readonly BitcoinTransactionSender _btcSender = new();
@@ -590,6 +591,14 @@ public partial class MainViewModel : ViewModelBase
     /// Click an item to read the full note. Newest first.</summary>
     public ObservableCollection<NewsItemViewModel> News { get; } =
     [
+        new("NEW", "History that stays, smart wallet linking, and 8 brand themes",
+            "A round of fixes and polish:\n\n" +
+            "• History persists — your activity and transactions no longer vanish when you close the wallet. They're kept on this device only (never a server), with real timestamps, and you can wipe them any time in Settings → Danger zone.\n" +
+            "• Linking a wallet now auto-detects the network from the address you paste — a T… address is tracked as TRON, bc1… as Bitcoin, 0x… as EVM. (Linking watches an external address read-only; it never changes your own receive addresses.)\n" +
+            "• Danger zone does more than delete: Clear history and Disconnect all (removes linked addresses/exchanges), both keeping your vault and funds.\n" +
+            "• Eight brand themes with the real colours — Uniswap (exact pink), Binance, Bybit, OKX, Telegram, TON · Gram, TRON, WhiteBit and Bitcoin — 21 themes in all.\n\n" +
+            "Umbrella is free, independent, self-custody software by the fear — not affiliated with any exchange or brand; those theme names just identify a colour style.",
+            "2026-08-01"),
         new("NEW", "Your currency, a Transactions view, and a fixed Market",
             "Three things people asked for:\n\n" +
             "• Display currency — Settings → Appearance now lets you show everything in USD, EUR, UAH (₴), RUB, GBP, CNY, JPY and more. The total, holdings, breakdown and market all convert; your coins don't change, only how their value reads. The rate is fetched anonymously (through Tor when it's on).\n" +
@@ -1235,6 +1244,32 @@ public partial class MainViewModel : ViewModelBase
         "ru" => "УДАЛИТЬ",
         _ => "DELETE",
     };
+
+    /// <summary>Danger zone: wipe the local activity / transaction history (keeps the wallet + funds).</summary>
+    [RelayCommand]
+    private void ClearHistory()
+    {
+        Activity.Clear();
+        RecentActivity.Clear();
+        _activityStore.Clear();
+        RebuildFilteredActivity();
+        RebuildTransactions();
+        OnPropertyChanged(nameof(HasActivity));
+        StatusMessage = "Activity & transaction history cleared from this device";
+    }
+
+    /// <summary>Danger zone: remove every linked watch-only address and connected exchange (keeps the vault).</summary>
+    [RelayCommand]
+    private async Task DisconnectAllAsync()
+    {
+        var count = WatchAddresses.Count + Exchanges.Count;
+        WatchAddresses.Clear();
+        await _watchStore.SaveAsync(WatchAddresses);
+        Exchanges.Clear();
+        if (_unlockedMnemonic is not null) await _exchangeStore.SaveAsync(Exchanges, _unlockedMnemonic);
+        StatusMessage = $"Disconnected {count} linked address(es) / exchange(s)";
+        if (IsUnlocked) await RefreshLiveDataAsync();
+    }
 
     [RelayCommand]
     private void DeleteVault()
@@ -2152,11 +2187,29 @@ public partial class MainViewModel : ViewModelBase
         ExchangeStatus = "Exchange disconnected";
     }
 
+    /// <summary>Guesses a chain from an address's shape, so a pasted watch address is tracked on the
+    /// right network even if the dropdown was left elsewhere. Returns null when it's ambiguous.</summary>
+    private static string? DetectChain(string a)
+    {
+        if (a.StartsWith("0x", StringComparison.OrdinalIgnoreCase) && a.Length == 42) return "ETH";
+        if (a.StartsWith("bc1", StringComparison.OrdinalIgnoreCase)) return "BTC";
+        if (a.StartsWith("ltc1", StringComparison.OrdinalIgnoreCase) || a.StartsWith("M", StringComparison.Ordinal)) return "LTC";
+        if (a.StartsWith("addr1", StringComparison.OrdinalIgnoreCase)) return "ADA";
+        if (a.StartsWith('T') && a.Length == 34) return "TRX";
+        if (a.Length == 48 && (a.StartsWith("UQ") || a.StartsWith("EQ") || a.StartsWith("kQ") || a.StartsWith("0Q"))) return "TON";
+        if ((a.StartsWith('4') || a.StartsWith('8')) && a.Length is 95 or 106) return "XMR";
+        if (a.StartsWith('D') && a.Length == 34) return "DOGE";
+        if ((a.StartsWith('1') || a.StartsWith('3')) && a.Length is >= 26 and <= 35) return "BTC";
+        return null; // Solana / other base58 is ambiguous — keep the selected network
+    }
+
     [RelayCommand]
     private async Task AddWatchAddressAsync()
     {
-        var chain = WatchChain.Trim().ToUpperInvariant();
         var address = WatchAddress.Trim();
+        // Auto-detect from the address itself (a T… address is TRON, bc1… is BTC, 0x… is EVM, …),
+        // falling back to the dropdown only when the shape is ambiguous.
+        var chain = DetectChain(address) ?? WatchChain.Trim().ToUpperInvariant();
         if (string.IsNullOrWhiteSpace(address) || address.Length < 10)
         {
             StatusMessage = "Paste a valid public address";
@@ -2759,6 +2812,7 @@ public partial class MainViewModel : ViewModelBase
         _ = LoadExchangesAsync(mnemonic);
         DeriveAccounts(mnemonic);
         SelectFirstReceive();
+        LoadActivity(); // restore the saved history before logging this unlock on top
         PushActivity("Security", "Vault", "unlocked", "this device", "now");
     }
 
@@ -2957,9 +3011,31 @@ public partial class MainViewModel : ViewModelBase
 
     private void PushActivity(string kind, string asset, string amount, string counter, string when, string? explorer = null)
     {
-        Activity.Insert(0, new ActivityRowViewModel(kind, asset, amount, counter, when, explorer));
-        while (Activity.Count > 40) Activity.RemoveAt(Activity.Count - 1);
+        // Real timestamp so persisted history reads correctly after a restart (callers pass "now").
+        var stamp = string.Equals(when, "now", StringComparison.OrdinalIgnoreCase)
+            ? DateTime.Now.ToString("MMM d · HH:mm", CultureInfo.InvariantCulture)
+            : when;
+        Activity.Insert(0, new ActivityRowViewModel(kind, asset, amount, counter, stamp, explorer));
+        while (Activity.Count > 60) Activity.RemoveAt(Activity.Count - 1);
 
+        RecentActivity.Clear();
+        foreach (var row in Activity.Take(5)) RecentActivity.Add(row);
+        RebuildFilteredActivity();
+        RebuildTransactions();
+        OnPropertyChanged(nameof(HasActivity));
+        PersistActivity();
+    }
+
+    private void PersistActivity() =>
+        _activityStore.Save(Activity.Select(a =>
+            new ActivityStore.Entry(a.Kind, a.Asset, a.Amount, a.Counterparty, a.When, a.Explorer)));
+
+    /// <summary>Loads the saved activity/transaction history from the data folder into the feeds.</summary>
+    private void LoadActivity()
+    {
+        Activity.Clear();
+        foreach (var e in _activityStore.Load())
+            Activity.Add(new ActivityRowViewModel(e.Kind, e.Asset, e.Amount, e.Counterparty, e.When, e.Explorer));
         RecentActivity.Clear();
         foreach (var row in Activity.Take(5)) RecentActivity.Add(row);
         RebuildFilteredActivity();

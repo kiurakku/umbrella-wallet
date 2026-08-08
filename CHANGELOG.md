@@ -4,6 +4,26 @@ All notable releases of **Umbrella Wallet**.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versioning follows [SemVer](https://semver.org/).
 
+## [2.7.0] — 2026-08-01
+
+### Desktop
+- **Watch-only linking now auto-detects the network** from the address you paste (a `T…` address is
+  TRON, `bc1…` is Bitcoin, `0x…` is EVM, and so on), so a linked address is always tracked on the
+  right chain instead of whatever the dropdown happened to show. (Connect tracks an *external* address
+  read-only; it never changes your own receive addresses.)
+- **Activity & transaction history now persist** across restarts (stored on this device only, never a
+  server) with real timestamps — they no longer vanish when you close the wallet, and the Transactions
+  section keeps your sends/swaps.
+- **Danger zone expanded** beyond delete-wallet: *Clear history* (wipe the local activity/transaction
+  log) and *Disconnect all* (remove every linked watch address and exchange) — both keep the vault and
+  funds intact.
+- **Eight branded themes**, each with real brand colours: Uniswap (exact `#FF007A` pink), Binance
+  (gold), Bybit (amber), OKX (mono black/white), Telegram (blue), TON · Gram (blue), TRON (red),
+  WhiteBit (green) and Bitcoin (orange) — 21 themes total.
+- LICENSE and README updated: independent/experimental self-custody framing, a trademark &
+  non-affiliation clause (the branded themes and coin names imply no endorsement), and a
+  not-a-regulated-service / no-advice clause. Author: **the fear**.
+
 ## [2.6.0] — 2026-08-01
 
 ### Desktop

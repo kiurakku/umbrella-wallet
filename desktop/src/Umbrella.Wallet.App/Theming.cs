@@ -32,6 +32,14 @@ public static class Theming
         new("slate", "Slate"),
         new("uniswap", "Uniswap · pink"),
         new("ocean", "Ocean · teal"),
+        new("binance", "Binance · gold"),
+        new("bybit", "Bybit · amber"),
+        new("okx", "OKX · mono"),
+        new("telegram", "Telegram · blue"),
+        new("ton", "TON · Gram"),
+        new("tron", "TRON · red"),
+        new("whitebit", "WhiteBit · green"),
+        new("bitcoin", "Bitcoin · orange"),
     ];
 
     /// <summary>Order matters only for readability; every theme must define every key.</summary>
@@ -144,14 +152,14 @@ public static class Theming
             "#EAF6F4", "#C0D4D0", "#849792", "#6C7E7A", "#2DE0C0",
             "#EAF6F4", "#FFFFFF", "#0A0C0D",
         ],
-        // Uniswap-style: hot magenta-pink on a deep violet near-black (the app.uniswap.org mood).
+        // Uniswap: the exact hot-pink (#FF007A) on Uniswap's neutral near-black (app.uniswap.org dark).
         ["uniswap"] =
         [
-            "#0B0712", "#120A1B", "#190F26", "#140B20", "#241534", "#301C44",
-            "#241534", "#3A2352", "#4E2F6E",
-            "#B02FC0", "#FC72FF", "#E24FE8", "#3A1547", "#2E1238",
-            "#F6EDFB", "#D6C2E2", "#A088AD", "#82708C", "#6FD3A0",
-            "#F6EDFB", "#FFFFFF", "#0B0712",
+            "#0D0E0E", "#131415", "#191A1C", "#141517", "#202224", "#2A2D30",
+            "#1E2022", "#2C2F33", "#3A3E43",
+            "#D6006B", "#FF007A", "#FF4D9E", "#3A0B22", "#2E091B",
+            "#F5F6F7", "#CBD0D4", "#8D9499", "#727980", "#21C77A",
+            "#F5F6F7", "#FFFFFF", "#0D0E0E",
         ],
         // Deep-ocean teal/cyan on midnight blue.
         ["ocean"] =
@@ -161,6 +169,78 @@ public static class Theming
             "#1E7FA8", "#38C6E0", "#2AA6C0", "#123A4C", "#0F3040",
             "#E6F4FA", "#B6D0DC", "#7C96A2", "#647C86", "#43F5C0",
             "#E6F4FA", "#FFFFFF", "#04090E",
+        ],
+        // Binance — signature black + gold (#F0B90B).
+        ["binance"] =
+        [
+            "#0B0E11", "#12161B", "#181D24", "#141920", "#20262F", "#2A323C",
+            "#1C222A", "#2A323C", "#38424F",
+            "#B88A08", "#F0B90B", "#F5C838", "#3A2F0A", "#2E2608",
+            "#EAECEF", "#C7CDD4", "#848E9C", "#6A7482", "#7DCF8F",
+            "#EAECEF", "#FFFFFF", "#0B0E11",
+        ],
+        // Bybit — gold-amber (#F7A600) on black.
+        ["bybit"] =
+        [
+            "#0A0B0D", "#121316", "#181A1E", "#141518", "#202329", "#2A2E35",
+            "#1C1F24", "#2A2E35", "#383D46",
+            "#C08400", "#F7A600", "#FFB92E", "#3A2C05", "#2E2304",
+            "#EDEFF2", "#C4C9D0", "#8A909A", "#6C727C", "#7DCF8F",
+            "#EDEFF2", "#FFFFFF", "#0A0B0D",
+        ],
+        // OKX — stark monochrome, white on true black.
+        ["okx"] =
+        [
+            "#000000", "#0A0A0A", "#121212", "#0E0E0E", "#1A1A1A", "#242424",
+            "#1A1A1A", "#2A2A2A", "#3A3A3A",
+            "#B8B8B8", "#FFFFFF", "#EDEDED", "#242424", "#1C1C1C",
+            "#F5F5F5", "#C8C8C8", "#8A8A8A", "#6C6C6C", "#7DCF8F",
+            "#F5F5F5", "#FFFFFF", "#000000",
+        ],
+        // Telegram — its own blue (#2AABEE) on the Telegram-dark surface.
+        ["telegram"] =
+        [
+            "#0E1621", "#17212B", "#1C2733", "#182430", "#22303C", "#2B3B47",
+            "#1E2A36", "#2A3947", "#38495A",
+            "#1E88C8", "#2AABEE", "#3FBEFF", "#123449", "#0F2A3A",
+            "#EAF3FA", "#B9CFDD", "#7E96A6", "#647B8A", "#7DCF8F",
+            "#EAF3FA", "#FFFFFF", "#0E1621",
+        ],
+        // TON / Gram — the Open Network blue (#0098EA).
+        ["ton"] =
+        [
+            "#0B131C", "#0F1A26", "#132030", "#101A28", "#1A2C3E", "#233A50",
+            "#182838", "#25405A", "#33567A",
+            "#0079BC", "#0098EA", "#2FB4FF", "#0E3350", "#0B2A44",
+            "#E6F4FC", "#B4D2E4", "#7B99AC", "#627E90", "#7DCF8F",
+            "#E6F4FC", "#FFFFFF", "#0B131C",
+        ],
+        // TRON — the TRX red (#FF3B4E) on near-black.
+        ["tron"] =
+        [
+            "#0D0708", "#160A0C", "#1D0D10", "#180A0D", "#2A1216", "#3A181E",
+            "#241216", "#3A1D22", "#4E272E",
+            "#C41020", "#FF3B4E", "#FF5F6E", "#3A1015", "#2E0C11",
+            "#FBEDEF", "#E2C2C6", "#AD888D", "#8E7075", "#7DCF8F",
+            "#FBEDEF", "#FFFFFF", "#0D0708",
+        ],
+        // WhiteBit — its bright green (#22C55E).
+        ["whitebit"] =
+        [
+            "#08100C", "#0C1712", "#101F17", "#0D1B14", "#163021", "#1E402B",
+            "#153024", "#22452F", "#2E5C3E",
+            "#159550", "#22C55E", "#3BE07A", "#0F3A24", "#0C2E1D",
+            "#EBFBF1", "#C0DECB", "#86A692", "#6E8677", "#22C55E",
+            "#EBFBF1", "#FFFFFF", "#08100C",
+        ],
+        // Bitcoin — the orange (#F7931A) on warm near-black.
+        ["bitcoin"] =
+        [
+            "#0D0A06", "#16110A", "#1D160D", "#18120A", "#2A2012", "#3A2C18",
+            "#241C12", "#3A2D1D", "#4E3C27",
+            "#C0700A", "#F7931A", "#FFAE42", "#3A2A0C", "#2E2109",
+            "#FBF3EA", "#E2CFB8", "#AD9578", "#8E7C64", "#7DCF8F",
+            "#FBF3EA", "#FFFFFF", "#0D0A06",
         ],
     };
 
