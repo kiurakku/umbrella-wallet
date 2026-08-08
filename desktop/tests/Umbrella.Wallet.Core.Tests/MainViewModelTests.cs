@@ -226,6 +226,81 @@ public sealed class MainViewModelTests : IDisposable
         Assert.DoesNotContain(vm.Activity, a => a.Kind.Contains("Sen", StringComparison.Ordinal));
     }
 
+    /// <summary>
+    /// Binance-style multi-wallet: add a second independent wallet, switch between them, and prove
+    /// each is locked behind its own password. This pins the fund-critical VM flow end to end.
+    /// </summary>
+    [Fact]
+    public async Task MultiWallet_AddSwitchAndUnlock_KeepsEachWalletIndependent()
+    {
+        const string secondPassword = "second-wallet-password-2026";
+        var vm = NewViewModel();
+
+        // First wallet becomes the "Main" wallet.
+        vm.Password = GoodPassword;
+        vm.ConfirmPassword = GoodPassword;
+        await vm.CreateWalletCommand.ExecuteAsync(null);
+        vm.ConfirmPhraseBackupCommand.Execute(null);
+        Assert.Single(vm.Wallets);
+        Assert.True(vm.IsUnlocked);
+        var mainId = vm.Wallets.Single(w => w.IsActive).Id;
+
+        // Add a second, independent wallet: current one locks, onboarding opens for the empty vault.
+        vm.NewWalletLabel = "Savings";
+        vm.BeginAddWalletCommand.Execute(null);
+        Assert.True(vm.IsAddingWallet);
+        Assert.False(vm.IsUnlocked);
+        Assert.True(vm.IsWelcomeStage);
+        Assert.Equal(2, vm.Wallets.Count);
+
+        vm.Password = secondPassword;
+        vm.ConfirmPassword = secondPassword;
+        await vm.CreateWalletCommand.ExecuteAsync(null);
+        vm.ConfirmPhraseBackupCommand.Execute(null);
+        Assert.False(vm.IsAddingWallet);
+        Assert.True(vm.IsUnlocked);
+        Assert.Equal("Savings", vm.ActiveWalletLabel);
+        Assert.Equal(2, vm.Wallets.Count);
+
+        // Switch back to Main → locked, must re-enter Main's password.
+        vm.SwitchWalletCommand.Execute(mainId);
+        Assert.False(vm.IsUnlocked);
+        Assert.True(vm.IsUnlockStage);
+        Assert.Equal("Main wallet", vm.ActiveWalletLabel);
+
+        // The second wallet's password must NOT open Main.
+        vm.Password = secondPassword;
+        await vm.UnlockCommand.ExecuteAsync(null);
+        Assert.False(vm.IsUnlocked);
+
+        // Main's own password does.
+        vm.Password = GoodPassword;
+        await vm.UnlockCommand.ExecuteAsync(null);
+        Assert.True(vm.IsUnlocked);
+        Assert.Equal("Main wallet", vm.ActiveWalletLabel);
+    }
+
+    /// <summary>Cancelling an add-wallet must de-register the pending wallet and leave exactly the
+    /// original wallet behind.</summary>
+    [Fact]
+    public async Task MultiWallet_CancelAddWallet_RemovesThePendingWallet()
+    {
+        var vm = NewViewModel();
+        vm.Password = GoodPassword;
+        vm.ConfirmPassword = GoodPassword;
+        await vm.CreateWalletCommand.ExecuteAsync(null);
+        vm.ConfirmPhraseBackupCommand.Execute(null);
+
+        vm.NewWalletLabel = "Throwaway";
+        vm.BeginAddWalletCommand.Execute(null);
+        Assert.Equal(2, vm.Wallets.Count);
+
+        vm.CancelAddWalletCommand.Execute(null);
+        Assert.False(vm.IsAddingWallet);
+        Assert.Single(vm.Wallets);
+        Assert.Equal("Main wallet", vm.ActiveWalletLabel);
+    }
+
     [Fact]
     public async Task DeleteVault_RequiresTypedConfirmation()
     {

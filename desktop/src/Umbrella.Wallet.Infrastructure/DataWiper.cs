@@ -49,8 +49,11 @@ public static class DataWiper
             }
         }
 
-        DeleteFile(Path.Combine(root, "vault.json"));           // the encrypted seed
+        DeleteFile(Path.Combine(root, "vault.json"));           // the encrypted seed (Main wallet)
+        DeleteFile(Path.Combine(root, "wallets.json"));         // multi-wallet index
+        DeleteDir(Path.Combine(root, "wallets"));               // every additional wallet's encrypted vault
         DeleteFile(Path.Combine(root, "watch-addresses.json")); // watch-only addresses
+        DeleteFile(Path.Combine(root, "activity.json"));        // local activity / transaction log
         DeleteFile(Path.Combine(root, "exchanges.bin"));        // encrypted exchange API keys
         DeleteFile(Path.Combine(root, "ui-settings.json"));     // theme, language, profile paths
         DeleteDir(Path.Combine(root, "profile"));               // avatar / banner / background images

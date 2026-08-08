@@ -4,6 +4,20 @@ All notable releases of **Umbrella Wallet**.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versioning follows [SemVer](https://semver.org/).
 
+## [2.8.4] — 2026-08-08
+
+### Desktop
+- **Multiple wallets (Binance-style).** Keep several independent wallets on this device and switch
+  between them from **Settings → Wallets** (or the new **⇄ Wallets** button in the sidebar). Each wallet
+  is its own encrypted seed with its own password; switching locks the current one and asks for the
+  other's password. Add a new wallet (create or import), rename the active one, or remove another —
+  the active wallet and the original "Main" seed file are protected from deletion.
+  - Safety: the pre-existing wallet is always preserved and auto-registered as "Main"; a corrupt index
+    can never lock you out (it falls back to the Main vault); a full data-wipe now also clears the
+    wallet index, every additional vault and the activity log.
+  - This ships **Stage 1** (independent wallets). Sub-accounts *within* one seed (one phrase, Account
+    1/2/3 like MetaMask) are the next stage.
+
 ## [2.8.3] — 2026-08-08
 
 ### Desktop

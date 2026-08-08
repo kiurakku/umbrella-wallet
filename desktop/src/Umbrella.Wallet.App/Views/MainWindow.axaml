@@ -133,6 +133,10 @@
               <Button Classes="ghost" Content="Import existing wallet" Command="{Binding GoToImportCommand}"/>
             </StackPanel>
 
+            <!-- Only while adding an additional wallet: a way back to the wallet you already had. -->
+            <Button Classes="ghost" Content="← Cancel · back to my wallet" HorizontalAlignment="Center" Margin="0,14,0,0"
+                    IsVisible="{Binding IsAddingWallet}" Command="{Binding CancelAddWalletCommand}"/>
+
             <StackPanel Orientation="Horizontal" Spacing="7" HorizontalAlignment="Center" Margin="0,28,0,0">
               <TextBlock Text="built by" Foreground="{DynamicResource UmBorder3}" FontSize="11" VerticalAlignment="Center"/>
               <!-- the fear maker's mark, beside the name rather than replacing it. -->
@@ -280,10 +284,20 @@
                            HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding !HasAvatar}"/>
                   </Panel>
                 </Border>
-                <TextBlock Classes="eyebrow" Text="WALLET"/>
+                <Grid ColumnDefinitions="*,Auto">
+                  <TextBlock Classes="eyebrow" Text="WALLET" VerticalAlignment="Center"/>
+                  <!-- Wallet switcher: jumps to Settings → Wallets to switch or add a wallet. -->
+                  <Button Grid.Column="1" Classes="chip" Padding="8,2" Command="{Binding OpenWalletsCommand}"
+                          ToolTip.Tip="Switch or add wallet" IsVisible="{Binding IsUnlocked}">
+                    <StackPanel Orientation="Horizontal" Spacing="5">
+                      <TextBlock Text="⇄" FontSize="12" VerticalAlignment="Center"/>
+                      <TextBlock Text="Wallets" FontSize="10.5" VerticalAlignment="Center"/>
+                    </StackPanel>
+                  </Button>
+                </Grid>
                 <Grid ColumnDefinitions="*,Auto">
                   <StackPanel>
-                    <TextBlock Classes="serif" FontSize="22" Text="{Binding WalletLabel}"/>
+                    <TextBlock Classes="serif" FontSize="22" Text="{Binding WalletLabel}" TextTrimming="CharacterEllipsis"/>
                     <TextBlock Classes="mono" FontSize="11" Foreground="{DynamicResource UmTextDim}" Margin="0,6,0,0"
                                Text="{Binding ShortAddress}"/>
                   </StackPanel>
@@ -1485,6 +1499,8 @@
                     <!-- Appearance first: theme and language are what people look for. -->
                     <Button Classes="chip" Content="{Binding [settings.appearance], Source={x:Static app:Loc.Instance}}" Command="{Binding SelectSettingsTabCommand}" CommandParameter="Appearance"
                             Classes.active="{Binding IsTabAppearance}"/>
+                    <Button Classes="chip" Content="Wallets" Command="{Binding SelectSettingsTabCommand}" CommandParameter="Wallets"
+                            Classes.active="{Binding IsTabWallets}"/>
                     <Button Classes="chip" Content="{Binding [settings.security], Source={x:Static app:Loc.Instance}}" Command="{Binding SelectSettingsTabCommand}" CommandParameter="Security"
                             Classes.active="{Binding IsTabSecurity}"/>
                     <Button Classes="chip" Content="{Binding [settings.privacy], Source={x:Static app:Loc.Instance}}" Command="{Binding SelectSettingsTabCommand}" CommandParameter="Privacy"
@@ -1495,6 +1511,62 @@
                             Classes.active="{Binding IsTabGuide}"/>
                     <Button Classes="chip" Content="{Binding [settings.danger], Source={x:Static app:Loc.Instance}}" Command="{Binding SelectSettingsTabCommand}" CommandParameter="Danger"
                             Classes.active="{Binding IsTabDanger}"/>
+                  </StackPanel>
+                </Border>
+
+                <!-- Wallets: Binance-style multiple independent wallets. Each is its own encrypted seed. -->
+                <Border Classes="card" IsVisible="{Binding IsTabWallets}" BorderBrush="{DynamicResource UmAccent}">
+                  <StackPanel Spacing="12">
+                    <TextBlock Classes="eyebrow" Text="YOUR WALLETS"/>
+                    <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12" TextWrapping="Wrap" MaxWidth="640"
+                               Text="Keep several independent wallets on this device and switch between them — each has its own recovery phrase and password. Switching locks the current wallet and asks for the other's password."/>
+
+                    <!-- The wallet list. -->
+                    <ItemsControl ItemsSource="{Binding Wallets}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:WalletListItemViewModel">
+                          <Border Background="{DynamicResource UmCardAlt}" CornerRadius="10" Padding="12,10" Margin="0,0,0,8">
+                            <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="12">
+                              <Border Width="38" Height="38" CornerRadius="10" Background="{DynamicResource UmAccentWash}" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Badge}" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource UmAccentBright}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                              </Border>
+                              <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                                <TextBlock Text="{Binding Label}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Text="{Binding StatusLabel}" FontSize="10.5"
+                                           Foreground="{DynamicResource UmTextMuted}"/>
+                              </StackPanel>
+                              <Button Grid.Column="2" Classes="chip" Content="Switch"
+                                      IsVisible="{Binding !IsActive}" VerticalAlignment="Center"
+                                      Command="{Binding #RootWindow.((vm:MainViewModel)DataContext).SwitchWalletCommand}"
+                                      CommandParameter="{Binding Id}"/>
+                              <Button Grid.Column="3" Classes="ghost" Content="Remove"
+                                      IsVisible="{Binding CanRemove}" VerticalAlignment="Center"
+                                      Command="{Binding #RootWindow.((vm:MainViewModel)DataContext).RemoveWalletCommand}"
+                                      CommandParameter="{Binding Id}"/>
+                            </Grid>
+                          </Border>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- Rename the active wallet. -->
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                      <TextBox Text="{Binding RenameWalletLabel, Mode=TwoWay}" Watermark="Rename the active wallet…" VerticalAlignment="Center"/>
+                      <Button Grid.Column="1" Classes="ghost" Content="Rename" Command="{Binding RenameActiveWalletCommand}"/>
+                    </Grid>
+
+                    <Border BorderBrush="{DynamicResource UmBorder}" BorderThickness="0,1,0,0" Padding="0,12,0,0">
+                      <StackPanel Spacing="8">
+                        <TextBlock Text="Add another wallet" FontWeight="SemiBold" FontSize="13"/>
+                        <TextBlock Foreground="{DynamicResource UmTextMuted}" FontSize="11.5" TextWrapping="Wrap" MaxWidth="640"
+                                   Text="Creates a brand-new, independent wallet (or import an existing seed). The current wallet is locked first; you'll set up the new one from the welcome screen."/>
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                          <TextBox Text="{Binding NewWalletLabel, Mode=TwoWay}" Watermark="Name for the new wallet (e.g. Savings)" VerticalAlignment="Center"/>
+                          <Button Grid.Column="1" Classes="primary" Content="＋ Add wallet" Command="{Binding BeginAddWalletCommand}"/>
+                        </Grid>
+                      </StackPanel>
+                    </Border>
                   </StackPanel>
                 </Border>
 

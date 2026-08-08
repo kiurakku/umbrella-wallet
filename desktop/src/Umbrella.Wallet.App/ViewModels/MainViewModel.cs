@@ -330,6 +330,7 @@ public partial class MainViewModel : ViewModelBase
     // buried at the bottom of one very long scroll.
     [ObservableProperty] private string _settingsTab = "Appearance";
 
+    public bool IsTabWallets => SettingsTab == "Wallets";
     public bool IsTabSecurity => SettingsTab == "Security";
     public bool IsTabPrivacy => SettingsTab == "Privacy";
     public bool IsTabBackup => SettingsTab == "Backup";
@@ -339,6 +340,7 @@ public partial class MainViewModel : ViewModelBase
     partial void OnSettingsTabChanged(string value)
     {
         OnPropertyChanged(nameof(IsTabAppearance));
+        OnPropertyChanged(nameof(IsTabWallets));
         OnPropertyChanged(nameof(IsTabSecurity));
         OnPropertyChanged(nameof(IsTabPrivacy));
         OnPropertyChanged(nameof(IsTabBackup));
@@ -356,6 +358,14 @@ public partial class MainViewModel : ViewModelBase
 
     [RelayCommand]
     private void SelectSettingsTab(string tab) => SettingsTab = tab;
+
+    /// <summary>Jump straight to the wallet switcher (Settings → Wallets) from the sidebar.</summary>
+    [RelayCommand]
+    private void OpenWallets()
+    {
+        SettingsTab = "Wallets";
+        SelectSection("Settings");
+    }
 
     // --- Developer fee -------------------------------------------------------
     // Baked into the build (DeveloperFeeConfig): the recipient address is obfuscated and never shown
@@ -454,7 +464,11 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty] private System.Collections.Generic.List<Avalonia.Point> _chartPoints = new();
 
     private string? _unlockedMnemonic;
-    private readonly EncryptedFileSeedVault _vault;
+    private readonly WalletRegistry _registry;
+    private EncryptedFileSeedVault _vault;
+    // Add-wallet flow: while true, a create/import writes an *additional* wallet rather than the first.
+    private string? _pendingNewWalletId;
+    private string? _previousActiveWalletId;
     private readonly Bip39MnemonicService _mnemonics = new();
     private readonly HdAddressDeriver _deriver = new();
     private readonly PublicChainBalanceClient _balances = new();
@@ -473,10 +487,41 @@ public partial class MainViewModel : ViewModelBase
     private CancellationTokenSource? _refreshCts;
     private Avalonia.Threading.DispatcherTimer? _autoRefreshTimer;
 
+    // --- Multi-wallet (Binance-style) ---------------------------------------
+    /// <summary>Every wallet on this PC, for the switcher. Each is an independent encrypted vault.</summary>
+    public ObservableCollection<WalletListItemViewModel> Wallets { get; } = [];
+    public string ActiveWalletLabel => _registry.Active?.Label ?? "Main wallet";
+    public bool HasMultipleWallets => _registry.Wallets.Count > 1;
+    /// <summary>Label typed when adding a new wallet.</summary>
+    [ObservableProperty] private string _newWalletLabel = string.Empty;
+    /// <summary>New label typed when renaming the active wallet.</summary>
+    [ObservableProperty] private string _renameWalletLabel = string.Empty;
+    /// <summary>True while the create/import onboarding is setting up an additional wallet (so the
+    /// onboarding can offer a Cancel back to the existing wallet).</summary>
+    [ObservableProperty] private bool _isAddingWallet;
+
+    /// <summary>Compatibility overload (tests / callers with a single vault): wraps that vault as the
+    /// one-and-only "Main" wallet in a registry rooted beside it.</summary>
     public MainViewModel(EncryptedFileSeedVault vault)
+        : this(RegistryForSingleVault(vault))
     {
-        _vault = vault;
-        HasVault = vault.Exists;
+    }
+
+    private static WalletRegistry RegistryForSingleVault(EncryptedFileSeedVault vault)
+    {
+        var dir = System.IO.Path.GetDirectoryName(vault.VaultPath) ?? ".";
+        return new WalletRegistry(
+            System.IO.Path.Combine(dir, "wallets.json"),
+            vault.VaultPath,
+            id => System.IO.Path.Combine(dir, "wallets", id + ".vault.json"));
+    }
+
+    public MainViewModel(WalletRegistry registry)
+    {
+        _registry = registry;
+        _vault = BuildActiveVault();
+        HasVault = _vault.Exists;
+        RefreshWalletList();
         StatusMessage = HasVault
             ? "Local vault found · unlock to load live balances"
             : "Create or import a BIP39 wallet · keys stay on this PC";
@@ -591,6 +636,13 @@ public partial class MainViewModel : ViewModelBase
     /// Click an item to read the full note. Newest first.</summary>
     public ObservableCollection<NewsItemViewModel> News { get; } =
     [
+        new("NEW", "Multiple wallets, like Binance accounts",
+            "You can now keep several independent wallets on this device and switch between them:\n\n" +
+            "• Open Settings → Wallets (or tap ⇄ Wallets in the sidebar) to add a new wallet, switch, rename or remove one.\n" +
+            "• Each wallet is completely independent — its own 24-word phrase and its own password. Switching locks the current wallet and asks for the other's password, so nothing is ever mixed up.\n" +
+            "• Your existing wallet is automatically kept as “Main” and can never be deleted by accident; even a corrupt index falls back to it, so you can't be locked out.\n\n" +
+            "This is Stage 1 — separate wallets. Next up: sub-accounts inside a single seed (one phrase, Account 1/2/3 like MetaMask).",
+            "2026-08-08"),
         new("NEW", "Buy crypto with a card, plus a sidebar fix",
             "A quick follow-up:\n\n" +
             "• New Buy section. Top up with a card or bank transfer through regulated on-ramps that send crypto straight to your own address — Onramper (compares them all), MoonPay, Ramp, Transak, Banxa, Mercuryo and Guardarian. There's a 3-step guide and one-tap copy of your receive address. Umbrella holds nothing and takes no fee.\n" +
@@ -932,6 +984,7 @@ public partial class MainViewModel : ViewModelBase
             var mnemonic = _mnemonics.Generate();
             await _vault.CreateAsync(mnemonic, Password);
             HasVault = true;
+            FinalizeWalletRegistration();
             SetUnlocked(mnemonic);
             // Gate the workspace behind an explicit "I wrote it down" step so the seed is
             // actually backed up before the user starts using the wallet.
@@ -968,6 +1021,7 @@ public partial class MainViewModel : ViewModelBase
         {
             await _vault.CreateAsync(result.NormalizedMnemonic, Password);
             HasVault = true;
+            FinalizeWalletRegistration();
             SetUnlocked(result.NormalizedMnemonic);
             // Imported wallets already have a backup — go straight to the workspace.
             RecoveryPhrase = string.Empty;
@@ -1306,6 +1360,14 @@ public partial class MainViewModel : ViewModelBase
             ShutdownMonero(); // release the Monero wallet-dir so it can be removed
             var result = DataWiper.WipeAll();
 
+            // Every vault file (Main + additional) was just erased — rebuild the registry from the now
+            // empty state and reset the add-wallet flags so onboarding starts clean.
+            IsAddingWallet = false;
+            _pendingNewWalletId = null;
+            _registry.ReloadFromDisk();
+            _vault = BuildActiveVault();
+            RefreshWalletList();
+
             HasVault = false;
             SetupStage = "Welcome";              // a fresh start, not an empty portfolio
             ActiveSection = "Portfolio";
@@ -1356,6 +1418,129 @@ public partial class MainViewModel : ViewModelBase
         StatusMessage = "Vault locked";
         ResetAddresses();
         RecalcBalance();
+    }
+
+    // --- Multi-wallet: switcher, add, rename, remove -------------------------
+
+    /// <summary>The vault of the currently-active wallet (or the first-run legacy location).</summary>
+    private EncryptedFileSeedVault BuildActiveVault()
+    {
+        var active = _registry.Active;
+        var path = active is not null ? _registry.VaultPathFor(active) : _registry.FirstWalletVaultPath;
+        return new EncryptedFileSeedVault(path);
+    }
+
+    private void RefreshWalletList()
+    {
+        Wallets.Clear();
+        var activeId = _registry.Active?.Id;
+        foreach (var w in _registry.Wallets)
+        {
+            Wallets.Add(new WalletListItemViewModel(w.Id, w.Label, w.Id == activeId, w.IsLegacy));
+        }
+        OnPropertyChanged(nameof(ActiveWalletLabel));
+        OnPropertyChanged(nameof(HasMultipleWallets));
+    }
+
+    /// <summary>Switch to another wallet: locks the current one (wiping its seed from memory) and shows
+    /// the unlock screen for the target, exactly like a fresh unlock.</summary>
+    [RelayCommand]
+    private void SwitchWallet(string? id)
+    {
+        if (string.IsNullOrWhiteSpace(id) || id == _registry.Active?.Id) return;
+        _registry.SetActive(id);
+        LockVault();
+        _vault = BuildActiveVault();
+        HasVault = _vault.Exists;
+        SetupStage = HasVault ? SetupStage : "Welcome";
+        RefreshWalletList();
+        StatusMessage = HasVault
+            ? $"Switched to “{ActiveWalletLabel}” · unlock to continue"
+            : $"“{ActiveWalletLabel}” · create or import to set it up";
+    }
+
+    /// <summary>Begin adding a new, independent wallet: registers it, makes it active, locks the current
+    /// wallet and drops into the create/import onboarding for the empty vault.</summary>
+    [RelayCommand]
+    private void BeginAddWallet()
+    {
+        var label = string.IsNullOrWhiteSpace(NewWalletLabel) ? $"Wallet {_registry.Wallets.Count + 1}" : NewWalletLabel.Trim();
+        _previousActiveWalletId = _registry.Active?.Id;
+        var entry = _registry.Add(label);
+        _pendingNewWalletId = entry.Id;
+        IsAddingWallet = true;
+        _registry.SetActive(entry.Id);
+        LockVault();
+        _vault = BuildActiveVault();       // points at the new (not-yet-created) vault → HasVault=false
+        HasVault = false;
+        NewWalletLabel = string.Empty;
+        SetupStage = "Welcome";
+        RefreshWalletList();
+        StatusMessage = $"New wallet “{label}” · create or import its seed";
+    }
+
+    /// <summary>Abort an in-progress add-wallet: de-registers the pending wallet and returns to the
+    /// previous one's unlock screen.</summary>
+    [RelayCommand]
+    private void CancelAddWallet()
+    {
+        if (!IsAddingWallet) return;
+        if (_previousActiveWalletId is not null) _registry.SetActive(_previousActiveWalletId);
+        if (_pendingNewWalletId is not null)
+        {
+            try { _registry.Remove(_pendingNewWalletId); } catch { /* it may never have been created */ }
+        }
+        IsAddingWallet = false;
+        _pendingNewWalletId = null;
+        _vault = BuildActiveVault();
+        HasVault = _vault.Exists;
+        RefreshWalletList();
+        StatusMessage = $"Back to “{ActiveWalletLabel}”";
+    }
+
+    [RelayCommand]
+    private void RenameActiveWallet()
+    {
+        var active = _registry.Active;
+        if (active is null || string.IsNullOrWhiteSpace(RenameWalletLabel)) return;
+        _registry.Rename(active.Id, RenameWalletLabel.Trim());
+        RenameWalletLabel = string.Empty;
+        RefreshWalletList();
+        StatusMessage = $"Renamed to “{ActiveWalletLabel}”";
+    }
+
+    /// <summary>Remove another (non-active) wallet, deleting only its own encrypted vault. The active
+    /// wallet and the Main wallet's seed file are protected by the registry.</summary>
+    [RelayCommand]
+    private void RemoveWallet(string? id)
+    {
+        if (string.IsNullOrWhiteSpace(id)) return;
+        try
+        {
+            _registry.Remove(id);
+            RefreshWalletList();
+            StatusMessage = "Wallet removed from this device.";
+        }
+        catch (Exception ex)
+        {
+            Fail(ex.Message);
+        }
+    }
+
+    /// <summary>Called after a create/import succeeds, to keep the registry in step.</summary>
+    private void FinalizeWalletRegistration()
+    {
+        if (IsAddingWallet)
+        {
+            IsAddingWallet = false;
+            _pendingNewWalletId = null;
+        }
+        else
+        {
+            // First-run: register the legacy vault we just wrote as the Main wallet.
+            _registry.EnsureLegacyRegistered();
+        }
+        RefreshWalletList();
     }
 
     [RelayCommand]
@@ -3038,6 +3223,7 @@ public partial class MainViewModel : ViewModelBase
     {
         _unlockedMnemonic = mnemonic;
         IsUnlocked = true;
+        RefreshWalletList(); // reflect which wallet is now active in the switcher
         // Exchange keys are encrypted with a key derived from the seed, so they can only be
         // read once the wallet is unlocked.
         _ = LoadExchangesAsync(mnemonic);
@@ -3082,7 +3268,7 @@ public partial class MainViewModel : ViewModelBase
         if (primary is not null)
         {
             ShortAddress = Shorten(primary.Address);
-            WalletLabel = "Umbrella Wallet";
+            WalletLabel = ActiveWalletLabel;
         }
 
         RefreshHoldings();
@@ -3536,6 +3722,14 @@ public sealed record CandleVm(
 /// <summary>One row in the P2P & DEX directory — a self-custody venue the user opens externally.</summary>
 public sealed record P2pVenue(
     string Name, string Kind, string Custody, string Description, string Url, string Tag, string Accent);
+
+/// <summary>One wallet in the multi-wallet switcher.</summary>
+public sealed record WalletListItemViewModel(string Id, string Label, bool IsActive, bool IsLegacy)
+{
+    public string Badge => IsLegacy ? "MAIN" : Label.Length > 0 ? Label[..1].ToUpperInvariant() : "W";
+    public string StatusLabel => IsActive ? "Active" : "Locked";
+    public bool CanRemove => !IsActive; // the active wallet (and the Main seed file) are protected
+}
 
 public sealed record HoldingRowViewModel(
     string Symbol,

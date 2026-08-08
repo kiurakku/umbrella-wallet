@@ -23,6 +23,16 @@ public static class AppPaths
 
     public static string VaultFile => Path.Combine(DataRoot, "vault.json");
     public static string WatchAddressesFile => Path.Combine(DataRoot, "watch-addresses.json");
+
+    /// <summary>Index of all wallets (Binance-style multi-wallet). The legacy single vault above stays
+    /// exactly where it is and is registered as the first ("Main") wallet.</summary>
+    public static string WalletsIndexFile => Path.Combine(DataRoot, "wallets.json");
+
+    /// <summary>Folder holding the encrypted vault of each additional (managed) wallet.</summary>
+    public static string WalletsDir => Path.Combine(DataRoot, "wallets");
+
+    /// <summary>Encrypted vault path for an additional wallet, keyed by its id.</summary>
+    public static string WalletVaultFile(string id) => Path.Combine(WalletsDir, id + ".vault.json");
     public static string TorDirectory => Path.Combine(DataRoot, "tor");
     public static string MoneroDirectory => Path.Combine(DataRoot, "monero");
 
