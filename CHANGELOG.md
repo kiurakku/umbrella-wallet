@@ -4,6 +4,19 @@ All notable releases of **Umbrella Wallet**.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versioning follows [SemVer](https://semver.org/).
 
+## [2.8.3] — 2026-08-08
+
+### Desktop
+- **Fixed: sidebar overflow.** On a shorter window the nav list ran into the footer, so *Settings*
+  overlapped "Keys encrypted on this PC" and the Lock button. The nav list now scrolls inside its own
+  area, and the status footer + Lock vault button stay pinned at the bottom at any window height.
+- **New Buy section (fiat on-ramps).** Top up with a card or bank transfer via regulated on-ramps that
+  deliver straight to your own address — **Onramper** (aggregator), MoonPay, Ramp, Transak, Banxa,
+  Mercuryo and Guardarian. A 3-step "how it works" and one-tap copy of your receive address; Umbrella
+  holds nothing and takes no fee.
+- **NFTs — clearer provenance.** Added a "Where these come from" note (read-only from the Ethereum
+  chain via a public explorer against your own 0x address; more chains on the roadmap).
+
 ## [2.8.1] — 2026-08-08
 
 ### Desktop

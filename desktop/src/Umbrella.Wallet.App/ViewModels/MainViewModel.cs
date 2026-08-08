@@ -591,6 +591,13 @@ public partial class MainViewModel : ViewModelBase
     /// Click an item to read the full note. Newest first.</summary>
     public ObservableCollection<NewsItemViewModel> News { get; } =
     [
+        new("NEW", "Buy crypto with a card, plus a sidebar fix",
+            "A quick follow-up:\n\n" +
+            "• New Buy section. Top up with a card or bank transfer through regulated on-ramps that send crypto straight to your own address — Onramper (compares them all), MoonPay, Ramp, Transak, Banxa, Mercuryo and Guardarian. There's a 3-step guide and one-tap copy of your receive address. Umbrella holds nothing and takes no fee.\n" +
+            "• Fixed a sidebar glitch. On shorter windows the menu could run into the footer (Settings overlapping the Lock button). The menu now scrolls on its own and the footer stays put at any window height.\n" +
+            "• NFTs now explain where they come from — read-only from the Ethereum chain against your own address, with more chains planned.\n\n" +
+            "On-ramps are independent third parties listed for convenience, not endorsements, and will ask for ID. No on-ramp ever needs your recovery phrase.",
+            "2026-08-08"),
         new("NEW", "Pro charts, a P2P & DEX hub, and Market search",
             "This release is all about trading and looking at prices like a pro:\n\n" +
             "• Charts got serious. Hover any coin's chart for a crosshair with a live price + time readout, flip between Line and Candles, and enjoy a soft gradient fill and a change-over-window badge (first→last). It feels like a real trading terminal now.\n" +
@@ -757,6 +764,7 @@ public partial class MainViewModel : ViewModelBase
     public bool IsNfts => ActiveSection == "Nfts";
     public bool IsStaking => ActiveSection == "Staking";
     public bool IsP2p => ActiveSection == "P2p";
+    public bool IsBuy => ActiveSection == "Buy";
 
     // --- Onboarding state machine: each is a full-screen page, sidebar only in the workspace ---
     public bool IsWelcomeStage => !HasVault && SetupStage == "Welcome";
@@ -882,6 +890,7 @@ public partial class MainViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsNfts));
         OnPropertyChanged(nameof(IsStaking));
         OnPropertyChanged(nameof(IsP2p));
+        OnPropertyChanged(nameof(IsBuy));
         OnPropertyChanged(nameof(IsWelcomeStage));
         OnPropertyChanged(nameof(IsCreateStage));
         OnPropertyChanged(nameof(IsImportStage));
@@ -1381,6 +1390,7 @@ public partial class MainViewModel : ViewModelBase
             "Market" => $"Market · live prices · {ChartRange} charts, click a coin for detail",
             "Swap" => "Swap · non-custodial cross-chain swaps route through THORChain vaults",
             "P2p" => "P2P & DEX · non-custodial venues to trade — your keys never leave this device",
+            "Buy" => "Buy · card/bank on-ramps deliver straight to your own address — nothing is held here",
             _ => StatusMessage,
         };
     }
@@ -1439,6 +1449,34 @@ public partial class MainViewModel : ViewModelBase
         new("Peach", "P2P", "Non-custodial · escrow",
             "Bitcoin ↔ fiat peer-to-peer with escrow, mobile-first, many local payment methods.",
             "https://peachbitcoin.com", "PCH", "#F97362"),
+    ];
+
+    /// <summary>Card/bank fiat on-ramps for the Buy page. Every one delivers the crypto straight to a
+    /// self-custody address you paste at checkout — Umbrella never holds funds or takes a cut. KYC and
+    /// availability depend on the provider and your region; the aggregator is listed first for best rates.</summary>
+    public ObservableCollection<P2pVenue> OnRampVenues { get; } =
+    [
+        new("Onramper", "Aggregator", "Delivers to your address",
+            "Compares MoonPay, Ramp, Transak, Banxa and more in one place and routes you to the cheapest for your card and country.",
+            "https://onramper.com", "ONR", "#3B82F6"),
+        new("MoonPay", "On-ramp", "Delivers to your address",
+            "Buy 100+ coins with card, Apple/Google Pay or bank transfer. Widely supported, quick verification.",
+            "https://www.moonpay.com/buy", "MOON", "#7B61FF"),
+        new("Ramp Network", "On-ramp", "Delivers to your address",
+            "Card and open-banking purchases with competitive fees; strong European coverage.",
+            "https://ramp.network", "RAMP", "#21BF73"),
+        new("Transak", "On-ramp", "Delivers to your address",
+            "160+ countries, many local payment rails; buy direct to your wallet address.",
+            "https://transak.com", "TRSK", "#0052FF"),
+        new("Banxa", "On-ramp", "Delivers to your address",
+            "Regulated global on-ramp with bank transfer and card, plus lots of local methods.",
+            "https://banxa.com", "BNXA", "#0E7C86"),
+        new("Mercuryo", "On-ramp", "Delivers to your address",
+            "Fast card purchases with a flat, transparent fee; good for smaller top-ups.",
+            "https://mercuryo.io", "MERC", "#6E56CF"),
+        new("Guardarian", "On-ramp", "Delivers to your address",
+            "Buy and sell fiat ↔ crypto, no account required for many amounts; delivered to your address.",
+            "https://guardarian.com", "GRD", "#12B886"),
     ];
 
     /// <summary>

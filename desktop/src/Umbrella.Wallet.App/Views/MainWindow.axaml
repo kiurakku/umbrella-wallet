@@ -295,11 +295,16 @@
               </StackPanel>
             </StackPanel>
 
-            <StackPanel Grid.Row="1" Margin="10,4,10,0" Spacing="3">
+            <!-- The nav list scrolls inside its own row so it can never overflow into the footer
+                 below (which is what made Settings collide with "Keys encrypted" on a short window). -->
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Margin="10,4,10,10" Spacing="3">
               <Button Classes="nav" Content="{Binding [nav.portfolio], Source={x:Static app:Loc.Instance}}" Classes.active="{Binding IsPortfolio}"
                       Command="{Binding SelectSectionCommand}" CommandParameter="Portfolio"/>
               <Button Classes="nav" Content="{Binding [nav.receive], Source={x:Static app:Loc.Instance}}" Classes.active="{Binding IsReceive}"
                       Command="{Binding SelectSectionCommand}" CommandParameter="Receive"/>
+              <Button Classes="nav" Content="Buy" Classes.active="{Binding IsBuy}"
+                      Command="{Binding SelectSectionCommand}" CommandParameter="Buy"/>
               <Button Classes="nav" Content="{Binding [nav.send], Source={x:Static app:Loc.Instance}}" Classes.active="{Binding IsSend}"
                       Command="{Binding SelectSectionCommand}" CommandParameter="Send"/>
               <Button Classes="nav" Content="Swap" Classes.active="{Binding IsSwap}"
@@ -323,6 +328,7 @@
               <Button Classes="nav" Content="{Binding [nav.settings], Source={x:Static app:Loc.Instance}}" Classes.active="{Binding IsSettings}"
                       Command="{Binding SelectSectionCommand}" CommandParameter="Settings"/>
             </StackPanel>
+            </ScrollViewer>
 
             <Border Grid.Row="2" BorderBrush="{DynamicResource UmBorder}" BorderThickness="0,1,0,0" Padding="18,14">
               <StackPanel Spacing="10">
@@ -346,6 +352,7 @@
           <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
             <Button Classes="chip" Content="{Binding [nav.portfolio], Source={x:Static app:Loc.Instance}}" Command="{Binding SelectSectionCommand}" CommandParameter="Portfolio" Classes.active="{Binding IsPortfolio}"/>
             <Button Classes="chip" Content="{Binding [nav.receive], Source={x:Static app:Loc.Instance}}" Command="{Binding SelectSectionCommand}" CommandParameter="Receive" Classes.active="{Binding IsReceive}"/>
+            <Button Classes="chip" Content="Buy" Command="{Binding SelectSectionCommand}" CommandParameter="Buy" Classes.active="{Binding IsBuy}"/>
             <Button Classes="chip" Content="{Binding [nav.send], Source={x:Static app:Loc.Instance}}" Command="{Binding SelectSectionCommand}" CommandParameter="Send" Classes.active="{Binding IsSend}"/>
             <Button Classes="chip" Content="Swap" Command="{Binding SelectSectionCommand}" CommandParameter="Swap" Classes.active="{Binding IsSwap}"/>
             <Button Classes="chip" Content="P2P" Command="{Binding SelectSectionCommand}" CommandParameter="P2p" Classes.active="{Binding IsP2p}"/>
@@ -878,6 +885,14 @@
                 <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12.5" MaxWidth="560" TextWrapping="Wrap"
                            Text="NFT collections (ERC-721 / ERC-1155) held at your Ethereum address. Only names and counts are read — no images are fetched, so viewing your NFTs never reveals your IP."/>
 
+                <Border Classes="card" Background="{DynamicResource UmCardAlt}" Padding="16,12">
+                  <StackPanel Spacing="4">
+                    <TextBlock Text="Where these come from" FontWeight="SemiBold" FontSize="12.5"/>
+                    <TextBlock Foreground="{DynamicResource UmTextMuted}" FontSize="11.5" TextWrapping="Wrap" MaxWidth="640"
+                               Text="Read straight from the Ethereum chain via a public explorer (Blockscout) against the same 0x address you receive to — nothing is uploaded and there is no marketplace account. The list refreshes when balances sync. Scanning NFTs on more chains (Polygon, BNB, Solana) is on the roadmap; for now only Ethereum is shown."/>
+                  </StackPanel>
+                </Border>
+
                 <ItemsControl ItemsSource="{Binding Nfts}" IsVisible="{Binding HasNfts}" x:CompileBindings="False">
                   <ItemsControl.ItemTemplate>
                     <DataTemplate>
@@ -1174,6 +1189,86 @@
                 </Border>
                 <TextBlock Foreground="{DynamicResource UmTextMuted}" FontSize="11.5" TextWrapping="Wrap" MaxWidth="720"
                            Text="Prices refresh automatically every minute. Use 1H–1Y above to change the window; click any coin for its full chart. &quot;Accepted&quot; means this build derives a real address and syncs the balance; &quot;adapter pending&quot; coins have no address here — do not send them from this wallet."/>
+              </StackPanel>
+
+              <!-- Buy (fiat on-ramps) -->
+              <StackPanel Classes="page" IsVisible="{Binding IsBuy}" Spacing="14">
+                <StackPanel Spacing="4">
+                  <TextBlock Classes="serif" FontSize="26" Text="Buy crypto"/>
+                  <TextBlock Foreground="{DynamicResource UmTextDim}" FontSize="12"
+                             Text="Top up with a card or bank transfer. The coins are delivered straight to your own wallet address — Umbrella never holds your funds or takes a cut."/>
+                </StackPanel>
+
+                <!-- How it works: three steps, then a shortcut to the address you'll paste. -->
+                <Border Classes="card">
+                  <StackPanel Spacing="12">
+                    <TextBlock Text="How it works" FontWeight="SemiBold" FontSize="14"/>
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="14">
+                      <StackPanel Spacing="4">
+                        <TextBlock Text="1 · Copy your address" FontWeight="SemiBold" FontSize="12.5"/>
+                        <TextBlock Text="Grab your receive address for the coin you want (e.g. BTC, ETH)." FontSize="11.5"
+                                   Foreground="{DynamicResource UmTextDim}" TextWrapping="Wrap"/>
+                      </StackPanel>
+                      <StackPanel Grid.Column="1" Spacing="4">
+                        <TextBlock Text="2 · Pick a provider" FontWeight="SemiBold" FontSize="12.5"/>
+                        <TextBlock Text="Open one below, choose amount and payment method, paste your address." FontSize="11.5"
+                                   Foreground="{DynamicResource UmTextDim}" TextWrapping="Wrap"/>
+                      </StackPanel>
+                      <StackPanel Grid.Column="2" Spacing="4">
+                        <TextBlock Text="3 · It lands here" FontWeight="SemiBold" FontSize="12.5"/>
+                        <TextBlock Text="The provider sends on-chain to you; it shows up in Portfolio once confirmed." FontSize="11.5"
+                                   Foreground="{DynamicResource UmTextDim}" TextWrapping="Wrap"/>
+                      </StackPanel>
+                    </Grid>
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                      <Button Classes="primary" Content="Show my addresses →"
+                              Command="{Binding SelectSectionCommand}" CommandParameter="Receive"/>
+                      <Button Classes="ghost" Content="Copy primary address" Command="{Binding CopyPrimaryAddressCommand}"/>
+                    </StackPanel>
+                  </StackPanel>
+                </Border>
+
+                <TextBlock Classes="eyebrow" Text="PROVIDERS — OPEN IN YOUR BROWSER" Margin="2,4,0,0"/>
+
+                <Border Classes="hairline">
+                  <ItemsControl ItemsSource="{Binding OnRampVenues}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="vm:P2pVenue">
+                        <Border BorderBrush="{DynamicResource UmBorder}" BorderThickness="0,1,0,0" Padding="16,14">
+                          <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                            <Border Width="42" Height="42" CornerRadius="12" Background="{Binding Accent}" VerticalAlignment="Top">
+                              <TextBlock Classes="mono" FontSize="10.5" FontWeight="Bold" Foreground="#FFFFFF" Text="{Binding Tag}"
+                                         HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="1" Spacing="5" VerticalAlignment="Center">
+                              <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="{Binding Name}" FontSize="14.5" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding Kind}" FontSize="11" Foreground="{DynamicResource UmTextMuted}" VerticalAlignment="Center"/>
+                                <Border Background="{DynamicResource UmCardAlt}" BorderBrush="{DynamicResource UmAccentDim}" BorderThickness="1"
+                                        CornerRadius="5" Padding="6,1" VerticalAlignment="Center">
+                                  <TextBlock Text="{Binding Custody}" FontSize="9.5" Foreground="{DynamicResource UmTextSoft}"/>
+                                </Border>
+                              </StackPanel>
+                              <TextBlock Text="{Binding Description}" FontSize="12" Foreground="{DynamicResource UmTextDim}"
+                                         TextWrapping="Wrap" MaxWidth="620"/>
+                            </StackPanel>
+                            <Button Grid.Column="2" Classes="ghost" Content="Open ↗" VerticalAlignment="Center"
+                                    Command="{Binding #RootWindow.((vm:MainViewModel)DataContext).OpenUrlCommand}"
+                                    CommandParameter="{Binding Url}"/>
+                          </Grid>
+                        </Border>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </Border>
+
+                <Border Classes="card" Background="{DynamicResource UmCardAlt}">
+                  <StackPanel Spacing="6">
+                    <TextBlock Text="Before you buy" FontWeight="SemiBold" FontSize="13"/>
+                    <TextBlock Foreground="{DynamicResource UmTextMuted}" FontSize="11.5" TextWrapping="Wrap" MaxWidth="720"
+                               Text="These are independent third-party providers, listed for convenience — not endorsements, and Umbrella takes no fee. They are regulated on-ramps and will ask for ID (KYC); availability, limits and fees depend on your country. Always double-check the receiving address you paste matches the coin/network, confirm the amount on the provider's own page, and never share your recovery phrase — no on-ramp ever needs it."/>
+                  </StackPanel>
+                </Border>
               </StackPanel>
 
               <!-- P2P & DEX -->
