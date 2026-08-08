@@ -1008,10 +1008,14 @@
                         <!-- Grid positions are constants (always five levels, five ticks), so the
                              lines and labels are placed directly rather than through an
                              ItemsControl, which does not position generated Canvas children.
-                             Background=Transparent so PointerMoved fires across the whole plot
-                             (crosshair), and the handler maps the X back to the nearest candle. -->
+                             The Viewbox scales the fixed 870×152 plot to fit whatever width the
+                             window gives it — so nothing is clipped on a narrow window and it grows
+                             gracefully on a wide/maximised one. Background=Transparent so PointerMoved
+                             fires across the whole plot (crosshair); GetPosition returns the Canvas's
+                             own 0–870 space regardless of the Viewbox scale, so the crosshair stays true. -->
+                        <Viewbox Stretch="Uniform" StretchDirection="Both" MaxHeight="178"
+                                 HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="4,0">
                         <Canvas x:Name="ChartCanvas" Background="Transparent" Width="870" Height="152"
-                                HorizontalAlignment="Center" VerticalAlignment="Center"
                                 PointerMoved="OnChartPointerMoved" PointerExited="OnChartPointerExited">
                           <Line StartPoint="58,10"  EndPoint="860,10"  Stroke="{DynamicResource UmBorder}" StrokeThickness="1"/>
                           <Line StartPoint="58,40"  EndPoint="860,40"  Stroke="{DynamicResource UmBorder}" StrokeThickness="1"/>
@@ -1080,6 +1084,7 @@
                           <TextBlock Canvas.Left="641" Canvas.Top="135" Classes="mono" FontSize="9.5" Width="36" TextAlignment="Center" Foreground="{DynamicResource UmTextMuted}" Text="{Binding ChartTime3}"/>
                           <TextBlock Canvas.Left="842" Canvas.Top="135" Classes="mono" FontSize="9.5" Width="36" TextAlignment="Center" Foreground="{DynamicResource UmTextMuted}" Text="{Binding ChartTime4}"/>
                         </Canvas>
+                        </Viewbox>
 
                         <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right"
                                     VerticalAlignment="Top" Margin="0,8,12,0">

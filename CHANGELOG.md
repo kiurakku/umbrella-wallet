@@ -4,6 +4,14 @@ All notable releases of **Umbrella Wallet**.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versioning follows [SemVer](https://semver.org/).
 
+## [2.8.1] — 2026-08-08
+
+### Desktop
+- **Responsive chart — nothing gets clipped.** The Market detail chart now scales to fit whatever
+  width the window gives it (wrapped in a Viewbox), so on a narrow or restored-down window it shrinks
+  to fit instead of having its price axis and right edge cut off, and it grows cleanly on a maximised
+  one. The hover crosshair stays pixel-accurate at any scale.
+
 ## [2.8.0] — 2026-08-08
 
 ### Desktop
